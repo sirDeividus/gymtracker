@@ -87,7 +87,7 @@ class HomeViewModel(private val c: AppContainer) : ViewModel() {
         val from = now - 14 * 86_400_000L
         val muscles = s.rows.filter { it.performedAt >= from }
             .groupingBy { enumOr(it.primaryMuscle, MuscleGroup.FULL_BODY) }.eachCount()
-            .entries.sortedByDescending { it.value }.take(6).map { it.key to it.value }
+            .entries.sortedByDescending { it.value }.map { it.key to it.value }
 
         // "Tu próximo objetivo": solo con historial real del ejercicio.
         val plan = recommendation?.let { c.workout.previewRoutine(it.routine.id) }.orEmpty()

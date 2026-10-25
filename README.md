@@ -49,7 +49,7 @@ cd domain && ../gradlew test                  # lógica de entrenamiento (94 pru
 
 ## Personalizar la marca
 
-Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta; la UI de Compose lee estos
+Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta —por defecto negro cálido con acento rojo—; la UI de Compose lee estos
 recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` (icono). El `applicationId` está en
 `app/build.gradle.kts`.
 
@@ -81,6 +81,7 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
 * **Historial**: calendario mensual, lista, detalle exacto de cada sesión, evolución por ejercicio.
 * **Progreso**: evolución (carga, 1RM estimado, repeticiones, volumen, duración) por ejercicio y periodo, frecuencia
   semanal, series por grupo muscular, volumen semanal y récords personales, con estados vacíos útiles.
+* **Mapa corporal** de músculos recientes (frente y espalda) dibujado con formas propias —gratis, sin recursos de terceros—, en Inicio y Progreso, con la intensidad en el color de marca.
 * **Inicio**: saludo, ENTRENAR / continuar, rutina de hoy o recomendada, resumen semanal, último entrenamiento con
   variación de volumen, "Tu próximo objetivo" (solo con historial real), músculos recientes.
 * **Copia de seguridad** JSON exportable/importable con validación y confirmación antes de sobrescribir (transacción

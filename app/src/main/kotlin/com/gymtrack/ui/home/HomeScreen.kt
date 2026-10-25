@@ -32,6 +32,7 @@ import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.Dates
 import com.gymtrack.ui.components.ExerciseThumbOrInitial
 import com.gymtrack.ui.components.GymCard
+import com.gymtrack.ui.components.MuscleMap
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenPadding
 import com.gymtrack.ui.components.SectionTitle
@@ -184,8 +185,9 @@ fun HomeScreen(
                 GymCard(Modifier.fillMaxWidth()) {
                     SectionTitle("Músculos entrenados · últimos 14 días")
                     val max = st.recentMuscles.maxOf { it.second }.coerceAtLeast(1)
+                    MuscleMap(st.recentMuscles.toMap(), Modifier.padding(top = 10.dp, bottom = 6.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 6.dp)) {
-                        st.recentMuscles.forEach { (m, n) ->
+                        st.recentMuscles.take(5).forEach { (m, n) ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(m.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                                 Text("$n series", style = MaterialTheme.typography.bodyMedium, color = if (n == max) c.primary else c.textSecondary)

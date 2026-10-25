@@ -40,6 +40,7 @@ import com.gymtrack.ui.components.BarChart
 import com.gymtrack.ui.components.ChipSelector
 import com.gymtrack.ui.components.EmptyState
 import com.gymtrack.ui.components.GymCard
+import com.gymtrack.ui.components.MuscleMap
 import com.gymtrack.ui.components.ScreenHeader
 import com.gymtrack.ui.components.ScreenPadding
 import com.gymtrack.ui.components.SecondaryButton
@@ -122,6 +123,7 @@ fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenE
                         Text("Sin series en este periodo.", style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
                     } else {
                         val max = st.setsPerMuscle.maxOf { it.second }.coerceAtLeast(1)
+                        MuscleMap(st.setsPerMuscle.toMap(), Modifier.padding(vertical = 10.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                             st.setsPerMuscle.forEach { (m, n) ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
