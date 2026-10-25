@@ -129,7 +129,7 @@ fun SettingsScreen(
                     )
                     Text(
                         if (vm.mediaAvailable) "Imágenes y GIF: instalados (${stringRes(R.string.media_attribution)})"
-                        else "Imágenes y GIF: no instalados. Para uso personal puedes añadirlos con tools/media.py (ver THIRD_PARTY_NOTICES.md).",
+                        else "Imágenes y GIF: no instalados. Para uso personal, en Android Studio ejecuta Gradle ▸ gymtrack ▸ fetchExerciseMedia y vuelve a instalar la app (ver THIRD_PARTY_NOTICES.md).",
                         style = MaterialTheme.typography.bodySmall, color = c.textSecondary, modifier = Modifier.padding(top = 6.dp),
                     )
                     SecondaryButton("Gestionar ejercicios", onOpenLibrary, Modifier.padding(top = 8.dp))

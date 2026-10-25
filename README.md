@@ -87,11 +87,16 @@ Las imágenes y animaciones del dataset son **© Gym visual** y no están bajo l
 incluyen en este repositorio** (que es público). La app las muestra automáticamente, con su atribución, si las copias
 tú en local:
 
+En Android Studio: panel **Gradle ▸ app ▸ gymtrack ▸ fetchExerciseMedia** (o por terminal) y vuelve a ejecutar la app:
+
 ```bash
-git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset /ruta/exercises-dataset
-python3 tools/media.py copy /ruta/exercises-dataset              # imágenes + GIF (≈137 MB de APK)
-python3 tools/media.py copy /ruta/exercises-dataset --no-gifs    # solo miniaturas (≈9 MB)
+./gradlew :app:fetchExerciseMedia                      # miniaturas + GIF (≈137 MB de APK)
+./gradlew :app:fetchExerciseMedia -PmediaGifs=false    # solo miniaturas (≈9 MB)
+./gradlew :app:fetchExerciseMedia -PmediaSource=/ruta/exercises-dataset   # desde un clon local, sin descargar
 ```
+
+Con las imágenes instaladas se ven miniaturas en la biblioteca, el editor de rutinas, el entrenamiento y el historial,
+y el GIF animado en la ficha del ejercicio. (`tools/media.py` sigue disponible como alternativa y para regenerar el índice.)
 
 Si distribuyes la app o el uso no es personal, consulta antes sus
 [términos](https://gymvisual.com/content/3-terms-and-conditions-of-use). Detalles en `THIRD_PARTY_NOTICES.md`.

@@ -78,6 +78,8 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+apply(from = rootProject.file("gradle/fetch-media.gradle.kts"))
+
 dependencies {
     implementation("com.gymtrack:domain")
 

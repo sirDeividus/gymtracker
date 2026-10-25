@@ -65,6 +65,8 @@ import com.gymtrack.domain.WeightUnit
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.EmptyState
+import com.gymtrack.ui.components.ExerciseThumb
+import com.gymtrack.ui.components.hasExerciseMedia
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.NumberInput
@@ -291,6 +293,12 @@ private fun ExerciseRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box48(dragModifier.semantics { contentDescription = "Reordenar $name" }) {
                 Icon(Icons.Default.DragHandle, contentDescription = null, tint = c.textSecondary)
+            }
+            item.exercise?.let { ex ->
+                if (hasExerciseMedia(ex.id)) {
+                    ExerciseThumb(ex.id, size = 48.dp)
+                    Spacer(Modifier.width(10.dp))
+                }
             }
             Column(Modifier.weight(1f)) {
                 Text(name, style = MaterialTheme.typography.titleMedium)

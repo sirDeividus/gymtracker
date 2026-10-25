@@ -35,6 +35,7 @@ import com.gymtrack.domain.WeightUnit
 import com.gymtrack.ui.components.ChipSelector
 import com.gymtrack.ui.components.Dates
 import com.gymtrack.ui.components.EmptyState
+import com.gymtrack.ui.components.ExerciseAnimation
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.LineChart
 import com.gymtrack.ui.components.ScreenHeader
@@ -161,6 +162,7 @@ fun ExerciseEvolutionScreen(vm: ExerciseEvolutionViewModel, contentPadding: Padd
             return@Column
         }
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            st.exercise?.let { ex -> item { ExerciseAnimation(ex.id, size = 160.dp) } }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     ChipSelector(metricsFor(tracking), setOf(metric), { it.label }, { metric = it })

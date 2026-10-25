@@ -166,7 +166,7 @@ fun ExerciseCard(
             }
             Spacer(Modifier.width(12.dp))
             if (hasExerciseMedia(e.exerciseId)) {
-                ExerciseThumb(e.exerciseId, Modifier.clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" }, size = 40.dp)
+                ExerciseThumb(e.exerciseId, Modifier.clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" }, size = 48.dp)
                 Spacer(Modifier.width(10.dp))
             }
             Column(Modifier.weight(1f)) {

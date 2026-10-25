@@ -41,12 +41,13 @@ Los activos generados a partir del dataset se crean con `tools/build_dataset_ass
 ### Imágenes y GIF para uso personal
 
 El repositorio **no contiene** los archivos multimedia (la carpeta `app/src/main/assets/media/` está en `.gitignore`).
-Para tenerlos en *tu* copia de la app, para uso personal y no comercial:
+Para tenerlos en *tu* copia de la app, para uso personal y no comercial, en Android Studio ejecuta la tarea
+**Gradle ▸ app ▸ gymtrack ▸ fetchExerciseMedia** (descarga solo lo necesario de `hasaneyldrm/exercises-dataset`), o por terminal:
 
 ```
-git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset /ruta/exercises-dataset
-python3 tools/media.py copy /ruta/exercises-dataset              # imágenes + GIF (~137 MB)
-python3 tools/media.py copy /ruta/exercises-dataset --no-gifs    # solo miniaturas (~9 MB)
+./gradlew :app:fetchExerciseMedia                      # imágenes + GIF (~137 MB)
+./gradlew :app:fetchExerciseMedia -PmediaGifs=false    # solo miniaturas (~9 MB)
+./gradlew :app:fetchExerciseMedia -PmediaSource=/ruta/exercises-dataset   # desde un clon local
 ```
 
 La app muestra siempre «© Gym visual — https://gymvisual.com/» junto a cada demostración, a 180×180 como exige el aviso original.

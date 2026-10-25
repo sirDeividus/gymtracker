@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -32,6 +34,8 @@ import com.gymtrack.domain.TrackingType
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.Dates
 import com.gymtrack.ui.components.EmptyState
+import com.gymtrack.ui.components.ExerciseThumb
+import com.gymtrack.ui.components.hasExerciseMedia
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.ScreenHeader
 import com.gymtrack.ui.components.ScreenPadding
@@ -89,7 +93,13 @@ fun SessionDetailScreen(
                 val tracking = enumOr(e.tracking, TrackingType.WEIGHT_REPS)
                 val omitted = e.skipped || ex.completedSets == 0
                 GymCard(Modifier.fillMaxWidth(), onClick = { onOpenExercise(e.exerciseId) }) {
-                    Text(e.exerciseName, style = MaterialTheme.typography.titleMedium)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (hasExerciseMedia(e.exerciseId)) {
+                            ExerciseThumb(e.exerciseId, size = 48.dp)
+                            Spacer(Modifier.width(12.dp))
+                        }
+                        Text(e.exerciseName, style = MaterialTheme.typography.titleMedium)
+                    }
                     if (omitted) {
                         Text(if (e.skipped) "Omitido" else "Sin series completadas", style = MaterialTheme.typography.bodySmall, color = c.warning)
                     } else {
