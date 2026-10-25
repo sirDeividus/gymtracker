@@ -18,7 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -82,7 +82,7 @@ fun RoutinesScreen(
         )
         if (state.items.isEmpty() && !state.loading) {
             EmptyState(
-                icon = Icons.Default.ViewList,
+                icon = Icons.AutoMirrored.Filled.ViewList,
                 title = "Aún no tienes rutinas",
                 message = "Crea tu primera rutina en blanco o parte de una plantilla que podrás editar libremente.",
             )

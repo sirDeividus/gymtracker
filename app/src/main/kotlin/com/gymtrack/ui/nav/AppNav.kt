@@ -15,7 +15,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -99,7 +99,7 @@ private class Tab(val route: String, val label: String, val icon: ImageVector)
 
 private val tabs = listOf(
     Tab(Routes.HOME, "Inicio", Icons.Default.Home),
-    Tab(Routes.ROUTINES, "Rutinas", Icons.Default.ViewList),
+    Tab(Routes.ROUTINES, "Rutinas", Icons.AutoMirrored.Filled.ViewList),
     Tab(Routes.HISTORY, "Historial", Icons.Default.History),
     Tab(Routes.PROGRESS, "Progreso", Icons.Default.BarChart),
 )
