@@ -4,7 +4,7 @@ App Android nativa (Kotlin + Jetpack Compose + Room) para registrar entrenamient
 fiables. Funciona **sin conexión, sin cuenta y sin permisos innecesarios**.
 
 > **Estado honesto de la verificación**
-> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 99 pruebas JUnit pasando**.
+> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 111 pruebas JUnit pasando**.
 > * `app/` (Android): el propietario confirmó que **compila y funciona en su dispositivo** con una versión anterior.
 >   Los cambios posteriores de interfaz (rediseño, modo intervalos, mapa muscular, medios) solo se han revisado
 >   estáticamente: su entorno de desarrollo no podía compilar Android (Google Maven bloqueado), así que puede
@@ -44,7 +44,7 @@ Sin `keystore.properties`, `assembleRelease` genera un APK sin firmar.
 ## Pruebas
 
 ```bash
-cd domain && ../gradlew test                  # lógica de entrenamiento (99 pruebas; no necesita Android)
+cd domain && ../gradlew test                  # lógica de entrenamiento (111 pruebas; no necesita Android)
 ./gradlew :app:connectedDebugAndroidTest      # persistencia, recuperación de sesión, migraciones y copia
                                               # de seguridad con Room real (necesita dispositivo/emulador)
 ```
@@ -88,6 +88,10 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
   variación de volumen, "Tu próximo objetivo" (solo con historial real), músculos recientes.
 * **Copia de seguridad** JSON exportable/importable con validación y confirmación antes de sobrescribir (transacción
   atómica: si falla, no se modifica nada).
+* **Tipos de serie** (normal, calentamiento, descendente, al fallo): los calentamientos no cuentan en volumen, récords ni progresión.
+  Toca ANTERIOR para copiar el peso/reps de la sesión pasada; calculadora de discos y generador de calentamiento.
+* **Fotos de progreso y peso corporal** (Progreso → Fotos y peso): cámara o galería, pose, nota, comparación antes/después
+  y gráfica de peso. Se guardan en el almacenamiento privado de la app; no se suben a ningún sitio.
 
 ## Imágenes y GIF de ejercicios (opcional, uso personal)
 
@@ -120,6 +124,8 @@ Si distribuyes la app o el uso no es personal, consulta antes sus
 * Los medios solo existen para los ejercicios con equivalente exacto en el dataset (76 de los 92 básicos + toda la ampliada).
 * El aviso de fin de descanso en segundo plano usa una alarma inexacta (respeta el ahorro de batería): puede
   retrasarse unos segundos o minutos con optimización agresiva.
+* Las fotos de progreso NO van en la copia JSON ni en la auto-copia de Android (solo en el teléfono): si desinstalas, se pierden.
+* La base de datos pasó a la versión 2 (migración v1→v2 sin probar en dispositivo); haz commit de `app/schemas` tras compilar.
 * La copia de seguridad incluye sesiones finalizadas, no la sesión en curso ni las descartadas.
 * Sin pruebas de interfaz (Compose UI tests) ni internacionalización (solo español).
 * Auto-copia de seguridad de Android activada (Room + ajustes); si no la quieres, ponla a `false` en el manifiesto.

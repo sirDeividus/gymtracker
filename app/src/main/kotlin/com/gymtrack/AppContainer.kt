@@ -10,6 +10,7 @@ import com.gymtrack.data.media.MediaRepository
 import com.gymtrack.data.db.GymDatabase
 import com.gymtrack.data.db.Migrations
 import com.gymtrack.data.repo.BackupRepository
+import com.gymtrack.data.repo.BodyRepository
 import com.gymtrack.data.repo.ExerciseRepository
 import com.gymtrack.data.repo.HistoryRepository
 import com.gymtrack.data.repo.RoutineRepository
@@ -38,6 +39,7 @@ class AppContainer(val context: Context) {
     val history = HistoryRepository(database)
     val backup = BackupRepository(database, settings)
     val media = MediaRepository(context)
+    val body = BodyRepository(context, database)
 
     /** Carga imágenes y GIF animados desde assets (sin red). */
     val imageLoader: ImageLoader = ImageLoader.Builder(context)

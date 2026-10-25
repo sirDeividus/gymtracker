@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -48,7 +49,12 @@ import com.gymtrack.ui.components.SectionTitle
 import com.gymtrack.ui.theme.Brand
 
 @Composable
-fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenExercise: (String) -> Unit) {
+fun ProgressScreen(
+    vm: ProgressViewModel,
+    contentPadding: PaddingValues,
+    onOpenExercise: (String) -> Unit,
+    onOpenPhotos: () -> Unit,
+) {
     val c = Brand.colors
     val st by vm.state.collectAsStateWithLifecycle()
     val unit = st.settings.unit
@@ -62,6 +68,7 @@ fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenE
         // El primer fotograma llega antes que los datos: no dibujamos estadísticas vacías.
         if (st.loading) return@Column
         if (!st.hasData) {
+            PhotosEntry(onOpenPhotos)
             EmptyState(
                 Icons.Default.ShowChart, "Aún no hay datos que mostrar",
                 "Finaliza tu primer entrenamiento con series completadas y aquí verás la evolución de tus cargas, tu frecuencia semanal, las series por músculo y tus récords.",
@@ -69,6 +76,7 @@ fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenE
             return@Column
         }
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item { PhotosEntry(onOpenPhotos) }
             item { ChipSelector(Period.values().toList(), setOf(st.period), { it.label }, vm::setPeriod) }
 
             // ---- Evolución por ejercicio
@@ -180,6 +188,20 @@ fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenE
                     }
                     Text(parts.joinToString(" · ").ifEmpty { "—" }, style = MaterialTheme.typography.bodyMedium, color = c.primary)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotosEntry(onClick: () -> Unit) {
+    val c = Brand.colors
+    GymCard(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding), onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Default.PhotoCamera, null, tint = c.primary)
+            Column(Modifier.weight(1f)) {
+                Text("FOTOS Y PESO CORPORAL", style = MaterialTheme.typography.titleSmall)
+                Text("Compara tus cambios · guardado solo en tu teléfono", style = MaterialTheme.typography.bodySmall, color = c.textMuted)
             }
         }
     }

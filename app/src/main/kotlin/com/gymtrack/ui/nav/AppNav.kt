@@ -72,6 +72,8 @@ import com.gymtrack.ui.workout.SummaryScreen
 import com.gymtrack.ui.workout.SummaryViewModel
 import com.gymtrack.ui.workout.WorkoutScreen
 import com.gymtrack.ui.workout.WorkoutViewModel
+import com.gymtrack.ui.body.BodyViewModel
+import com.gymtrack.ui.body.PhotosScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -87,6 +89,7 @@ object Routes {
     const val SUMMARY = "summary/{id}"
     const val SESSION = "session/{id}"
     const val EXERCISE = "exercise/{id}"
+    const val PHOTOS = "photos"
     const val LIBRARY = "library"
     const val SETTINGS = "settings"
 
@@ -191,7 +194,15 @@ fun GymTrackRoot() {
             }
             composable(Routes.PROGRESS) {
                 val vm = appViewModel { ProgressViewModel(it) }
-                ProgressScreen(vm, inner, onOpenExercise = { nav.navigate(Routes.exercise(it)) })
+                ProgressScreen(
+                    vm, inner,
+                    onOpenExercise = { nav.navigate(Routes.exercise(it)) },
+                    onOpenPhotos = { nav.navigate(Routes.PHOTOS) },
+                )
+            }
+            composable(Routes.PHOTOS) {
+                val vm = appViewModel { BodyViewModel(it) }
+                PhotosScreen(vm, inner, onBack = { nav.popBackStack() })
             }
             composable(Routes.ROUTINE_EDIT, arguments = idArg) { e ->
                 val id = e.id()
