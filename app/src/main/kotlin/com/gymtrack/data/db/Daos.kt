@@ -139,6 +139,7 @@ data class HistorySetRow(
     val distanceM: Double?,
     val rpe: Double?,
     val completedAt: Long?,
+    val setType: String,
 )
 
 private const val HISTORY_SELECT = """
@@ -146,7 +147,7 @@ private const val HISTORY_SELECT = """
            se.exerciseId AS exerciseId, se.exerciseName AS exerciseName, se.primaryMuscle AS primaryMuscle,
            se.tracking AS tracking, se.discomfort AS discomfort,
            r.id AS setId, r.setNumber AS setNumber, r.side AS side, r.weightKg AS weightKg, r.reps AS reps,
-           r.durationSec AS durationSec, r.distanceM AS distanceM, r.rpe AS rpe, r.completedAt AS completedAt
+           r.durationSec AS durationSec, r.distanceM AS distanceM, r.rpe AS rpe, r.completedAt AS completedAt, r.setType AS setType
     FROM set_records r
     JOIN session_exercises se ON se.id = r.sessionExerciseId
     JOIN sessions s ON s.id = se.sessionId
@@ -276,3 +277,27 @@ interface SessionDao {
 }
 
 data class ExerciseUsage(val exerciseId: String, val uses: Int)
+
+@Dao
+interface BodyDao {
+    @Query("SELECT * FROM progress_photos ORDER BY takenAt DESC")
+    fun observePhotos(): Flow<List<ProgressPhotoEntity>>
+
+    @Query("SELECT * FROM progress_photos WHERE id = :id")
+    suspend fun getPhoto(id: String): ProgressPhotoEntity?
+
+    @Upsert
+    suspend fun upsertPhoto(item: ProgressPhotoEntity)
+
+    @Query("DELETE FROM progress_photos WHERE id = :id")
+    suspend fun deletePhoto(id: String)
+
+    @Query("SELECT * FROM body_weights ORDER BY measuredAt")
+    fun observeWeights(): Flow<List<BodyWeightEntity>>
+
+    @Upsert
+    suspend fun upsertWeight(item: BodyWeightEntity)
+
+    @Query("DELETE FROM body_weights WHERE id = :id")
+    suspend fun deleteWeight(id: String)
+}

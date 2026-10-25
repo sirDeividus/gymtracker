@@ -58,8 +58,11 @@ import com.gymtrack.data.db.SetRecordEntity
 import com.gymtrack.data.db.enumOr
 import com.gymtrack.data.repo.ActiveExercise
 import com.gymtrack.domain.Formatting
+import com.gymtrack.domain.Equipment
 import com.gymtrack.domain.PersonalRecord
+import com.gymtrack.domain.PlateCalculator
 import com.gymtrack.domain.RecordType
+import com.gymtrack.domain.SetType
 import com.gymtrack.domain.Side
 import com.gymtrack.domain.SuggestionKind
 import com.gymtrack.domain.TrackingType
@@ -96,6 +99,9 @@ class ExerciseActions(
     val setBodyweightMode: (List<SetRecordEntity>, Int) -> Unit,
     val setMinutes: (String, String) -> Unit,
     val startInterval: (String) -> Unit,
+    val setType: (String, SetType) -> Unit,
+    val copyPrevious: (String) -> Unit,
+    val addWarmups: (String) -> Unit,
 )
 
 private fun repsRange(min: Int, max: Int) = if (min == max) "$min" else "$min–$max"
@@ -213,6 +219,9 @@ fun ExerciseCard(
                 if (tracking == TrackingType.DURATION) {
                     DropdownMenuItem(text = { Text("Modo intervalos (Tabata)") }, onClick = { menu = false; actions.startInterval(e.id) })
                 }
+                if (tracking == TrackingType.WEIGHT_REPS) {
+                    DropdownMenuItem(text = { Text("Añadir calentamiento") }, onClick = { menu = false; actions.addWarmups(e.id) })
+                }
                 DropdownMenuItem(text = { Text(if (showNotes) "Ocultar notas" else "Notas del ejercicio") }, onClick = { menu = false; showNotes = !showNotes })
                 DropdownMenuItem(
                     text = { Text(if (e.discomfort) "Quitar aviso de dolor/técnica" else "Marcar dolor o técnica deteriorada") },
@@ -267,11 +276,16 @@ fun ExerciseCard(
                 }
 
                 SetTableHeader(tracking, bwMode, unit)
+                // Los calentamientos (W) y las series D/F no consumen número: 1, 2, 3 son las series normales.
+                val normalNumbers = item.sets.filter { enumOr(it.setType, SetType.NORMAL) == SetType.NORMAL }.map { it.setNumber }.distinct().sorted()
+                val isBarbell = enumOr(e.equipment, Equipment.OTHER) == Equipment.BARBELL
                 item.sets.forEachIndexed { index, s ->
                     SetRow(
                         set = s, index = index, tracking = tracking, unit = unit, bwMode = bwMode,
                         repMin = e.repMin, repMax = e.repMax, targetDuration = e.targetDurationSec,
                         unilateral = e.unilateral, records = prs[s.id], actions = actions,
+                        displayNumber = (normalNumbers.indexOf(s.setNumber).takeIf { it >= 0 }?.plus(1) ?: s.setNumber).toString(),
+                        isBarbell = isBarbell,
                     )
                 }
                 TextButton(onClick = { actions.addSet(e.id) }, modifier = Modifier.heightIn(min = MinTouch)) {
@@ -380,21 +394,38 @@ private fun SetRow(
     unilateral: Boolean,
     records: List<PersonalRecord>?,
     actions: ExerciseActions,
+    displayNumber: String,
+    isBarbell: Boolean,
 ) {
     val c = Brand.colors
     var menu by remember { mutableStateOf(false) }
     var rpeDialog by remember { mutableStateOf(false) }
-    val bg by animateColorAsState(if (set.completed) c.primary.copy(alpha = 0.10f) else androidx.compose.ui.graphics.Color.Transparent, label = "setBg")
+    var typeDialog by remember { mutableStateOf(false) }
+    var plateDialog by remember { mutableStateOf(false) }
+    // Fila completada: tono neutro (el acento se reserva para acciones); el check ya se ilumina en rojo.
+    val bg by animateColorAsState(if (set.completed) c.text.copy(alpha = 0.05f) else androidx.compose.ui.graphics.Color.Transparent, label = "setBg")
     val side = enumOr(set.side, Side.BOTH)
-    val label = "${set.setNumber}" + if (unilateral && side != Side.BOTH) " ${side.short}" else ""
+    val type = enumOr(set.setType, SetType.NORMAL)
+    val numberOrType = if (type == SetType.NORMAL) displayNumber else type.short
+    val label = numberOrType + if (unilateral && side != Side.BOTH) " ${side.short}" else ""
+    val labelColor = when (type) {
+        SetType.WARMUP -> c.warning
+        SetType.FAILURE -> c.primary
+        else -> c.text
+    }
+    val hasPrevious = set.prevWeightKg != null || set.prevReps != null || set.prevDurationSec != null || set.prevDistanceM != null
     val weightText = set.weightKg?.let { Formatting.weight(abs(it), unit, false) }.orEmpty()
     val prevWeightText = set.prevWeightKg?.takeIf { it != 0.0 }?.let { Formatting.weight(abs(it), unit, false) } ?: "—"
 
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(W_SET).heightIn(min = MinTouch).clickable { menu = true }.semantics { contentDescription = "Serie $label, más opciones" }, contentAlignment = Alignment.Center) {
-                Text(label, style = MaterialTheme.typography.titleMedium, color = c.text)
+                Text(label, style = MaterialTheme.typography.titleMedium, color = labelColor)
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text("Tipo de serie: ${type.label}") }, onClick = { menu = false; typeDialog = true })
+                    if (isBarbell && tracking == TrackingType.WEIGHT_REPS) {
+                        DropdownMenuItem(text = { Text("Calculadora de discos") }, onClick = { menu = false; plateDialog = true })
+                    }
                     if (index > 0) DropdownMenuItem(text = { Text("Repetir serie anterior") }, onClick = { menu = false; actions.repeatPrevious(set.id) })
                     DropdownMenuItem(
                         text = { Text(if (set.rpe != null) "Esfuerzo (RPE ${Formatting.number(set.rpe)})" else "Esfuerzo (RPE)") },
@@ -403,11 +434,18 @@ private fun SetRow(
                     DropdownMenuItem(text = { Text("Eliminar serie", color = c.error) }, onClick = { menu = false; actions.removeSet(set.id) })
                 }
             }
-            Text(
-                previousText(set, tracking, unit) ?: "—",
-                style = MaterialTheme.typography.bodySmall, color = c.textSecondary, textAlign = TextAlign.Center,
-                modifier = Modifier.weight(W_PREV).padding(horizontal = 2.dp), maxLines = 2,
-            )
+            Box(
+                Modifier.weight(W_PREV).heightIn(min = MinTouch).clip(RoundedCornerShape(8.dp))
+                    .clickable(enabled = hasPrevious) { actions.copyPrevious(set.id) }
+                    .semantics { if (hasPrevious) contentDescription = "Copiar valores de la sesión anterior: ${previousText(set, tracking, unit)}" },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    previousText(set, tracking, unit) ?: "—",
+                    style = MaterialTheme.typography.bodySmall, color = c.textSecondary, textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 2.dp), maxLines = 2,
+                )
+            }
             when (tracking) {
                 TrackingType.WEIGHT_REPS -> {
                     FieldBox(W_FIELD) {
@@ -457,6 +495,82 @@ private fun SetRow(
         }
     }
     if (rpeDialog) RpeDialog(current = set.rpe, onDismiss = { rpeDialog = false }, onPick = { actions.setRpe(set.id, it); rpeDialog = false })
+    if (typeDialog) SetTypeDialog(current = type, onDismiss = { typeDialog = false }, onPick = { actions.setType(set.id, it); typeDialog = false })
+    if (plateDialog) PlateDialog(weightKg = set.weightKg, unit = unit, onDismiss = { plateDialog = false })
+}
+
+@Composable
+private fun SetTypeDialog(current: SetType, onDismiss: () -> Unit, onPick: (SetType) -> Unit) {
+    val c = Brand.colors
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = c.surfaceHigh,
+        title = { Text("Tipo de serie") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Los calentamientos no cuentan para volumen, récords ni sugerencias de progresión.", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                SetType.values().forEach { t ->
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(if (t == current) c.text.copy(alpha = 0.08f) else androidx.compose.ui.graphics.Color.Transparent)
+                            .clickable { onPick(t) }.padding(horizontal = 12.dp, vertical = 10.dp).heightIn(min = MinTouch),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            t.short.ifEmpty { "·" }, style = MaterialTheme.typography.titleMedium,
+                            color = when (t) { SetType.WARMUP -> c.warning; SetType.FAILURE -> c.primary; else -> c.text },
+                            modifier = Modifier.width(28.dp),
+                        )
+                        Text(t.label, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar", color = c.text) } },
+    )
+}
+
+@Composable
+private fun PlateDialog(weightKg: Double?, unit: WeightUnit, onDismiss: () -> Unit) {
+    val c = Brand.colors
+    val set = PlateCalculator.plateSetFor(unit)
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = c.surfaceHigh,
+        title = { Text("Calculadora de discos") },
+        text = {
+            if (weightKg == null || weightKg <= 0.0) {
+                Text("Escribe primero el peso de la serie.", color = c.textSecondary)
+            } else {
+                val target = unit.fromKg(weightKg)
+                val plan = PlateCalculator.plan(target, set)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Objetivo: ${Formatting.number(target, 2)} ${unit.symbol} · barra ${Formatting.number(set.bar)} ${unit.symbol}", style = MaterialTheme.typography.bodyMedium)
+                    Text("POR LADO", style = MaterialTheme.typography.labelMedium, color = c.textMuted)
+                    if (plan.perSide.isEmpty()) {
+                        Text("Solo la barra", style = MaterialTheme.typography.titleMedium)
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            plan.perSide.forEach { (plate, n) ->
+                                Text(
+                                    "${Formatting.number(plate, 2)} × $n", style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.border(1.dp, c.outline, RoundedCornerShape(10.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
+                                )
+                            }
+                        }
+                    }
+                    if (plan.remainder > 0) {
+                        Text(
+                            "Faltan ${Formatting.number(plan.remainder, 2)} ${unit.symbol} para el objetivo con estos discos.",
+                            style = MaterialTheme.typography.bodySmall, color = c.warning,
+                        )
+                    }
+                    Text("Juego de discos estándar; ajústalo a lo que tengas en tu gimnasio.", style = MaterialTheme.typography.bodySmall, color = c.textMuted)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar", color = c.primary) } },
+    )
 }
 
 @Composable

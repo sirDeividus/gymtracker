@@ -149,4 +149,25 @@ data class SetRecordEntity(
     val prevReps: Int?,
     val prevDurationSec: Int?,
     val prevDistanceM: Double?,
+    /** NORMAL, WARMUP, DROP o FAILURE (ver SetType). Añadido en la versión 2 del esquema. */
+    val setType: String = "NORMAL",
+)
+
+/** Foto de progreso. El archivo vive en el almacenamiento privado de la app (filesDir/progress_photos). */
+@Entity(tableName = "progress_photos", indices = [Index("takenAt")])
+data class ProgressPhotoEntity(
+    @PrimaryKey val id: String,
+    val takenAt: Long,
+    val pose: String,
+    val weightKg: Double?,
+    val note: String,
+    val fileName: String,
+)
+
+/** Registro de peso corporal (kg). */
+@Entity(tableName = "body_weights", indices = [Index("measuredAt")])
+data class BodyWeightEntity(
+    @PrimaryKey val id: String,
+    val measuredAt: Long,
+    val weightKg: Double,
 )

@@ -8,6 +8,7 @@ import com.gymtrack.domain.MuscleGroup
 import com.gymtrack.domain.RoutineExerciseSpec
 import com.gymtrack.domain.SessionStatus
 import com.gymtrack.domain.SetEntry
+import com.gymtrack.domain.SetType
 import com.gymtrack.domain.Side
 import com.gymtrack.domain.TrackingType
 
@@ -64,6 +65,7 @@ fun SetRecordEntity.toEntry() = SetEntry(
     distanceM = distanceM,
     rpe = rpe,
     completed = completed,
+    type = enumOr(setType, SetType.NORMAL),
 )
 
 fun SessionExerciseEntity.toRef() = ExerciseRef(
@@ -85,4 +87,5 @@ fun HistorySetRow.toEntry() = SetEntry(
     distanceM = distanceM,
     rpe = rpe,
     completed = true,
+    type = enumOr(setType, SetType.NORMAL),
 )

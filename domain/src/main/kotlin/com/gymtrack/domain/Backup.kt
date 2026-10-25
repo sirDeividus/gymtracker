@@ -77,6 +77,7 @@ data class SetRecordDto(
     val completed: Boolean = false,
     val note: String = "",
     val completedAt: Long? = null,
+    val type: SetType = SetType.NORMAL,
 )
 
 @Serializable

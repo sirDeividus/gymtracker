@@ -76,13 +76,13 @@ class ProgressViewModel(c: AppContainer) : ViewModel() {
         val perWeek = Stats.sessionsPerWeek(sessionStarts, zone)
         val volumeByWeek = HashMap<LocalDate, Double>()
         for (r in rows) {
-            if (enumOr(r.tracking, TrackingType.WEIGHT_REPS) != TrackingType.WEIGHT_REPS) continue
+            if (r.setType == "WARMUP" || enumOr(r.tracking, TrackingType.WEIGHT_REPS) != TrackingType.WEIGHT_REPS) continue
             val w = Stats.weekStart(r.performedAt, zone)
             volumeByWeek[w] = (volumeByWeek[w] ?: 0.0) + (r.weightKg ?: 0.0) * (r.reps ?: 0)
         }
 
         val from = per.days?.let { now - it * 86_400_000L }
-        val muscleCounts = rows.filter { from == null || it.performedAt >= from }
+        val muscleCounts = rows.filter { it.setType != "WARMUP" && (from == null || it.performedAt >= from) }
             .groupingBy { enumOr(it.primaryMuscle, MuscleGroup.FULL_BODY) }.eachCount()
             .entries.sortedByDescending { it.value }.map { it.key to it.value }
 

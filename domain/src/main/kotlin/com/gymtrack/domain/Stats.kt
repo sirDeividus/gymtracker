@@ -34,7 +34,7 @@ object Stats {
         var distance = 0.0
         for (l in sets) {
             val s = l.set
-            if (!s.completed) continue
+            if (!s.completed || s.type == SetType.WARMUP) continue
             count++
             when (l.tracking) {
                 TrackingType.WEIGHT_REPS -> volume += (s.weightKg ?: 0.0) * (s.reps ?: 0)
@@ -50,7 +50,7 @@ object Stats {
     }
 
     fun setsPerMuscle(sets: List<LoggedSet>): Map<MuscleGroup, Int> =
-        sets.filter { it.set.completed }.groupingBy { it.muscle }.eachCount()
+        sets.filter { it.set.completed && it.set.type != SetType.WARMUP }.groupingBy { it.muscle }.eachCount()
 
     fun weekStart(epochMs: Long, zone: ZoneId): LocalDate =
         Instant.ofEpochMilli(epochMs).atZone(zone).toLocalDate()
@@ -105,7 +105,7 @@ data class ExercisePoint(
 object ExerciseEvolution {
     fun points(performances: List<ExercisePerformance>): List<ExercisePoint> =
         performances.sortedBy { it.performedAt }.mapNotNull { p ->
-            val done = p.completedSets
+            val done = p.workingSets
             if (done.isEmpty()) return@mapNotNull null
             ExercisePoint(
                 performedAt = p.performedAt,

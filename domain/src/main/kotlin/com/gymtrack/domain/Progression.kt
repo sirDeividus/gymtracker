@@ -92,7 +92,7 @@ object ProgressionEngine {
         increments: IncrementSettings,
         unit: WeightUnit,
     ): Suggestion {
-        val done = last?.completedSets.orEmpty()
+        val done = last?.workingSets.orEmpty()
         if (last == null || done.isEmpty()) {
             return Suggestion(
                 SuggestionKind.FIRST_TIME,

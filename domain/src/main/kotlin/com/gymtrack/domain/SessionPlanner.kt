@@ -50,7 +50,7 @@ object SessionPlanner {
         unit: WeightUnit,
     ): PlannedExercise {
         require(spec.sets in 1..MAX_SETS) { "Número de series inválido: ${spec.sets}" }
-        val prevDone = previous?.completedSets.orEmpty()
+        val prevDone = previous?.workingSets.orEmpty()
         val sides = if (spec.exercise.unilateral) listOf(Side.LEFT, Side.RIGHT) else listOf(Side.BOTH)
         val sets = buildList {
             for (n in 1..spec.sets) for (side in sides) {
@@ -72,10 +72,14 @@ object SessionPlanner {
         return PlannedExercise(spec, sets, suggestion, previous)
     }
 
-    private fun matchPrevious(done: List<SetEntry>, setNumber: Int, side: Side): SetEntry? =
-        done.firstOrNull { it.setNumber == setNumber && it.side == side }
-            ?: done.lastOrNull { it.side == side }
-            ?: done.lastOrNull()
+    /**
+     * La serie de trabajo n-ésima del mismo lado de la sesión anterior (por posición, no por número guardado:
+     * los calentamientos desplazan la numeración). Si no hay tantas, la última de ese lado.
+     */
+    private fun matchPrevious(done: List<SetEntry>, position: Int, side: Side): SetEntry? {
+        val sameSide = done.filter { it.side == side }.sortedBy { it.setNumber }
+        return sameSide.getOrNull(position - 1) ?: sameSide.lastOrNull() ?: done.lastOrNull()
+    }
 
     /** Serie extra: copia los valores de la última serie del ejercicio. */
     fun extraSet(existing: List<SetEntry>, side: Side = Side.BOTH): SetEntry {

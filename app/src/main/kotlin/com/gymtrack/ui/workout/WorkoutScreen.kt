@@ -134,6 +134,7 @@ fun WorkoutScreen(
             setNotes = vm::setNotes, setDiscomfort = vm::setDiscomfort, applySuggestion = vm::applySuggestion,
             dismissSuggestion = vm::dismissSuggestion, setBodyweightMode = vm::setBodyweightMode,
             setMinutes = vm::setMinutes, startInterval = vm::openIntervalSetup,
+            setType = vm::setType, copyPrevious = vm::copyPrevious, addWarmups = vm::addWarmups,
         )
     }
     val progress by animateFloatAsState(workout.progress, label = "progress")
@@ -177,8 +178,15 @@ fun WorkoutScreen(
             )
 
             // ---- Ejercicios
+            // Al terminar un ejercicio, la lista se desplaza sola al siguiente (y al abrir, al que toca).
+            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+            LaunchedEffect(currentId) {
+                val idx = workout.exercises.indexOfFirst { it.entity.id == currentId }
+                if (idx >= 0) listState.animateScrollToItem(idx)
+            }
             LazyColumn(
                 Modifier.weight(1f),
+                state = listState,
                 contentPadding = PaddingValues(horizontal = ScreenPadding, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {

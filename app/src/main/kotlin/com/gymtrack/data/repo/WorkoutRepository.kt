@@ -22,7 +22,10 @@ import com.gymtrack.domain.RestTimerState
 import com.gymtrack.domain.RoutineExerciseSpec
 import com.gymtrack.domain.SessionPlanner
 import com.gymtrack.domain.SessionStatus
+import com.gymtrack.domain.PlateCalculator
 import com.gymtrack.domain.SetEntry
+import com.gymtrack.domain.SetType
+import com.gymtrack.domain.WarmupCalculator
 import com.gymtrack.domain.SetRules
 import com.gymtrack.domain.Side
 import com.gymtrack.domain.Stats
@@ -216,6 +219,60 @@ class WorkoutRepository(
         val cur = sessions.getSet(setId) ?: return
         if (cur.completed) return
         sessions.upsertSet(cur.copy(durationSec = durationSec, completed = true, completedAt = now()))
+    }
+
+    suspend fun setSetType(setId: String, type: SetType) {
+        val cur = sessions.getSet(setId) ?: return
+        sessions.upsertSet(cur.copy(setType = type.name))
+    }
+
+    /** Copia a la serie los valores de la sesión anterior (toque en la columna ANTERIOR). */
+    suspend fun applyPreviousValues(setId: String): Boolean {
+        val cur = sessions.getSet(setId) ?: return false
+        if (cur.prevWeightKg == null && cur.prevReps == null && cur.prevDurationSec == null && cur.prevDistanceM == null) return false
+        sessions.upsertSet(
+            cur.copy(
+                weightKg = cur.prevWeightKg ?: cur.weightKg, reps = cur.prevReps ?: cur.reps,
+                durationSec = cur.prevDurationSec ?: cur.durationSec, distanceM = cur.prevDistanceM ?: cur.distanceM,
+            ),
+        )
+        return true
+    }
+
+    /**
+     * Inserta series de calentamiento antes de las de trabajo, calculadas desde el peso de la primera serie de trabajo.
+     * @return nº de series añadidas; -1 si ya había calentamiento; 0 si no se pudo calcular (sin peso o no aplica).
+     */
+    suspend fun addWarmups(sessionExerciseId: String): Int {
+        val se = sessions.getSessionExercise(sessionExerciseId) ?: return 0
+        if (enumOr(se.tracking, TrackingType.WEIGHT_REPS) != TrackingType.WEIGHT_REPS) return 0
+        val existing = sessions.getSetsFor(sessionExerciseId)
+        if (existing.any { it.setType == SetType.WARMUP.name }) return -1
+        val workingKg = existing.firstOrNull { (it.weightKg ?: 0.0) > 0.0 }?.weightKg ?: return 0
+        val s = settings.current()
+        val equipment = enumOr(se.equipment, com.gymtrack.domain.Equipment.OTHER)
+        val barKg = if (equipment == com.gymtrack.domain.Equipment.BARBELL) s.unit.toKg(PlateCalculator.plateSetFor(s.unit).bar) else 0.0
+        val warmups = WarmupCalculator.generate(workingKg, s.increments.stepFor(se.toRef()), barKg)
+        if (warmups.isEmpty()) return 0
+        val sides = if (se.unilateral) listOf(Side.LEFT, Side.RIGHT) else listOf(Side.BOTH)
+        db.withTransaction {
+            // Las series existentes se desplazan para que los calentamientos queden primero.
+            existing.forEach { sessions.upsertSet(it.copy(setNumber = it.setNumber + warmups.size)) }
+            warmups.forEachIndexed { i, w ->
+                sides.forEach { side ->
+                    sessions.upsertSet(
+                        SetRecordEntity(
+                            id = UUID.randomUUID().toString(), sessionExerciseId = sessionExerciseId,
+                            setNumber = i + 1, side = side.name, weightKg = w.weightKg, reps = w.reps, durationSec = null,
+                            distanceM = null, rpe = null, completed = false, note = "", completedAt = null,
+                            prevWeightKg = null, prevReps = null, prevDurationSec = null, prevDistanceM = null,
+                            setType = SetType.WARMUP.name,
+                        ),
+                    )
+                }
+            }
+        }
+        return warmups.size
     }
 
     suspend fun uncompleteSet(setId: String) {

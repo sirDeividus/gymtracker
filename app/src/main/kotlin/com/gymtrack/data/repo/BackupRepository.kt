@@ -21,6 +21,7 @@ import com.gymtrack.domain.SetRecordDto
 import com.gymtrack.data.db.enumOr
 import com.gymtrack.domain.Equipment
 import com.gymtrack.domain.MuscleGroup
+import com.gymtrack.domain.SetType
 import com.gymtrack.domain.Side
 import com.gymtrack.domain.TrackingType
 
@@ -106,10 +107,12 @@ private fun SessionExerciseDto.toEntity() = SessionExerciseEntity(
 
 private fun SetRecordEntity.toDto() = SetRecordDto(
     id, sessionExerciseId, setNumber, enumOr(side, Side.BOTH), weightKg, reps, durationSec, distanceM, rpe, completed, note, completedAt,
+    enumOr(setType, SetType.NORMAL),
 )
 
 private fun SetRecordDto.toEntity() = SetRecordEntity(
     id = id, sessionExerciseId = sessionExerciseId, setNumber = setNumber, side = side.name, weightKg = weightKg,
     reps = reps, durationSec = durationSec, distanceM = distanceM, rpe = rpe, completed = completed, note = note,
     completedAt = completedAt, prevWeightKg = null, prevReps = null, prevDurationSec = null, prevDistanceM = null,
+    setType = type.name,
 )

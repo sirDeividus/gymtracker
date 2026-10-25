@@ -90,7 +90,7 @@ class HomeViewModel(private val c: AppContainer) : ViewModel() {
             if (prev.totals.volumeKg > 0 && l.totals.volumeKg > 0) (l.totals.volumeKg - prev.totals.volumeKg) / prev.totals.volumeKg * 100 else null
         }
         val from = now - 14 * 86_400_000L
-        val muscles = s.rows.filter { it.performedAt >= from }
+        val muscles = s.rows.filter { it.setType != "WARMUP" && it.performedAt >= from }
             .groupingBy { enumOr(it.primaryMuscle, MuscleGroup.FULL_BODY) }.eachCount()
             .entries.sortedByDescending { it.value }.map { it.key to it.value }
 
@@ -103,7 +103,7 @@ class HomeViewModel(private val c: AppContainer) : ViewModel() {
         }
         val starts = s.sessions.map { it.startedAt }
         val thisWeek = Stats.weekStart(now, zone)
-        val setsThisWeek = s.rows.count { Stats.weekStart(it.performedAt, zone) == thisWeek }
+        val setsThisWeek = s.rows.count { it.setType != "WARMUP" && Stats.weekStart(it.performedAt, zone) == thisWeek }
         val secThisWeek = s.sessions.filter { Stats.weekStart(it.startedAt, zone) == thisWeek }
             .sumOf { (((it.endedAt ?: it.startedAt) - it.startedAt) / 1000).coerceAtLeast(0) }
         val todaySets = plan.sumOf { it.spec.sets }

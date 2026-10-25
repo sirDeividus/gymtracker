@@ -20,6 +20,7 @@ import com.gymtrack.domain.IntervalPlan
 import com.gymtrack.domain.IntervalSnapshot
 import com.gymtrack.domain.IntervalTimer
 import com.gymtrack.domain.RestTimerState
+import com.gymtrack.domain.SetType
 import com.gymtrack.domain.TrackingType
 import com.gymtrack.notify.RestNotifier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -201,6 +202,24 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
                     is CompleteOutcome.Invalid -> events.emit(r.message)
                     is CompleteOutcome.Done -> Unit
                 }
+            }
+        }
+    }
+
+    fun setType(setId: String, type: SetType) {
+        viewModelScope.launch { c.workout.setSetType(setId, type) }
+    }
+
+    fun copyPrevious(setId: String) {
+        viewModelScope.launch { if (!c.workout.applyPreviousValues(setId)) events.emit("No hay valores anteriores que copiar") }
+    }
+
+    fun addWarmups(sessionExerciseId: String) {
+        viewModelScope.launch {
+            when (val n = c.workout.addWarmups(sessionExerciseId)) {
+                -1 -> events.emit("Este ejercicio ya tiene calentamiento")
+                0 -> events.emit("Pon primero el peso de la primera serie de trabajo")
+                else -> events.emit("Añadidas $n series de calentamiento (puedes editarlas)")
             }
         }
     }
