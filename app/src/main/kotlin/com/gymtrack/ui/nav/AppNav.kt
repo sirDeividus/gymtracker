@@ -223,6 +223,7 @@ fun GymTrackRoot() {
                     },
                     // Seguro frente a carreras: solo sale si seguimos en la pantalla de entrenamiento.
                     onLeave = { if (nav.currentDestination?.route == Routes.WORKOUT) nav.popBackStack() },
+                    onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                 )
             }
             composable(Routes.SUMMARY, arguments = idArg) { e ->

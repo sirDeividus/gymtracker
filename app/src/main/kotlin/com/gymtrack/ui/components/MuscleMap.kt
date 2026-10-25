@@ -68,7 +68,7 @@ fun MuscleMap(setsByMuscle: Map<MuscleGroup, Int>, modifier: Modifier = Modifier
 private fun trainedColor(base: Color, accent: Color, t: Float): Color = lerp(base, accent, 0.45f + 0.55f * t)
 
 @Composable
-private fun BodyView(zones: List<MapZone>, sets: Map<MuscleGroup, Int>, max: Int, modifier: Modifier) {
+internal fun BodyView(zones: List<MapZone>, sets: Map<MuscleGroup, Int>, max: Int, modifier: Modifier) {
     val c = Brand.colors
     Canvas(modifier) {
         val k = size.width / 100f
@@ -97,7 +97,7 @@ private fun BodyView(zones: List<MapZone>, sets: Map<MuscleGroup, Int>, max: Int
 }
 
 /** Relleno con degradado radial interno: opacidad alta en el centro y suave hacia el borde. */
-private fun DrawScope.drawMapShapeRadial(s: MapShape, accent: Color, t: Float, k: Float) {
+internal fun DrawScope.drawMapShapeRadial(s: MapShape, accent: Color, t: Float, k: Float) {
     val (center, radius) = when (s) {
         is MapShape.Oval -> Offset(s.cx * k, s.cy * k) to max(s.rx, s.ry) * k
         is MapShape.Rect -> Offset((s.x + s.w / 2) * k, (s.y + s.h / 2) * k) to max(s.w, s.h) / 2f * k
@@ -114,7 +114,7 @@ private fun DrawScope.drawMapShapeRadial(s: MapShape, accent: Color, t: Float, k
     }
 }
 
-private fun DrawScope.drawMapShape(s: MapShape, color: Color, k: Float, grow: Float = 0f) {
+internal fun DrawScope.drawMapShape(s: MapShape, color: Color, k: Float, grow: Float = 0f) {
     when (s) {
         is MapShape.Oval -> drawOval(
             color,
@@ -127,5 +127,15 @@ private fun DrawScope.drawMapShape(s: MapShape, color: Color, k: Float, grow: Fl
             size = Size((s.w + 2 * grow) * k, (s.h + 2 * grow) * k),
             cornerRadius = CornerRadius((s.r + grow) * k, (s.r + grow) * k),
         )
+    }
+}
+
+/** Versión compacta (frente y espalda, sin leyenda) para cabeceras. */
+@Composable
+fun MiniMuscleMap(setsByMuscle: Map<MuscleGroup, Int>, modifier: Modifier = Modifier) {
+    val max = (setsByMuscle.values.maxOrNull() ?: 0).coerceAtLeast(1)
+    Row(modifier.semantics { contentDescription = "Músculos de este entrenamiento" }, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        BodyView(MuscleMapShapes.front, setsByMuscle, max, Modifier.weight(1f).aspectRatio(0.5f))
+        BodyView(MuscleMapShapes.back, setsByMuscle, max, Modifier.weight(1f).aspectRatio(0.5f))
     }
 }

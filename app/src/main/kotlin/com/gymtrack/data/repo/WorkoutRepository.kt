@@ -339,6 +339,9 @@ class WorkoutRepository(
     suspend fun setDiscomfort(sessionExerciseId: String, discomfort: Boolean) =
         updateExercise(sessionExerciseId) { it.copy(discomfort = discomfort) }
 
+    suspend fun setExerciseRest(sessionExerciseId: String, sec: Int) =
+        updateExercise(sessionExerciseId) { it.copy(restSec = sec.coerceIn(0, 1800)) }
+
     suspend fun dismissSuggestion(sessionExerciseId: String) =
         updateExercise(sessionExerciseId) { it.copy(suggestionDismissed = true) }
 

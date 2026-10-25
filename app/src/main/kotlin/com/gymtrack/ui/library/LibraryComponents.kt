@@ -13,6 +13,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.FilterChip
+import com.gymtrack.ui.components.ExerciseImageFill
+import com.gymtrack.ui.components.GradientCapsuleButton
+import com.gymtrack.ui.components.MuscleSelector
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -176,7 +186,10 @@ fun ExerciseRow(ex: Exercise, uses: Int, onClick: () -> Unit, modifier: Modifier
     }
 }
 
-/** Selector de ejercicios en hoja inferior. Las sugerencias son editables: nada es obligatorio. */
+/**
+ * Selector de ejercicios en hoja inferior: primero una silueta donde tocas el músculo (con botón Girar)
+ * y después una cuadrícula con los ejercicios de ese grupo. También se puede buscar por nombre directamente.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisePickerSheet(
@@ -184,36 +197,134 @@ fun ExercisePickerSheet(
     onPick: (Exercise) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val c = Brand.colors
     val state by vm.state.collectAsStateWithLifecycle()
     var creating by remember { mutableStateOf(false) }
+    var back by remember { mutableStateOf(false) }
+    // Lista = ya se eligió músculo/equipo o se está buscando; si no, se muestra la silueta.
+    var browsing by remember { mutableStateOf(false) }
+    var panel by remember { mutableStateOf<String?>(null) }
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = Brand.colors.background) {
+    val f = state.filters
+    androidx.compose.runtime.LaunchedEffect(Unit) { vm.clearFilters(); vm.setQuery("") }
+    val showList = browsing || f.query.isNotBlank() || f.muscles.isNotEmpty() || f.equipment.isNotEmpty()
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = c.background) {
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding), verticalAlignment = Alignment.CenterVertically) {
-                Text("Elegir ejercicio", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                TextButton(onClick = { creating = true }, modifier = Modifier.padding(0.dp)) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Text(" Crear", color = Brand.colors.primary)
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = {
+                    if (showList) { vm.clearFilters(); vm.setQuery(""); browsing = false; panel = null } else onDismiss()
+                }) {
+                    Icon(
+                        if (showList) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Close,
+                        contentDescription = if (showList) "Volver al mapa corporal" else "Cerrar",
+                    )
+                }
+                Text("Agregar ejercicio", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                TextButton(onClick = { creating = true }) { Text("Crear", color = c.primary) }
+            }
+            OutlinedTextField(
+                value = f.query, onValueChange = vm::setQuery,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = ScreenPadding, vertical = 8.dp),
+                singleLine = true, placeholder = { Text("Buscar") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (f.query.isNotEmpty()) IconButton(onClick = { vm.setQuery("") }) { Icon(Icons.Default.Clear, contentDescription = "Borrar búsqueda") }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+                colors = fieldColors(),
+            )
+            if (!showList) {
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    MuscleSelector(
+                        back = back,
+                        onSelect = { m -> vm.clearFilters(); vm.toggleMuscle(m); browsing = true },
+                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
+                    )
+                    GradientCapsuleButton(
+                        if (back) "VER FRENTE" else "GIRAR", { back = !back },
+                        Modifier.align(Alignment.BottomEnd).padding(end = ScreenPadding, bottom = 24.dp),
+                        icon = Icons.Default.Refresh,
+                    )
+                }
+            } else {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = ScreenPadding),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FilterChip(
+                        selected = f.muscles.isEmpty() && f.equipment.isEmpty(),
+                        onClick = { vm.clearFilters(); panel = null },
+                        label = { Text("Todos") }, colors = pickerChipColors(),
+                    )
+                    FilterChip(
+                        selected = f.muscles.isNotEmpty() || panel == "m",
+                        onClick = { panel = if (panel == "m") null else "m" },
+                        label = { Text("Grupos musculares" + if (f.muscles.isNotEmpty()) " (${f.muscles.size})" else "") },
+                        colors = pickerChipColors(),
+                    )
+                    FilterChip(
+                        selected = f.equipment.isNotEmpty() || panel == "e",
+                        onClick = { panel = if (panel == "e") null else "e" },
+                        label = { Text("Equipo" + if (f.equipment.isNotEmpty()) " (${f.equipment.size})" else "") },
+                        colors = pickerChipColors(),
+                    )
+                }
+                if (panel == "m") Box(Modifier.padding(top = 8.dp)) { ChipSelector(MuscleGroup.values().toList(), f.muscles, { it.label }, vm::toggleMuscle) }
+                if (panel == "e") Box(Modifier.padding(top = 8.dp)) { ChipSelector(Equipment.values().toList(), f.equipment, { it.label }, vm::toggleEquipment) }
+                Text(
+                    "${state.items.size} ejercicios", style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
+                    modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp),
+                )
+                if (state.items.isEmpty() && !state.loading) {
+                    EmptyState(
+                        icon = Icons.Default.FitnessCenter, title = "Sin resultados",
+                        message = "Prueba con otra búsqueda o quita algún filtro. También puedes crear tu propio ejercicio.",
+                        actionLabel = "Crear ejercicio", onAction = { creating = true },
+                    )
+                }
+                androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                    columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, bottom = 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    gridItems(state.items, key = { it.id }) { ex -> ExerciseGridCard(ex) { onPick(ex) } }
                 }
             }
-            Text(
-                "Pulsa un ejercicio para añadirlo. Las primeras opciones se ordenan según tu uso real.",
-                style = MaterialTheme.typography.bodySmall, color = Brand.colors.textSecondary,
-                modifier = Modifier.padding(horizontal = ScreenPadding, vertical = 4.dp),
-            )
-            ExerciseBrowser(state, vm, onClick = onPick, onCreate = { creating = true }, modifier = Modifier.weight(1f), bottomPadding = 32.dp)
         }
     }
     if (creating) {
         ExerciseEditorDialog(
             initial = null,
             onDismiss = { creating = false },
-            onSave = { f, done ->
-                vm.saveCustom(null, f.name, f.primary, f.secondary, f.equipment, f.movement, f.tracking, f.unilateral, f.description, f.cues) { err ->
+            onSave = { f2, done ->
+                vm.saveCustom(null, f2.name, f2.primary, f2.secondary, f2.equipment, f2.movement, f2.tracking, f2.unilateral, f2.description, f2.cues) { err ->
                     if (err == null) creating = false
                     done(err)
                 }
             },
+        )
+    }
+}
+
+@Composable
+private fun pickerChipColors() = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+    containerColor = Brand.colors.surface, labelColor = Brand.colors.text,
+    selectedContainerColor = Brand.colors.primary, selectedLabelColor = Brand.colors.onPrimary,
+)
+
+@Composable
+private fun ExerciseGridCard(ex: Exercise, onClick: () -> Unit) {
+    val c = Brand.colors
+    GymCard(Modifier.fillMaxWidth(), onClick = onClick, contentPadding = PaddingValues(8.dp)) {
+        ExerciseImageFill(ex.id, ex.name, Modifier.fillMaxWidth().aspectRatio(1f))
+        Text(
+            ex.name, style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
         )
     }
 }

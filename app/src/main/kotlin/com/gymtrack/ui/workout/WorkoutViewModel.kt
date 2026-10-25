@@ -250,6 +250,10 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
         viewModelScope.launch { c.workout.setExerciseNotes(id, notes) }
     }
 
+    fun setRest(id: String, sec: Int) {
+        viewModelScope.launch { c.workout.setExerciseRest(id, sec) }
+    }
+
     fun setDiscomfort(id: String, on: Boolean) {
         viewModelScope.launch { c.workout.setDiscomfort(id, on) }
     }

@@ -92,3 +92,24 @@ fun ExerciseMediaDialog(exerciseId: String, title: String, onDismiss: () -> Unit
         confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar", color = Brand.colors.primary) } },
     )
 }
+
+/** Imagen del ejercicio a ancho completo sobre fondo blanco (las ilustraciones del dataset son sobre blanco). */
+@Composable
+fun ExerciseImageFill(
+    exerciseId: String, name: String, modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(12.dp),
+) {
+    val (ref, app) = rememberMediaRef(exerciseId)
+    val uri = ref?.thumbUri ?: ref?.gifUri
+    if (uri == null) {
+        androidx.compose.foundation.layout.Box(
+            modifier.clip(shape).background(Brand.colors.surfaceHigh), contentAlignment = Alignment.Center,
+        ) { Text(name.firstOrNull()?.uppercase().orEmpty(), style = MaterialTheme.typography.headlineMedium, color = Brand.colors.textSecondary) }
+    } else {
+        AsyncImage(
+            model = uri, contentDescription = null, imageLoader = app.container.imageLoader,
+            contentScale = ContentScale.Fit,
+            modifier = modifier.clip(shape).background(androidx.compose.ui.graphics.Color.White),
+        )
+    }
+}

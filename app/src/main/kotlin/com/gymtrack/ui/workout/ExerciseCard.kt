@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.DropdownMenu
@@ -102,6 +103,7 @@ class ExerciseActions(
     val setType: (String, SetType) -> Unit,
     val copyPrevious: (String) -> Unit,
     val addWarmups: (String) -> Unit,
+    val setRest: (String, Int) -> Unit,
 )
 
 private fun repsRange(min: Int, max: Int) = if (min == max) "$min" else "$min–$max"
@@ -161,87 +163,66 @@ fun ExerciseCard(
     var bwMode by remember(e.id) { mutableStateOf(derivedMode) }
 
     MediaHost(showMedia, e.exerciseId, e.exerciseName) { showMedia = false }
-    GymCard(
-        modifier.fillMaxWidth(),
-        highlighted = expanded && !e.skipped,
-        contentPadding = PaddingValues(0.dp),
-    ) {
-        // ---- Cabecera
-        Row(
-            Modifier.fillMaxWidth().clickable(onClick = onToggleExpanded).padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier.size(26.dp).clip(CircleShape)
-                    .background(if (done) c.primary else c.surfaceHigh),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (done) Icon(Icons.Default.Check, contentDescription = "Completado", tint = c.onPrimary, modifier = Modifier.size(16.dp))
-                else Text("${item.completedSets}", style = MaterialTheme.typography.labelMedium, color = c.textMuted)
-            }
+    var restMenu by remember { mutableStateOf(false) }
+    // Bloque plano (sin tarjeta): miniatura circular, nombre en el acento, chips de descanso/nota y la tabla.
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            com.gymtrack.ui.components.ExerciseImageFill(
+                e.exerciseId, e.exerciseName,
+                Modifier.size(52.dp).clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" },
+                shape = CircleShape,
+            )
             Spacer(Modifier.width(12.dp))
-            if (hasExerciseMedia(e.exerciseId)) {
-                ExerciseThumb(e.exerciseId, Modifier.clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" }, size = 64.dp)
-                Spacer(Modifier.width(10.dp))
-            }
             Column(Modifier.weight(1f)) {
                 Text(
-                    e.exerciseName.uppercase(), style = ExerciseTitleStyle,
-                    color = if (e.skipped) c.textSecondary else c.text, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    e.exerciseName, style = MaterialTheme.typography.titleLarge,
+                    color = if (e.skipped) c.textSecondary else if (done) c.textSecondary else c.primary,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
-                val target = when (tracking) {
-                    TrackingType.DURATION -> "${e.targetSets} × ${Formatting.duration(e.targetDurationSec ?: 30)}"
-                    TrackingType.DISTANCE -> "${e.targetSets} series"
-                    else -> "${e.targetSets} × ${repsRange(e.repMin, e.repMax)} reps"
+                if (e.skipped) Text("Omitido", style = MaterialTheme.typography.bodySmall, color = c.warning)
+            }
+            Box {
+                IconButton(onClick = { menu = true }, modifier = Modifier.size(MinTouch)) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Opciones de ${e.exerciseName}")
                 }
-                val loadKg = item.sets.mapNotNull { it.weightKg }.maxOrNull()
-                val weightLabel = when {
-                    tracking == TrackingType.WEIGHT_REPS && loadKg != null && loadKg > 0 -> " · ${Formatting.weight(loadKg, unit)}"
-                    tracking == TrackingType.BODYWEIGHT && loadKg != null && loadKg != 0.0 -> " · ${Formatting.bodyweightLoad(loadKg, unit)}"
-                    else -> ""
-                }
-                Text(
-                    if (e.skipped) "Omitido" else target + weightLabel,
-                    style = MaterialTheme.typography.bodyMedium, color = if (e.skipped) c.warning else c.textSecondary,
-                )
-                if (!e.skipped) {
-                    Text(
-                        "${item.completedSets}/${item.sets.size} series",
-                        style = MaterialTheme.typography.labelMedium, color = if (item.completedSets > 0) c.primary else c.textSecondary,
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text("Añadir serie") }, onClick = { menu = false; actions.addSet(e.id) })
+                    if (tracking == TrackingType.DURATION) {
+                        DropdownMenuItem(text = { Text("Modo intervalos (Tabata)") }, onClick = { menu = false; actions.startInterval(e.id) })
+                    }
+                    if (tracking == TrackingType.WEIGHT_REPS) {
+                        DropdownMenuItem(text = { Text("Añadir calentamiento") }, onClick = { menu = false; actions.addWarmups(e.id) })
+                    }
+                    DropdownMenuItem(text = { Text(if (showNotes) "Ocultar notas" else "Notas del ejercicio") }, onClick = { menu = false; showNotes = !showNotes })
+                    DropdownMenuItem(
+                        text = { Text(if (e.discomfort) "Quitar aviso de dolor/técnica" else "Marcar dolor o técnica deteriorada") },
+                        onClick = { menu = false; actions.setDiscomfort(e.id, !e.discomfort) },
                     )
+                    DropdownMenuItem(
+                        text = { Text(if (e.skipped) "Retomar ejercicio" else "Saltar ejercicio") },
+                        onClick = { menu = false; actions.setSkipped(e.id, !e.skipped) },
+                    )
+                    DropdownMenuItem(text = { Text("Quitar de la sesión", color = c.error) }, onClick = { menu = false; actions.removeExercise(e.id) })
                 }
             }
-            IconButton(onClick = { menu = true }, modifier = Modifier.size(MinTouch)) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Opciones de ${e.exerciseName}")
-            }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text("Añadir serie") }, onClick = { menu = false; actions.addSet(e.id) })
-                if (tracking == TrackingType.DURATION) {
-                    DropdownMenuItem(text = { Text("Modo intervalos (Tabata)") }, onClick = { menu = false; actions.startInterval(e.id) })
+        }
+        if (!e.skipped) Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box {
+                PillChip(if (e.restSec > 0) "Descanso: ${Formatting.duration(e.restSec)}" else "Descanso: --", Icons.Default.Timer) { restMenu = true }
+                DropdownMenu(expanded = restMenu, onDismissRequest = { restMenu = false }) {
+                    listOf(0, 30, 45, 60, 90, 120, 180, 240, 300).forEach { sec ->
+                        DropdownMenuItem(
+                            text = { Text(if (sec == 0) "Sin descanso" else Formatting.duration(sec)) },
+                            onClick = { restMenu = false; actions.setRest(e.id, sec) },
+                        )
+                    }
                 }
-                if (tracking == TrackingType.WEIGHT_REPS) {
-                    DropdownMenuItem(text = { Text("Añadir calentamiento") }, onClick = { menu = false; actions.addWarmups(e.id) })
-                }
-                DropdownMenuItem(text = { Text(if (showNotes) "Ocultar notas" else "Notas del ejercicio") }, onClick = { menu = false; showNotes = !showNotes })
-                DropdownMenuItem(
-                    text = { Text(if (e.discomfort) "Quitar aviso de dolor/técnica" else "Marcar dolor o técnica deteriorada") },
-                    onClick = { menu = false; actions.setDiscomfort(e.id, !e.discomfort) },
-                )
-                DropdownMenuItem(
-                    text = { Text(if (e.skipped) "Retomar ejercicio" else "Saltar ejercicio") },
-                    onClick = { menu = false; actions.setSkipped(e.id, !e.skipped) },
-                )
-                DropdownMenuItem(text = { Text("Quitar de la sesión", color = c.error) }, onClick = { menu = false; actions.removeExercise(e.id) })
             }
-            Icon(
-                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Contraer" else "Expandir",
-                tint = c.textSecondary, modifier = Modifier.padding(end = 12.dp),
-            )
+            PillChip(if (showNotes) "Ocultar nota" else "Nota", Icons.Default.NoteAdd) { showNotes = !showNotes }
         }
 
-        AnimatedVisibility(visible = expanded && !e.skipped) {
-            Column(Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        AnimatedVisibility(visible = !e.skipped) {
+            Column(Modifier.padding(top = 6.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // ---- Sugerencia de progresión (editable, nunca automática)
                 val kind = e.suggestionKind?.let { enumOr(it, SuggestionKind.HOLD) }
                 if (!hasHistory && kind == SuggestionKind.FIRST_TIME) {
@@ -288,10 +269,14 @@ fun ExerciseCard(
                         isBarbell = isBarbell,
                     )
                 }
-                TextButton(onClick = { actions.addSet(e.id) }, modifier = Modifier.heightIn(min = MinTouch)) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = c.primary)
-                    Spacer(Modifier.width(6.dp))
-                    Text("Añadir serie", color = c.primary)
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(14.dp)).background(c.surfaceHigh)
+                        .clickable { actions.addSet(e.id) },
+                    horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Agregar Serie", style = MaterialTheme.typography.titleSmall)
                 }
                 if (tracking == TrackingType.DURATION && item.sets.any { !it.completed }) {
                     SecondaryButton("Modo intervalos (Tabata)", { actions.startInterval(e.id) }, Modifier.fillMaxWidth(), icon = Icons.Default.Timer)
@@ -311,6 +296,20 @@ fun ExerciseCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PillChip(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    val c = Brand.colors
+    Row(
+        Modifier.heightIn(min = 44.dp).clip(RoundedCornerShape(14.dp)).background(c.surfaceHigh)
+            .clickable(onClick = onClick).padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -352,6 +351,9 @@ private const val W_PREV = 1.35f
 private const val W_FIELD = 1.0f
 private val CheckWidth = 52.dp
 
+/** Verde de «serie hecha». */
+private val SetDone = androidx.compose.ui.graphics.Color(0xFF34C759)
+
 @Composable
 private fun SetTableHeader(tracking: TrackingType, bwMode: Int, unit: WeightUnit) {
     val c = Brand.colors
@@ -367,7 +369,7 @@ private fun SetTableHeader(tracking: TrackingType, bwMode: Int, unit: WeightUnit
 }
 
 private fun fieldLabels(tracking: TrackingType, bwMode: Int, unit: WeightUnit): List<String> = when (tracking) {
-    TrackingType.WEIGHT_REPS -> listOf("PESO (${unit.symbol})", "REPS")
+    TrackingType.WEIGHT_REPS -> listOf(unit.symbol.uppercase(), "REPS")
     TrackingType.BODYWEIGHT -> if (bwMode == 0) listOf("REPS") else listOf(if (bwMode > 0) "+${unit.symbol}" else "−${unit.symbol}", "REPS")
     TrackingType.DURATION -> listOf("SEGUNDOS")
     TrackingType.DISTANCE -> listOf("KM", "MIN")
@@ -402,8 +404,8 @@ private fun SetRow(
     var rpeDialog by remember { mutableStateOf(false) }
     var typeDialog by remember { mutableStateOf(false) }
     var plateDialog by remember { mutableStateOf(false) }
-    // Fila completada: tono neutro (el acento se reserva para acciones); el check ya se ilumina en rojo.
-    val bg by animateColorAsState(if (set.completed) c.text.copy(alpha = 0.05f) else androidx.compose.ui.graphics.Color.Transparent, label = "setBg")
+    // Fila completada: tono verde (como Hevy) para que se vea de un vistazo qué series ya están hechas.
+    val bg by animateColorAsState(if (set.completed) SetDone.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent, label = "setBg")
     val side = enumOr(set.side, Side.BOTH)
     val type = enumOr(set.setType, SetType.NORMAL)
     val numberOrType = if (type == SetType.NORMAL) displayNumber else type.short
@@ -420,7 +422,9 @@ private fun SetRow(
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(bg)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(W_SET).heightIn(min = MinTouch).clickable { menu = true }.semantics { contentDescription = "Serie $label, más opciones" }, contentAlignment = Alignment.Center) {
-                Text(label, style = MaterialTheme.typography.titleMedium, color = labelColor)
+                Box(Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(if (set.completed) c.background.copy(alpha = 0.35f) else c.surfaceHigh), contentAlignment = Alignment.Center) {
+                    Text(label, style = MaterialTheme.typography.titleMedium, color = labelColor)
+                }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text("Tipo de serie: ${type.label}") }, onClick = { menu = false; typeDialog = true })
                     if (isBarbell && tracking == TrackingType.WEIGHT_REPS) {
@@ -581,8 +585,8 @@ private fun androidx.compose.foundation.layout.RowScope.FieldBox(weight: Float, 
 @Composable
 private fun CompleteButton(completed: Boolean, label: String, onClick: () -> Unit) {
     val c = Brand.colors
-    val fill by animateColorAsState(if (completed) c.primary else androidx.compose.ui.graphics.Color.Transparent, label = "checkFill")
-    val stroke by animateColorAsState(if (completed) c.primary else c.outline, label = "checkStroke")
+    val fill by animateColorAsState(if (completed) SetDone else c.surfaceHigh, label = "checkFill")
+    val stroke by animateColorAsState(if (completed) SetDone else androidx.compose.ui.graphics.Color.Transparent, label = "checkStroke")
     val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     // Al completar: un pulso breve (sube y vuelve con un muelle) con animateFloatAsState.
     // No se dispara al abrir una serie que ya estaba completada.
@@ -604,8 +608,8 @@ private fun CompleteButton(completed: Boolean, label: String, onClick: () -> Uni
     Box(Modifier.width(CheckWidth), contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(MinTouch).graphicsLayer { scaleX = scale; scaleY = scale }.pressScale(source, 0.9f)
-                .clip(CircleShape).background(fill)
-                .border(1.5.dp, stroke, CircleShape)
+                .clip(RoundedCornerShape(10.dp)).background(fill)
+                .border(1.5.dp, stroke, RoundedCornerShape(10.dp))
                 .clickable(interactionSource = source, indication = androidx.compose.foundation.LocalIndication.current, onClick = onClick)
                 .semantics { contentDescription = if (completed) "Serie $label completada. Toca para deshacer" else "Completar serie $label" },
             contentAlignment = Alignment.Center,
@@ -613,7 +617,7 @@ private fun CompleteButton(completed: Boolean, label: String, onClick: () -> Uni
             // Inactivo: solo contorno; el check queda apenas insinuado para que el control siga siendo descubrible.
             Icon(
                 Icons.Default.Check, contentDescription = null,
-                tint = if (completed) c.onGradient else c.textMuted.copy(alpha = 0.5f),
+                tint = if (completed) androidx.compose.ui.graphics.Color.White else c.textMuted,
             )
         }
     }

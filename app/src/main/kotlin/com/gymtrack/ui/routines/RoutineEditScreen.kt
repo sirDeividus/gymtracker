@@ -1,6 +1,17 @@
 package com.gymtrack.ui.routines
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -354,61 +365,168 @@ private fun RoutineExerciseDialog(
     onDismiss: () -> Unit,
 ) {
     val c = Brand.colors
-    val tracking = item.exercise?.tracking ?: TrackingType.WEIGHT_REPS
+    val ex = item.exercise
+    val tracking = ex?.tracking ?: TrackingType.WEIGHT_REPS
     var row by remember(item.row.id) { mutableStateOf(item.row) }
     fun set(new: RoutineExerciseEntity) { row = new; onChange(new) }
     var weightText by remember(item.row.id) { mutableStateOf(item.row.startWeightKg?.let { Formatting.weight(it, unit, false) }.orEmpty()) }
-    var restText by remember(item.row.id) { mutableStateOf(item.row.restSec.toString()) }
+    var minText by remember(item.row.id) { mutableStateOf(item.row.repMin.toString()) }
+    var maxText by remember(item.row.id) { mutableStateOf(item.row.repMax.toString()) }
     var durText by remember(item.row.id) { mutableStateOf((item.row.targetDurationSec ?: 30).toString()) }
+    var showNote by remember(item.row.id) { mutableStateOf(item.row.notes.isNotBlank()) }
+    var restMenu by remember { mutableStateOf(false) }
+    var showMedia by remember { mutableStateOf(false) }
+    val trackingLabel = when (tracking) {
+        TrackingType.WEIGHT_REPS -> "Reps y carga"
+        TrackingType.BODYWEIGHT -> "Reps (peso corporal)"
+        TrackingType.DURATION -> "Duración"
+        TrackingType.DISTANCE -> "Distancia y tiempo"
+    }
 
-    AlertDialog(
+    androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
-        containerColor = c.surfaceHigh,
-        title = { Text(item.exercise?.name ?: "Ejercicio") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Stepper("Series", row.sets, { set(row.copy(sets = it)) }, 1..20)
-                if (tracking == TrackingType.WEIGHT_REPS || tracking == TrackingType.BODYWEIGHT) {
-                    Stepper("Reps mínimas", row.repMin, { set(row.copy(repMin = it, repMax = maxOf(row.repMax, it))) }, 1..100)
-                    Stepper("Reps máximas", row.repMax, { set(row.copy(repMax = it, repMin = minOf(row.repMin, it))) }, 1..100)
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = c.background) {
+            Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = ScreenPadding)) {
+                Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") }
+                    Text("Editar ejercicio", style = MaterialTheme.typography.headlineSmall)
                 }
-                if (tracking == TrackingType.DURATION) {
-                    LabeledInput("Duración objetivo (segundos)", durText, decimal = false) {
-                        durText = it
-                        it.toIntOrNull()?.takeIf { s -> s in 1..3600 }?.let { s -> set(row.copy(targetDurationSec = s)) }
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        com.gymtrack.ui.components.ExerciseImageFill(item.row.exerciseId, ex?.name.orEmpty(), Modifier.size(92.dp))
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(ex?.name ?: "Ejercicio", style = MaterialTheme.typography.titleLarge)
+                            val muscles = ex?.let { (listOf(it.primaryMuscle) + it.secondaryMuscles).distinct().joinToString(", ") { m -> m.label } }.orEmpty()
+                            Text(muscles, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
+                        }
+                        if (hasExerciseMedia(item.row.exerciseId)) {
+                            IconButton(onClick = { showMedia = true }) { Icon(Icons.Default.Info, contentDescription = "Ver demostración") }
+                        }
                     }
-                }
-                if (tracking == TrackingType.WEIGHT_REPS) {
-                    LabeledInput("Peso inicial opcional (${unit.symbol})", weightText, decimal = true) {
-                        weightText = it
-                        val parsed = Formatting.parseDecimal(it)
-                        set(row.copy(startWeightKg = if (it.isBlank()) null else parsed?.let { v -> unit.toKg(v) }))
+                    Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        EditChip(trackingLabel, Modifier.weight(1.3f), onClick = null)
+                        Box(Modifier.weight(1f)) {
+                            EditChip(if (row.restSec > 0) Formatting.duration(row.restSec) else "Sin descanso", Modifier.fillMaxWidth(), icon = Icons.Default.Timer) { restMenu = true }
+                            DropdownMenu(expanded = restMenu, onDismissRequest = { restMenu = false }) {
+                                listOf(0, 30, 45, 60, 90, 120, 180, 240, 300).forEach { s ->
+                                    DropdownMenuItem(
+                                        text = { Text(if (s == 0) "Sin descanso" else Formatting.duration(s)) },
+                                        onClick = { restMenu = false; set(row.copy(restSec = s)) },
+                                    )
+                                }
+                            }
+                        }
+                        EditChip("Nota", Modifier.weight(0.9f), icon = Icons.Default.Add) { showNote = !showNote }
                     }
-                }
-                LabeledInput("Descanso entre series (segundos)", restText, decimal = false) {
-                    restText = it
-                    it.toIntOrNull()?.takeIf { s -> s in 0..1800 }?.let { s -> set(row.copy(restSec = s)) }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(45, 60, 90, 120, 180).forEach { s ->
-                        FilterChip(
-                            selected = row.restSec == s,
-                            onClick = { restText = s.toString(); set(row.copy(restSec = s)) },
-                            label = { Text("${s}s") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = c.surface, labelColor = c.text,
-                                selectedContainerColor = c.primary, selectedLabelColor = c.onPrimary,
-                            ),
+                    if (showNote) {
+                        OutlinedTextField(
+                            value = row.notes, onValueChange = { set(row.copy(notes = it.take(500))) },
+                            label = { Text("Notas personales") }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                            colors = editColors(), minLines = 2,
+                        )
+                    }
+
+                    // ---- Series: línea de tiempo con una tarjeta por serie (todas comparten el mismo objetivo).
+                    Column(Modifier.padding(top = 20.dp)) {
+                        for (i in 1..row.sets) {
+                            Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(34.dp).clip(androidx.compose.foundation.shape.CircleShape).background(c.surfaceHigh), contentAlignment = Alignment.Center) {
+                                    Text("$i", style = MaterialTheme.typography.labelLarge)
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Row(
+                                    Modifier.weight(1f).clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                                        .border(1.dp, c.outline, androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    when (tracking) {
+                                        TrackingType.WEIGHT_REPS, TrackingType.BODYWEIGHT -> {
+                                            SetField(minText, "mín", Modifier.width(52.dp)) {
+                                                minText = it
+                                                it.toIntOrNull()?.takeIf { v -> v in 1..100 }?.let { v -> set(row.copy(repMin = v, repMax = maxOf(row.repMax, v))); if (v > (maxText.toIntOrNull() ?: 0)) maxText = v.toString() }
+                                            }
+                                            Text("–", color = c.textMuted, modifier = Modifier.padding(horizontal = 4.dp))
+                                            SetField(maxText, "máx", Modifier.width(52.dp)) {
+                                                maxText = it
+                                                it.toIntOrNull()?.takeIf { v -> v in 1..100 }?.let { v -> set(row.copy(repMax = v, repMin = minOf(row.repMin, v))); if (v < (minText.toIntOrNull() ?: 0)) minText = v.toString() }
+                                            }
+                                            Text(" reps", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                            if (tracking == TrackingType.WEIGHT_REPS) {
+                                                Text("  ·  ", color = c.textMuted)
+                                                SetField(weightText, "—", Modifier.width(64.dp), decimal = true) {
+                                                    weightText = it
+                                                    val parsed = Formatting.parseDecimal(it)
+                                                    set(row.copy(startWeightKg = if (it.isBlank()) null else parsed?.let { v -> unit.toKg(v) }))
+                                                }
+                                                Text(" ${unit.symbol}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                            }
+                                        }
+                                        TrackingType.DURATION -> {
+                                            SetField(durText, "30", Modifier.width(72.dp)) {
+                                                durText = it
+                                                it.toIntOrNull()?.takeIf { v -> v in 1..3600 }?.let { v -> set(row.copy(targetDurationSec = v)) }
+                                            }
+                                            Text(" segundos", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                        }
+                                        TrackingType.DISTANCE -> Text("Registras km y minutos al entrenar", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                    }
+                                }
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = { if (row.sets < 20) set(row.copy(sets = row.sets + 1)) }, modifier = Modifier.heightIn(min = MinTouch)) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = c.primary)
+                                Text("  Añadir serie", color = c.primary)
+                            }
+                            if (row.sets > 1) {
+                                TextButton(onClick = { set(row.copy(sets = row.sets - 1)) }, modifier = Modifier.heightIn(min = MinTouch)) {
+                                    Icon(Icons.Default.Remove, contentDescription = null, tint = c.textSecondary)
+                                    Text("  Quitar serie", color = c.textSecondary)
+                                }
+                            }
+                        }
+                        Text(
+                            "Todas las series comparten el mismo objetivo; durante el entreno puedes cambiar cada una.",
+                            style = MaterialTheme.typography.bodySmall, color = c.textMuted, modifier = Modifier.padding(bottom = 16.dp),
                         )
                     }
                 }
-                OutlinedTextField(
-                    value = row.notes, onValueChange = { set(row.copy(notes = it.take(500))) },
-                    label = { Text("Notas personales") }, modifier = Modifier.fillMaxWidth(), colors = editColors(), minLines = 2,
+                com.gymtrack.ui.components.GradientCapsuleButton(
+                    "GUARDAR", onDismiss, Modifier.fillMaxWidth().padding(vertical = 12.dp), icon = Icons.Default.Check,
                 )
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss, modifier = Modifier.padding(0.dp)) { Text("Hecho", color = c.primary) } },
+        }
+    }
+    if (showMedia) com.gymtrack.ui.components.ExerciseMediaDialog(item.row.exerciseId, ex?.name.orEmpty()) { showMedia = false }
+}
+
+@Composable
+private fun Modifier.systemBarsPadding(): Modifier = this.then(Modifier.systemBarsPadding())
+
+@Composable
+private fun EditChip(text: String, modifier: Modifier = Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, onClick: (() -> Unit)?) {
+    val c = Brand.colors
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+    Row(
+        modifier.heightIn(min = 44.dp).clip(shape).background(c.surfaceHigh)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) { Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
+        Text(text, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun SetField(value: String, placeholder: String, modifier: Modifier, decimal: Boolean = false, onChange: (String) -> Unit) {
+    NumberInput(
+        value = value, placeholder = placeholder, onValueChange = onChange, decimal = decimal, modifier = modifier,
+        minimal = true, description = placeholder,
     )
 }
 

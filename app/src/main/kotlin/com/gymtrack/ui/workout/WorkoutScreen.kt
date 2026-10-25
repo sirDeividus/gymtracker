@@ -8,6 +8,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import com.gymtrack.data.db.enumOr
+import com.gymtrack.domain.MuscleGroup
+import com.gymtrack.domain.SetType
+import com.gymtrack.ui.components.MiniMuscleMap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.shape.CircleShape
@@ -89,6 +102,7 @@ fun WorkoutScreen(
     contentPadding: PaddingValues,
     onFinished: (String) -> Unit,
     onLeave: () -> Unit,
+    onOpenSettings: () -> Unit = {},
 ) {
     val c = Brand.colors
     val state by vm.state.collectAsStateWithLifecycle()
@@ -134,48 +148,71 @@ fun WorkoutScreen(
             setNotes = vm::setNotes, setDiscomfort = vm::setDiscomfort, applySuggestion = vm::applySuggestion,
             dismissSuggestion = vm::dismissSuggestion, setBodyweightMode = vm::setBodyweightMode,
             setMinutes = vm::setMinutes, startInterval = vm::openIntervalSetup,
-            setType = vm::setType, copyPrevious = vm::copyPrevious, addWarmups = vm::addWarmups,
+            setType = vm::setType, copyPrevious = vm::copyPrevious, addWarmups = vm::addWarmups, setRest = vm::setRest,
         )
     }
     val progress by animateFloatAsState(workout.progress, label = "progress")
 
+    // Bloqueo durante el descanso: si guardas el móvil en el bolsillo, los toques accidentales no tocan nada.
+    // Se desbloquea manteniendo pulsado el candado; al acabar el descanso se libera solo.
+    val restActive = state.rest != null
+    var unlockedFor by remember { mutableStateOf<Long?>(null) }
+    val restKey = state.rest?.endsAtMs ?: state.rest?.totalSec?.toLong()
+    val locked = restActive && unlockedFor != restKey
+    LaunchedEffect(restActive) { if (!restActive) unlockedFor = null }
+    androidx.activity.compose.BackHandler(enabled = locked) { /* ignorado mientras está bloqueado */ }
+
+    val volumeKg = workout.exercises.sumOf { ex ->
+        ex.sets.filter { it.completed && it.setType != SetType.WARMUP.name }
+            .sumOf { (it.weightKg ?: 0.0).coerceAtLeast(0.0) * (it.reps ?: 0) }
+    }
+    val muscleSets = remember(workout.exercises.map { it.entity.id to it.sets.size }) {
+        workout.exercises.filter { !it.entity.skipped }
+            .groupBy { enumOr(it.entity.primaryMuscle, MuscleGroup.FULL_BODY) }
+            .mapValues { (_, l) -> l.sumOf { it.sets.size } }
+    }
+
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding()) {
-            // ---- Cabecera: cronómetro centrado e imponente (monoespaciado, blanco brillante)
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            // ---- Cabecera: minimizar · cronómetro · despertador (descanso) · Terminar
+            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onLeave, modifier = Modifier.size(MinTouch)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Salir sin finalizar (el entrenamiento se conserva)")
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Minimizar (el entrenamiento se conserva)", modifier = Modifier.size(30.dp))
                 }
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        Formatting.duration(state.elapsedSec.toInt()),
-                        style = ClockStyle, color = c.text, maxLines = 1, textAlign = TextAlign.Center,
-                        modifier = Modifier.semantics { contentDescription = "Tiempo transcurrido ${Formatting.duration(state.elapsedSec.toInt())}" },
-                    )
-                    Text(
-                        workout.session.routineName.uppercase(), style = MaterialTheme.typography.labelMedium,
-                        color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        "${workout.finishedExercises}/${workout.exercises.size} ejercicios · ${workout.completedSets}/${workout.totalSets} series",
-                        style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
-                    )
-                }
+                Text(
+                    Formatting.duration(state.elapsedSec.toInt()),
+                    style = MaterialTheme.typography.titleLarge, color = c.primary, maxLines = 1,
+                    modifier = Modifier.weight(1f).semantics { contentDescription = "Tiempo transcurrido ${Formatting.duration(state.elapsedSec.toInt())}" },
+                )
                 Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.size(MinTouch)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Más opciones")
+                        Icon(Icons.Default.Alarm, contentDescription = "Descanso", modifier = Modifier.size(28.dp))
                     }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(text = { Text("Iniciar descanso (${state.settings.defaultRestSec} s)") }, onClick = { menu = false; vm.startRest(state.settings.defaultRestSec) })
-                        DropdownMenuItem(text = { Text("Descartar entrenamiento", color = c.error) }, onClick = { menu = false; discardDialog = true })
                     }
                 }
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    Modifier.heightIn(min = 44.dp).clip(RoundedCornerShape(14.dp)).background(c.primaryGradient)
+                        .clickable { finishDialog = true }.padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text("Terminar", style = MaterialTheme.typography.titleMedium, color = c.onGradient) }
             }
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = ScreenPadding, vertical = 6.dp),
-                color = c.primary, trackColor = c.surfaceHigh,
+                modifier = Modifier.fillMaxWidth().height(3.dp),
+                color = c.primary, trackColor = c.surfaceHigh, gapSize = 0.dp, drawStopIndicator = {},
             )
+
+            // ---- Estadísticas rápidas + mapa corporal
+            Row(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                StatCell("Duración", Formatting.duration(state.elapsedSec.toInt()), Modifier.weight(1f), accent = true)
+                StatCell("Volumen", Formatting.weight(volumeKg, unit), Modifier.weight(1f))
+                StatCell("Series", "${workout.completedSets}", Modifier.weight(0.7f))
+                MiniMuscleMap(muscleSets, Modifier.width(64.dp))
+            }
+            androidx.compose.material3.HorizontalDivider(color = c.outline)
 
             // ---- Ejercicios
             // Al terminar un ejercicio, la lista se desplaza sola al siguiente (y al abrir, al que toca).
@@ -187,44 +224,53 @@ fun WorkoutScreen(
             LazyColumn(
                 Modifier.weight(1f),
                 state = listState,
-                contentPadding = PaddingValues(horizontal = ScreenPadding, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(horizontal = ScreenPadding, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 if (workout.exercises.isEmpty()) {
                     item {
                         EmptyState(
                             Icons.Default.FitnessCenter, "Entrenamiento libre",
                             "Añade el primer ejercicio para empezar a registrar series.",
-                            actionLabel = "Añadir ejercicio", onAction = { picker = true },
                         )
                     }
                 }
                 items(workout.exercises, key = { it.entity.id }) { ex ->
-                    val open = expandedOverrides[ex.entity.id] ?: (ex.entity.id == currentId)
                     ExerciseCard(
-                        item = ex, expanded = open,
-                        onToggleExpanded = { expandedOverrides = expandedOverrides + (ex.entity.id to !open) },
+                        item = ex, expanded = true, onToggleExpanded = {},
                         unit = unit, prs = state.prs, actions = actions,
                     )
                 }
-                item(key = "add-exercise") {
-                    SecondaryButton("AÑADIR EJERCICIO", { picker = true }, Modifier.fillMaxWidth(), icon = Icons.Default.Add)
+                item(key = "footer") {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        GradientCapsuleButton("AGREGAR EJERCICIO", { picker = true }, Modifier.fillMaxWidth().heightIn(min = 54.dp), icon = Icons.Default.Add)
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            FooterButton("Configuración", c.text, Modifier.weight(1f), onOpenSettings)
+                            FooterButton("Descartar Entreno", c.error, Modifier.weight(1f)) { discardDialog = true }
+                        }
+                    }
                 }
             }
 
-            // ---- Descanso + acciones
+            // ---- Descanso
             state.rest?.let { rest ->
                 RestPanel(
                     remainingSec = state.restRemainingSec, totalSec = rest.totalSec, paused = rest.paused,
+                    locked = locked,
                     onAdjust = vm::adjustRest,
                     onPauseResume = { if (rest.paused) vm.resumeRest() else vm.pauseRest() },
                     onRestart = vm::restartRest, onSkip = vm::skipRest,
+                    onUnlock = { unlockedFor = restKey },
                 )
             }
-            // «Finalizar»: cápsula flotante centrada con el degradado rojo (85 % del ancho).
-            Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.Center) {
-                GradientCapsuleButton("FINALIZAR", { finishDialog = true }, Modifier.fillMaxWidth(0.85f).heightIn(min = 56.dp), icon = Icons.Default.Check)
-            }
+        }
+        // Capa de bloqueo: se traga todos los toques de lo que hay debajo (salvo el panel de descanso, que queda encima).
+        if (locked) {
+            Box(
+                Modifier.fillMaxSize().padding(bottom = 110.dp + contentPadding.calculateBottomPadding())
+                    .background(c.background.copy(alpha = 0.45f))
+                    .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } },
+            )
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp + contentPadding.calculateBottomPadding()))
     }
@@ -266,10 +312,12 @@ private fun RestPanel(
     remainingSec: Int,
     totalSec: Int,
     paused: Boolean,
+    locked: Boolean,
     onAdjust: (Int) -> Unit,
     onPauseResume: () -> Unit,
     onRestart: () -> Unit,
     onSkip: () -> Unit,
+    onUnlock: () -> Unit,
 ) {
     val c = Brand.colors
     GymCard(
@@ -291,13 +339,28 @@ private fun RestPanel(
                     )
                 }
             }
-            TextButton(onClick = { onAdjust(-15) }, modifier = Modifier.heightIn(min = MinTouch)) { Text("−15", color = c.text) }
-            TextButton(onClick = { onAdjust(15) }, modifier = Modifier.heightIn(min = MinTouch)) { Text("+15", color = c.text) }
-            IconButton(onClick = onPauseResume, modifier = Modifier.size(MinTouch)) {
-                Icon(if (paused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = if (paused) "Reanudar descanso" else "Pausar descanso")
+            if (locked) {
+                // Bloqueado: solo un gesto deliberado (mantener pulsado) libera los controles.
+                Row(
+                    Modifier.clip(RoundedCornerShape(14.dp)).background(c.surfaceHigh)
+                        .pointerInput(Unit) { detectTapGestures(onLongPress = { onUnlock() }) }
+                        .heightIn(min = MinTouch).padding(horizontal = 14.dp)
+                        .semantics { contentDescription = "Pantalla bloqueada durante el descanso. Mantén pulsado para desbloquear" },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Mantén para desbloquear", style = MaterialTheme.typography.labelMedium)
+                }
+            } else {
+                TextButton(onClick = { onAdjust(-15) }, modifier = Modifier.heightIn(min = MinTouch)) { Text("−15", color = c.text) }
+                TextButton(onClick = { onAdjust(15) }, modifier = Modifier.heightIn(min = MinTouch)) { Text("+15", color = c.text) }
+                IconButton(onClick = onPauseResume, modifier = Modifier.size(MinTouch)) {
+                    Icon(if (paused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = if (paused) "Reanudar descanso" else "Pausar descanso")
+                }
+                IconButton(onClick = onRestart, modifier = Modifier.size(MinTouch)) { Icon(Icons.Default.Refresh, contentDescription = "Reiniciar descanso") }
+                IconButton(onClick = onSkip, modifier = Modifier.size(MinTouch)) { Icon(Icons.Default.SkipNext, contentDescription = "Saltar descanso") }
             }
-            IconButton(onClick = onRestart, modifier = Modifier.size(MinTouch)) { Icon(Icons.Default.Refresh, contentDescription = "Reiniciar descanso") }
-            IconButton(onClick = onSkip, modifier = Modifier.size(MinTouch)) { Icon(Icons.Default.SkipNext, contentDescription = "Saltar descanso") }
         }
         // La barra se desliza de forma continua en vez de saltar cada segundo.
         val restProgress by animateFloatAsState(
@@ -309,6 +372,23 @@ private fun RestPanel(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp), color = c.primary, trackColor = c.surfaceHigh,
         )
     }
+}
+
+@Composable
+private fun StatCell(label: String, value: String, modifier: Modifier = Modifier, accent: Boolean = false) {
+    val c = Brand.colors
+    Column(modifier) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+        Text(value, style = MaterialTheme.typography.titleLarge, color = if (accent) c.primary else c.text, maxLines = 1)
+    }
+}
+
+@Composable
+private fun FooterButton(text: String, color: androidx.compose.ui.graphics.Color, modifier: Modifier, onClick: () -> Unit) {
+    Box(
+        modifier.heightIn(min = 52.dp).clip(RoundedCornerShape(14.dp)).background(Brand.colors.surfaceHigh).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(text, style = MaterialTheme.typography.titleMedium, color = color, maxLines = 1) }
 }
 
 @Composable

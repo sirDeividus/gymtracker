@@ -90,6 +90,10 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
   atómica: si falla, no se modifica nada).
 * **Tipos de serie** (normal, calentamiento, descendente, al fallo): los calentamientos no cuentan en volumen, récords ni progresión.
   Toca ANTERIOR para copiar el peso/reps de la sesión pasada; calculadora de discos y generador de calentamiento.
+* **Pantalla de entrenamiento** al estilo Hevy: cronómetro, «Terminar», volumen/series/mapa corporal, filas completadas en verde,
+  descanso por ejercicio. **Bloqueo durante el descanso**: la pantalla ignora toques (bolsillo) hasta que mantienes pulsado el candado.
+* **Añadir ejercicio**: silueta corporal tocable (Girar frente/espalda) → cuadrícula de ejercicios del músculo elegido, con filtros.
+* **Editar ejercicio** de rutina a pantalla completa con una tarjeta por serie (todas comparten objetivo).
 * **Fotos de progreso y peso corporal** (Progreso → Fotos y peso): cámara o galería, pose, nota, comparación antes/después
   y gráfica de peso. Se guardan en el almacenamiento privado de la app; no se suben a ningún sitio.
 
