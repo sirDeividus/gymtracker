@@ -37,3 +37,18 @@ licencia MIT: se redistribuyen allí con un permiso específico del titular y se
 Si quieres mostrar demostraciones animadas, necesitas tu propia licencia de Gym visual.
 
 Los activos generados a partir del dataset se crean con `tools/build_dataset_asset.py`.
+
+### Imágenes y GIF para uso personal
+
+El repositorio **no contiene** los archivos multimedia (la carpeta `app/src/main/assets/media/` está en `.gitignore`).
+Para tenerlos en *tu* copia de la app, para uso personal y no comercial:
+
+```
+git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset /ruta/exercises-dataset
+python3 tools/media.py copy /ruta/exercises-dataset              # imágenes + GIF (~137 MB)
+python3 tools/media.py copy /ruta/exercises-dataset --no-gifs    # solo miniaturas (~9 MB)
+```
+
+La app muestra siempre «© Gym visual — https://gymvisual.com/» junto a cada demostración, a 180×180 como exige el aviso original.
+Si publicas o distribuyes tu APK, o el uso no es personal, revisa antes los
+[Términos de Gym visual](https://gymvisual.com/content/3-terms-and-conditions-of-use) y obtén tu propia licencia.

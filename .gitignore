@@ -10,3 +10,6 @@ captures/
 *.jks
 *.keystore
 keystore.properties
+
+# Medios de terceros (c) Gym visual: solo para uso personal, NO se versionan (ver tools/media.py)
+app/src/main/assets/media/

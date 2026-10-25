@@ -1,7 +1,12 @@
 package com.gymtrack
 
 import android.content.Context
+import android.os.Build
 import androidx.room.Room
+import coil.ImageLoader
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import com.gymtrack.data.media.MediaRepository
 import com.gymtrack.data.db.GymDatabase
 import com.gymtrack.data.db.Migrations
 import com.gymtrack.data.repo.BackupRepository
@@ -19,7 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /** Inyección de dependencias manual: simple, explícita y sin generación de código. */
-class AppContainer(private val context: Context) {
+class AppContainer(val context: Context) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val database: GymDatabase = Room.databaseBuilder(context, GymDatabase::class.java, GymDatabase.NAME)
@@ -32,6 +37,14 @@ class AppContainer(private val context: Context) {
     val workout = WorkoutRepository(database, settings)
     val history = HistoryRepository(database)
     val backup = BackupRepository(database, settings)
+    val media = MediaRepository(context)
+
+    /** Carga imágenes y GIF animados desde assets (sin red). */
+    val imageLoader: ImageLoader = ImageLoader.Builder(context)
+        .components {
+            if (Build.VERSION.SDK_INT >= 28) add(ImageDecoderDecoder.Factory()) else add(GifDecoder.Factory())
+        }
+        .build()
 
     init {
         RestNotifier.ensureChannel(context)

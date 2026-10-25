@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -45,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
 import com.gymtrack.domain.Equipment
 import com.gymtrack.domain.Exercise
@@ -55,6 +57,9 @@ import com.gymtrack.domain.TrackingType
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.ChipSelector
 import com.gymtrack.ui.components.EmptyState
+import com.gymtrack.ui.components.ExerciseAnimation
+import com.gymtrack.ui.components.ExerciseThumb
+import com.gymtrack.ui.components.hasExerciseMedia
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenPadding
@@ -147,6 +152,12 @@ private fun Modifier.heightIn48(): Modifier = this.then(Modifier.padding(0.dp))
 fun ExerciseRow(ex: Exercise, uses: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val c = Brand.colors
     GymCard(modifier.fillMaxWidth(), onClick = onClick, contentPadding = PaddingValues(14.dp)) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        if (hasExerciseMedia(ex.id)) {
+            ExerciseThumb(ex.id, size = 52.dp)
+            Spacer(Modifier.width(12.dp))
+        }
+        Column(Modifier.weight(1f)) {
         Text(ex.name, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(2.dp))
         val extra = buildList {
@@ -159,6 +170,8 @@ fun ExerciseRow(ex: Exercise, uses: Int, onClick: () -> Unit, modifier: Modifier
         if (uses > 0) {
             Text("Usado $uses ${if (uses == 1) "vez" else "veces"}", style = MaterialTheme.typography.bodySmall, color = c.primary)
         }
+        }
+      }
     }
 }
 
@@ -170,7 +183,7 @@ fun ExercisePickerSheet(
     onPick: (Exercise) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val state by androidx.lifecycle.compose.collectAsStateWithLifecycle(vm.state)
+    val state by vm.state.collectAsStateWithLifecycle()
     var creating by remember { mutableStateOf(false) }
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = Brand.colors.background) {
@@ -323,6 +336,7 @@ fun ExerciseDetailDialog(
         title = { Text(exercise.name) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ExerciseAnimation(exercise.id)
                 Fact("Músculo principal", exercise.primaryMuscle.label)
                 if (exercise.secondaryMuscles.isNotEmpty()) Fact("Secundarios", exercise.secondaryMuscles.joinToString { it.label })
                 Fact("Equipamiento", exercise.equipment.label)
@@ -358,7 +372,7 @@ fun LibraryScreen(
     onEvolution: (String) -> Unit,
     contentPadding: PaddingValues,
 ) {
-    val state by androidx.lifecycle.compose.collectAsStateWithLifecycle(vm.state)
+    val state by vm.state.collectAsStateWithLifecycle()
     var selected by remember { mutableStateOf<Exercise?>(null) }
     var editing by remember { mutableStateOf<Exercise?>(null) }
     var creating by remember { mutableStateOf(false) }

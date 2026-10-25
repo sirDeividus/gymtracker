@@ -124,3 +124,19 @@ class BackupAndLibraryTest {
         assertEquals("1:01:01", Formatting.duration(3661))
     }
 }
+
+class RoutineTemplatesTest {
+    @Test fun `las plantillas solo usan ejercicios de la biblioteca y rangos validos`() {
+        assertTrue(RoutineTemplates.all.size >= 5)
+        for (t in RoutineTemplates.all) {
+            assertTrue(t.items.isNotEmpty())
+            for (i in t.items) {
+                val ex = ExerciseLibrary.byId[i.exerciseId]
+                assertTrue("${t.name}: no existe ${i.exerciseId}", ex != null)
+                assertTrue(i.sets in 1..SessionPlanner.MAX_SETS && i.repMin in 1..i.repMax)
+                if (ex!!.tracking == TrackingType.DURATION) assertTrue(i.durationSec != null)
+            }
+            assertEquals(t.items.size, t.items.map { it.exerciseId }.toSet().size)
+        }
+    }
+}

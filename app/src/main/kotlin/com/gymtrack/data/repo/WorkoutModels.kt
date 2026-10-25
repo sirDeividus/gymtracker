@@ -61,3 +61,13 @@ internal fun groupPerformances(rows: List<HistorySetRow>): List<ExercisePerforma
         )
     }.sortedBy { it.performedAt }
 
+
+/** Series completadas de una sesión como datos de estadística (peso × reps, series por músculo…). */
+fun ActiveWorkout.loggedSets(): List<com.gymtrack.domain.LoggedSet> =
+    exercises.filter { !it.entity.skipped }.flatMap { ex ->
+        val tracking = enumOr(ex.entity.tracking, TrackingType.WEIGHT_REPS)
+        val muscle = enumOr(ex.entity.primaryMuscle, com.gymtrack.domain.MuscleGroup.FULL_BODY)
+        ex.sets.filter { it.completed }.map {
+            com.gymtrack.domain.LoggedSet(ex.entity.exerciseId, ex.entity.exerciseName, muscle, tracking, it.toEntry())
+        }
+    }

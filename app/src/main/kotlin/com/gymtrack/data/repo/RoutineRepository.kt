@@ -5,6 +5,7 @@ import com.gymtrack.data.db.GymDatabase
 import com.gymtrack.data.db.RoutineCounts
 import com.gymtrack.data.db.RoutineEntity
 import com.gymtrack.data.db.RoutineExerciseEntity
+import com.gymtrack.domain.RoutineTemplate
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -31,6 +32,32 @@ class RoutineRepository(private val db: GymDatabase) {
                     createdAt = now, updatedAt = now, sortOrder = dao.maxSortOrder() + 1,
                 ),
             )
+        }
+        return id
+    }
+
+    /** Crea una rutina editable a partir de una plantilla (omite ejercicios que no existan en la base). */
+    suspend fun createFromTemplate(template: RoutineTemplate, defaultRestSec: Int): String {
+        val now = System.currentTimeMillis()
+        val id = UUID.randomUUID().toString()
+        db.withTransaction {
+            dao.upsert(
+                RoutineEntity(
+                    id = id, name = template.name, description = template.description, daysMask = 0,
+                    createdAt = now, updatedAt = now, sortOrder = dao.maxSortOrder() + 1,
+                ),
+            )
+            var pos = 0
+            for (item in template.items) {
+                if (db.exerciseDao().get(item.exerciseId) == null) continue
+                dao.upsertExercise(
+                    RoutineExerciseEntity(
+                        id = UUID.randomUUID().toString(), routineId = id, exerciseId = item.exerciseId, position = pos++,
+                        sets = item.sets, repMin = item.repMin, repMax = item.repMax, targetDurationSec = item.durationSec,
+                        startWeightKg = null, restSec = item.restSec.takeIf { it != 90 } ?: defaultRestSec, notes = "",
+                    ),
+                )
+            }
         }
         return id
     }

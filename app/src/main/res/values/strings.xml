@@ -2,4 +2,5 @@
 <resources>
     <string name="rest_over_title">Descanso terminado</string>
     <string name="rest_over_text">Es hora de la siguiente serie.</string>
+    <string name="media_attribution">© Gym visual — https://gymvisual.com/</string>
 </resources>
