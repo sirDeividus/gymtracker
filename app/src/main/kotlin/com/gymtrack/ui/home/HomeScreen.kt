@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,6 +51,7 @@ import com.gymtrack.domain.Formatting
 import com.gymtrack.domain.RoutineReason
 import com.gymtrack.ui.components.Dates
 import com.gymtrack.ui.components.ExerciseThumbOrInitial
+import com.gymtrack.ui.components.GradientCapsuleButton
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.MuscleMap
@@ -260,7 +262,7 @@ fun HomeScreen(
         StartFab(
             label = if (st.active != null) "CONTINUAR ENTRENAMIENTO" else "INICIAR ENTRENAMIENTO",
             onClick = { if (st.active != null) onOpenWorkout() else chooser = true },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = ScreenPadding, vertical = 12.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = ScreenPadding, vertical = 16.dp),
         )
     }
 
@@ -315,20 +317,8 @@ private fun WeekDots(trained: Set<DayOfWeek>, today: DayOfWeek) {
 
 @Composable
 private fun StartFab(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val c = Brand.colors
-    val source = remember { MutableInteractionSource() }
-    Button(
-        onClick = onClick,
-        interactionSource = source,
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = c.onPrimary),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp, pressedElevation = 4.dp),
-        modifier = modifier.pressScale(source).fillMaxWidth().height(56.dp),
-    ) {
-        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(24.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(label, fontWeight = FontWeight.Black, fontSize = 16.sp, letterSpacing = 1.sp, textAlign = TextAlign.Center)
-    }
+    // Cápsula flotante centrada: no ocupa todo el ancho para no saturar la pantalla.
+    GradientCapsuleButton(label, onClick, modifier.heightIn(min = 56.dp))
 }
 
 private fun LazyListScope.recentItems(

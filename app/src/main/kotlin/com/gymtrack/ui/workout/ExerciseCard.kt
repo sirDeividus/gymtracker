@@ -2,6 +2,7 @@ package com.gymtrack.ui.workout
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -169,7 +170,7 @@ fun ExerciseCard(
                 contentAlignment = Alignment.Center,
             ) {
                 if (done) Icon(Icons.Default.Check, contentDescription = "Completado", tint = c.onPrimary, modifier = Modifier.size(16.dp))
-                else Text("${item.completedSets}", style = MaterialTheme.typography.labelMedium, color = c.textSecondary)
+                else Text("${item.completedSets}", style = MaterialTheme.typography.labelMedium, color = c.textMuted)
             }
             Spacer(Modifier.width(12.dp))
             if (hasExerciseMedia(e.exerciseId)) {
@@ -345,7 +346,7 @@ private fun SetTableHeader(tracking: TrackingType, bwMode: Int, unit: WeightUnit
         HeaderCell("ANTERIOR", W_PREV)
         labels.forEach { HeaderCell(it, W_FIELD) }
         Box(Modifier.width(CheckWidth), contentAlignment = Alignment.Center) {
-            Text("✓", style = MaterialTheme.typography.labelSmall, color = c.textSecondary)
+            Text("✓", style = MaterialTheme.typography.labelSmall, color = c.textMuted)
         }
     }
 }
@@ -360,7 +361,7 @@ private fun fieldLabels(tracking: TrackingType, bwMode: Int, unit: WeightUnit): 
 @Composable
 private fun androidx.compose.foundation.layout.RowScope.HeaderCell(text: String, weight: Float) {
     Text(
-        text, style = MaterialTheme.typography.labelSmall, color = Brand.colors.textSecondary,
+        text, style = MaterialTheme.typography.labelSmall, color = Brand.colors.textMuted,
         modifier = Modifier.weight(weight).padding(horizontal = 2.dp), textAlign = TextAlign.Center, maxLines = 1,
     )
 }
@@ -465,27 +466,40 @@ private fun androidx.compose.foundation.layout.RowScope.FieldBox(weight: Float, 
 @Composable
 private fun CompleteButton(completed: Boolean, label: String, onClick: () -> Unit) {
     val c = Brand.colors
-    val bg by animateColorAsState(if (completed) c.primary else c.surfaceHigh, label = "checkBg")
+    val fill by animateColorAsState(if (completed) c.primary else androidx.compose.ui.graphics.Color.Transparent, label = "checkFill")
+    val stroke by animateColorAsState(if (completed) c.primary else c.outline, label = "checkStroke")
     val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    // Al completar: un pequeño "pop" (sube y vuelve con un muelle). No se dispara al abrir una serie ya completada.
-    val pop = remember { androidx.compose.animation.core.Animatable(1f) }
+    // Al completar: un pulso breve (sube y vuelve con un muelle) con animateFloatAsState.
+    // No se dispara al abrir una serie que ya estaba completada.
+    var pulse by remember { mutableStateOf(false) }
     var seen by remember { mutableStateOf(completed) }
     androidx.compose.runtime.LaunchedEffect(completed) {
         if (completed && !seen) {
-            pop.animateTo(1.14f, androidx.compose.animation.core.tween(90))
-            pop.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.5f, stiffness = 500f))
+            pulse = true
+            kotlinx.coroutines.delay(110)
+            pulse = false
         }
         seen = completed
     }
+    val scale by animateFloatAsState(
+        targetValue = if (pulse) 1.18f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.45f, stiffness = 500f),
+        label = "checkScale",
+    )
     Box(Modifier.width(CheckWidth), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(MinTouch).graphicsLayer { scaleX = pop.value; scaleY = pop.value }.pressScale(source, 0.9f).clip(CircleShape).background(bg)
-                .border(1.dp, if (completed) c.primary else c.outline, CircleShape)
+            Modifier.size(MinTouch).graphicsLayer { scaleX = scale; scaleY = scale }.pressScale(source, 0.9f)
+                .clip(CircleShape).background(fill)
+                .border(1.5.dp, stroke, CircleShape)
                 .clickable(interactionSource = source, indication = androidx.compose.foundation.LocalIndication.current, onClick = onClick)
                 .semantics { contentDescription = if (completed) "Serie $label completada. Toca para deshacer" else "Completar serie $label" },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Default.Check, contentDescription = null, tint = if (completed) c.onPrimary else c.textSecondary)
+            // Inactivo: solo contorno; el check queda apenas insinuado para que el control siga siendo descubrible.
+            Icon(
+                Icons.Default.Check, contentDescription = null,
+                tint = if (completed) c.onGradient else c.textMuted.copy(alpha = 0.5f),
+            )
         }
     }
 }

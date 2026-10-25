@@ -254,7 +254,7 @@ private fun RestPanel(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(if (paused) "DESCANSO EN PAUSA" else "DESCANSO", style = MaterialTheme.typography.labelSmall, color = c.textSecondary)
+                Text(if (paused) "DESCANSO EN PAUSA" else "DESCANSO", style = MaterialTheme.typography.labelSmall, color = c.textMuted)
                 AnimatedContent(
                     targetState = remainingSec,
                     transitionSpec = { fadeIn(tween(140)) togetherWith fadeOut(tween(90)) },

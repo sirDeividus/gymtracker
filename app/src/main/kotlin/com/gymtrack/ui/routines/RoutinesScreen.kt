@@ -36,6 +36,7 @@ import com.gymtrack.domain.RoutineTemplates
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.EmptyState
+import com.gymtrack.ui.components.GradientCapsuleButton
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenHeader
@@ -88,7 +89,7 @@ fun RoutinesScreen(
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = ScreenPadding, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(state.items, key = { it.routine.id }) { item ->
                     RoutineCard(
@@ -156,7 +157,9 @@ private fun RoutineCard(
                 DropdownMenuItem(text = { Text("Eliminar", color = c.error) }, onClick = { menu = false; onDelete() })
             }
         }
-        BigButton(startLabel, onStart, Modifier.padding(top = 12.dp), enabled = startEnabled, icon = Icons.Default.PlayArrow)
+        Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.End) {
+            GradientCapsuleButton(startLabel, onStart, enabled = startEnabled)
+        }
     }
 }
 

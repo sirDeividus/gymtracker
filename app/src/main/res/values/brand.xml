@@ -16,6 +16,8 @@
     <color name="brand_primary">#FF1E46</color>
     <!-- Final del degradado de acento (PremiumRedGradient: brand_primary → brand_primary_end), solo para cápsulas de acción -->
     <color name="brand_primary_end">#FF4D6D</color>
+    <!-- Texto/icono sobre el degradado y sobre el check completado. Blanco = 3,8:1; para 5,3:1 usa #070708. -->
+    <color name="brand_on_gradient">#FFFFFF</color>
     <color name="brand_on_primary">#070708</color>
     <color name="brand_text">#FAFAFA</color>
     <color name="brand_text_secondary">#A1A1AA</color>

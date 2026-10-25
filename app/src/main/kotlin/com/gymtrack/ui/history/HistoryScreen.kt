@@ -126,7 +126,7 @@ private fun MonthCalendar(
         }
         Row(Modifier.fillMaxWidth()) {
             listOf("L", "M", "X", "J", "V", "S", "D").forEach {
-                Text(it, modifier = Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall, color = c.textSecondary)
+                Text(it, modifier = Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall, color = c.textMuted)
             }
         }
         val first = month.atDay(1)

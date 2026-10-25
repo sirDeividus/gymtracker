@@ -155,7 +155,7 @@ fun RoutineEditScreen(
                             value = draft.description, onValueChange = vm::setDescription, label = { Text("Descripción (opcional)") },
                             modifier = Modifier.fillMaxWidth(), colors = editColors(), minLines = 1, maxLines = 3,
                         )
-                        Text("DÍAS DE ENTRENAMIENTO", style = MaterialTheme.typography.labelMedium, color = Brand.colors.textSecondary)
+                        Text("DÍAS DE ENTRENAMIENTO", style = MaterialTheme.typography.labelMedium, color = Brand.colors.textMuted)
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             java.time.DayOfWeek.values().forEach { day ->
                                 val sel = RoutineDays.contains(draft.daysMask, day)
@@ -173,7 +173,7 @@ fun RoutineEditScreen(
                                 )
                             }
                         }
-                        Text("EJERCICIOS", style = MaterialTheme.typography.labelMedium, color = Brand.colors.textSecondary, modifier = Modifier.padding(top = 6.dp))
+                        Text("EJERCICIOS", style = MaterialTheme.typography.labelMedium, color = Brand.colors.textMuted, modifier = Modifier.padding(top = 6.dp))
                         if (state.items.isNotEmpty()) {
                             Text(
                                 "Mantén pulsado el asa ⠿ para reordenar arrastrando, o usa el menú ⋮.",

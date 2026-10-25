@@ -314,7 +314,7 @@ fun ExerciseEditorDialog(
 @Composable
 private fun Label(text: String) {
     Text(
-        text, style = MaterialTheme.typography.labelMedium, color = Brand.colors.textSecondary,
+        text, style = MaterialTheme.typography.labelMedium, color = Brand.colors.textMuted,
         modifier = Modifier.padding(horizontal = ScreenPadding),
     )
 }
@@ -360,7 +360,7 @@ fun ExerciseDetailDialog(
 @Composable
 private fun Fact(label: String, value: String) {
     Column {
-        Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = Brand.colors.textSecondary)
+        Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = Brand.colors.textMuted)
         Text(value, style = MaterialTheme.typography.bodyMedium)
     }
 }

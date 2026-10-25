@@ -26,7 +26,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -139,6 +144,43 @@ fun BigButton(
             Spacer(Modifier.width(10.dp))
         }
         Text(text, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+/**
+ * Botón cápsula con PremiumRedGradient para la acción principal (ENTRENAR / INICIAR ENTRENAMIENTO).
+ * El degradado se pinta con background + clip(CircleShape) sobre un Button transparente y sin elevación,
+ * de modo que el área táctil, el ripple y la forma coinciden exactamente.
+ */
+@Composable
+fun GradientCapsuleButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    icon: ImageVector? = Icons.Default.PlayArrow,
+) {
+    val c = Brand.colors
+    val source = remember { MutableInteractionSource() }
+    val fill: Brush = if (enabled) c.primaryGradient else SolidColor(c.surfaceHigh)
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        interactionSource = source,
+        shape = CircleShape,
+        elevation = null,
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent, contentColor = c.onGradient,
+            disabledContainerColor = Color.Transparent, disabledContentColor = c.textMuted,
+        ),
+        modifier = modifier.pressScale(source).heightIn(min = MinTouch).clip(CircleShape).background(fill, CircleShape),
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(text, fontWeight = FontWeight.Black, letterSpacing = 1.sp, fontSize = 15.sp, maxLines = 1)
     }
 }
 

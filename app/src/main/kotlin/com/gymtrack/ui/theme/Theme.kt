@@ -31,6 +31,7 @@ data class BrandColors(
     val primaryEnd: Color,
     val primaryGradient: Brush,
     val onPrimary: Color,
+    val onGradient: Color,
     val text: Color,
     val textSecondary: Color,
     val textMuted: Color,
@@ -56,8 +57,8 @@ private val GymTypography = Typography(
     bodyMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp),
     bodySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 12.sp, lineHeight = 16.sp),
     labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.4.sp),
-    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.5.sp),
-    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.5.sp),
+    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.5.sp),
+    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.5.sp),
 )
 
 private val GymShapes = Shapes(
@@ -88,6 +89,7 @@ fun GymTrackTheme(content: @Composable () -> Unit) {
         primaryEnd = colorResource(R.color.brand_primary_end),
         primaryGradient = Brush.horizontalGradient(listOf(colorResource(R.color.brand_primary), colorResource(R.color.brand_primary_end))),
         onPrimary = colorResource(R.color.brand_on_primary),
+        onGradient = colorResource(R.color.brand_on_gradient),
         text = colorResource(R.color.brand_text),
         textSecondary = colorResource(R.color.brand_text_secondary),
         textMuted = colorResource(R.color.brand_text_muted),
