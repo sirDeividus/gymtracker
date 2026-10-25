@@ -46,6 +46,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -101,10 +103,16 @@ fun WorkoutScreen(
 
     val unit = state.settings.unit
     val currentId = workout.exercises.firstOrNull { !it.finished }?.entity?.id
-    val actions = remember(vm) {
+    val haptic = LocalHapticFeedback.current
+    val hapticsOn = state.settings.vibration
+    val actions = remember(vm, hapticsOn) {
         ExerciseActions(
             setWeight = vm::setWeight, setReps = vm::setReps, setDuration = vm::setDuration, setDistance = vm::setDistance,
-            toggleComplete = vm::toggleComplete, repeatPrevious = vm::repeatPrevious, setRpe = vm::setRpe,
+            toggleComplete = { set ->
+                // Pulso leve solo al completar (no al deshacer), y solo si el usuario tiene la vibración activada.
+                if (!set.completed && hapticsOn) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                vm.toggleComplete(set)
+            }, repeatPrevious = vm::repeatPrevious, setRpe = vm::setRpe,
             addSet = vm::addSet, removeSet = vm::removeSet, setSkipped = vm::setSkipped, removeExercise = vm::removeExercise,
             setNotes = vm::setNotes, setDiscomfort = vm::setDiscomfort, applySuggestion = vm::applySuggestion,
             dismissSuggestion = vm::dismissSuggestion, setBodyweightMode = vm::setBodyweightMode,

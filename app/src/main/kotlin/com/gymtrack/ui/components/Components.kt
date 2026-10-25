@@ -1,6 +1,14 @@
 package com.gymtrack.ui.components
 
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -65,6 +73,23 @@ import com.gymtrack.ui.theme.Brand
 import com.gymtrack.ui.theme.NumberStyle
 
 val ScreenPadding = 16.dp
+
+private val EaseOutQuint = CubicBezierEasing(0.23f, 1f, 0.32f, 1f)
+
+/**
+ * Respuesta táctil inmediata: escala sutil mientras se pulsa (~130 ms, ease-out). Usa graphicsLayer,
+ * así que no mueve ni redimensiona nada a su alrededor.
+ */
+@Composable
+fun Modifier.pressScale(source: InteractionSource, pressedScale: Float = 0.97f): Modifier {
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) pressedScale else 1f,
+        animationSpec = tween(durationMillis = 130, easing = EaseOutQuint),
+        label = "pressScale",
+    )
+    return this.graphicsLayer { scaleX = scale; scaleY = scale }
+}
 val MinTouch = 48.dp
 
 @Composable
@@ -77,11 +102,12 @@ fun GymCard(
 ) {
     val c = Brand.colors
     val shape = RoundedCornerShape(18.dp)
-    val base = modifier
+    val source = remember { MutableInteractionSource() }
+    val base = (if (onClick != null) modifier.pressScale(source) else modifier)
         .clip(shape)
         .background(c.surface)
         .border(BorderStroke(1.dp, if (highlighted) c.primary.copy(alpha = 0.6f) else c.outline), shape)
-        .let { if (onClick != null) it.clickable(onClick = onClick) else it }
+        .let { if (onClick != null) it.clickable(interactionSource = source, indication = LocalIndication.current, onClick = onClick) else it }
     Column(base.padding(contentPadding), content = content)
 }
 
@@ -95,10 +121,12 @@ fun BigButton(
     icon: ImageVector? = null,
 ) {
     val c = Brand.colors
+    val source = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = 60.dp).fillMaxWidth(),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = 60.dp).fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = c.primary, contentColor = c.onPrimary,
@@ -124,10 +152,12 @@ fun SecondaryButton(
 ) {
     val c = Brand.colors
     val color = if (destructive) c.error else c.text
+    val source = remember { MutableInteractionSource() }
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = MinTouch),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = MinTouch),
         shape = RoundedCornerShape(14.dp),
         border = BorderStroke(1.dp, if (destructive) c.error.copy(alpha = 0.6f) else c.outline),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = color),

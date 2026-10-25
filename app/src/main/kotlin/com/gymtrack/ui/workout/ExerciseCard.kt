@@ -65,6 +65,7 @@ import com.gymtrack.ui.components.ExerciseMediaDialog
 import com.gymtrack.ui.components.ExerciseThumb
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.hasExerciseMedia
+import com.gymtrack.ui.components.pressScale
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.NumberInput
 import com.gymtrack.ui.components.SecondaryButton
@@ -463,11 +464,12 @@ private fun androidx.compose.foundation.layout.RowScope.FieldBox(weight: Float, 
 private fun CompleteButton(completed: Boolean, label: String, onClick: () -> Unit) {
     val c = Brand.colors
     val bg by animateColorAsState(if (completed) c.primary else c.surfaceHigh, label = "checkBg")
+    val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Box(Modifier.width(CheckWidth), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(MinTouch).clip(CircleShape).background(bg)
+            Modifier.size(MinTouch).pressScale(source, 0.9f).clip(CircleShape).background(bg)
                 .border(1.dp, if (completed) c.primary else c.outline, CircleShape)
-                .clickable(onClick = onClick)
+                .clickable(interactionSource = source, indication = androidx.compose.foundation.LocalIndication.current, onClick = onClick)
                 .semantics { contentDescription = if (completed) "Serie $label completada. Toca para deshacer" else "Completar serie $label" },
             contentAlignment = Alignment.Center,
         ) {
