@@ -65,6 +65,29 @@ object Stats {
         return startTimes.count { weekStart(it, zone) == ws }
     }
 
+    /** Días de la semana (lun–dom) en los que hubo al menos una sesión en la semana de [nowMs]. */
+    fun trainedDaysInWeekOf(nowMs: Long, startTimes: List<Long>, zone: ZoneId): Set<DayOfWeek> {
+        val ws = weekStart(nowMs, zone)
+        return startTimes.filter { weekStart(it, zone) == ws }
+            .map { Instant.ofEpochMilli(it).atZone(zone).dayOfWeek }.toSet()
+    }
+
+    /**
+     * Racha: semanas consecutivas con al menos una sesión. La semana en curso todavía puede salvar la racha:
+     * si aún no has entrenado esta semana, se cuenta desde la anterior.
+     */
+    fun weekStreak(startTimes: List<Long>, nowMs: Long, zone: ZoneId): Int {
+        val weeks = startTimes.map { weekStart(it, zone) }.toSet()
+        var cursor = weekStart(nowMs, zone)
+        if (cursor !in weeks) cursor = cursor.minusWeeks(1)
+        var n = 0
+        while (cursor in weeks) {
+            n++
+            cursor = cursor.minusWeeks(1)
+        }
+        return n
+    }
+
     fun epochDay(epochMs: Long, zone: ZoneId): LocalDate =
         Instant.ofEpochMilli(epochMs).atZone(zone).toLocalDate()
 }

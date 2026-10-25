@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -70,6 +71,7 @@ import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.NumberInput
 import com.gymtrack.ui.components.SecondaryButton
 import com.gymtrack.ui.theme.Brand
+import com.gymtrack.ui.theme.ExerciseTitleStyle
 import kotlin.math.abs
 
 /** Acciones que la tarjeta delega en el ViewModel. */
@@ -176,7 +178,7 @@ fun ExerciseCard(
             }
             Column(Modifier.weight(1f)) {
                 Text(
-                    e.exerciseName, style = MaterialTheme.typography.titleMedium,
+                    e.exerciseName.uppercase(), style = ExerciseTitleStyle,
                     color = if (e.skipped) c.textSecondary else c.text, maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
                 val target = when (tracking) {
@@ -465,9 +467,19 @@ private fun CompleteButton(completed: Boolean, label: String, onClick: () -> Uni
     val c = Brand.colors
     val bg by animateColorAsState(if (completed) c.primary else c.surfaceHigh, label = "checkBg")
     val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    // Al completar: un pequeño "pop" (sube y vuelve con un muelle). No se dispara al abrir una serie ya completada.
+    val pop = remember { androidx.compose.animation.core.Animatable(1f) }
+    var seen by remember { mutableStateOf(completed) }
+    androidx.compose.runtime.LaunchedEffect(completed) {
+        if (completed && !seen) {
+            pop.animateTo(1.14f, androidx.compose.animation.core.tween(90))
+            pop.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.5f, stiffness = 500f))
+        }
+        seen = completed
+    }
     Box(Modifier.width(CheckWidth), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(MinTouch).pressScale(source, 0.9f).clip(CircleShape).background(bg)
+            Modifier.size(MinTouch).graphicsLayer { scaleX = pop.value; scaleY = pop.value }.pressScale(source, 0.9f).clip(CircleShape).background(bg)
                 .border(1.dp, if (completed) c.primary else c.outline, CircleShape)
                 .clickable(interactionSource = source, indication = androidx.compose.foundation.LocalIndication.current, onClick = onClick)
                 .semantics { contentDescription = if (completed) "Serie $label completada. Toca para deshacer" else "Completar serie $label" },

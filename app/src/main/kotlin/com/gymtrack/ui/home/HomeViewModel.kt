@@ -47,6 +47,11 @@ data class HomeState(
     val todaySets: Int = 0,
     /** Estimación orientativa: series × (trabajo + descanso). */
     val todayMinutes: Int = 0,
+    /** Panel semanal: días entrenados (lun–dom), racha de semanas, series y minutos de la semana en curso. */
+    val weekDays: Set<java.time.DayOfWeek> = emptySet(),
+    val streakWeeks: Int = 0,
+    val setsThisWeek: Int = 0,
+    val minutesThisWeek: Int = 0,
 )
 
 class HomeViewModel(private val c: AppContainer) : ViewModel() {
@@ -96,6 +101,11 @@ class HomeViewModel(private val c: AppContainer) : ViewModel() {
                 ?: plan.firstOrNull { it.suggestion.kind != SuggestionKind.FIRST_TIME }
             pick?.let { NextGoal(it.spec.exercise.name, rec.routine.name, it.suggestion.reason) }
         }
+        val starts = s.sessions.map { it.startedAt }
+        val thisWeek = Stats.weekStart(now, zone)
+        val setsThisWeek = s.rows.count { Stats.weekStart(it.performedAt, zone) == thisWeek }
+        val secThisWeek = s.sessions.filter { Stats.weekStart(it.startedAt, zone) == thisWeek }
+            .sumOf { (((it.endedAt ?: it.startedAt) - it.startedAt) / 1000).coerceAtLeast(0) }
         val todaySets = plan.sumOf { it.spec.sets }
         val todaySeconds = plan.sumOf { p -> p.spec.sets * ((p.spec.targetDurationSec ?: 40) + p.spec.restSec) }
         return HomeState(
@@ -106,6 +116,8 @@ class HomeViewModel(private val c: AppContainer) : ViewModel() {
             recentMuscles = muscles, volumeDeltaPct = delta, nextGoal = goal,
             todayExercises = plan.map { TodayExercise(it.spec.exercise.id, it.spec.exercise.name) },
             todaySets = todaySets, todayMinutes = (todaySeconds + 59) / 60,
+            weekDays = Stats.trainedDaysInWeekOf(now, starts, zone), streakWeeks = Stats.weekStreak(starts, now, zone),
+            setsThisWeek = setsThisWeek, minutesThisWeek = (secThisWeek / 60).toInt(),
         )
     }
 

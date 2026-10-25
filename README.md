@@ -49,7 +49,7 @@ cd domain && ../gradlew test                  # lógica de entrenamiento (94 pru
 
 ## Personalizar la marca
 
-Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta —por defecto negro cálido con acento rojo—; la UI de Compose lee estos
+Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta —por defecto negro zinc con acento naranja; ver `DESIGN.md`—; la UI de Compose lee estos
 recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` (icono). El `applicationId` está en
 `app/build.gradle.kts`.
 

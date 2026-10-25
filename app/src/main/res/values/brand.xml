@@ -9,17 +9,17 @@
     <string name="app_name">GymTrack</string>
     <string name="brand_tagline">Entrena. Registra. Progresa.</string>
 
-    <color name="brand_background">#110F0F</color>
-    <color name="brand_surface">#1B1818</color>
-    <color name="brand_surface_high">#262121</color>
-    <color name="brand_outline">#342E2E</color>
-    <color name="brand_primary">#FF3B3B</color>
-    <color name="brand_on_primary">#110F0F</color>
-    <color name="brand_text">#F6F2F2</color>
-    <color name="brand_text_secondary">#9A9292</color>
-    <color name="brand_warning">#FFB020</color>
+    <color name="brand_background">#09090B</color>
+    <color name="brand_surface">#18181B</color>
+    <color name="brand_surface_high">#1F1F23</color>
+    <color name="brand_outline">#27272A</color>
+    <color name="brand_primary">#FF5722</color>
+    <color name="brand_on_primary">#09090B</color>
+    <color name="brand_text">#FAFAFA</color>
+    <color name="brand_text_secondary">#A1A1AA</color>
+    <color name="brand_warning">#FACC15</color>
     <!-- Error/borrado: salmón pálido, distinto del rojo de marca para no confundirlos -->
     <color name="brand_error">#FFB4AB</color>
 
-    <color name="brand_icon_background">#110F0F</color>
+    <color name="brand_icon_background">#09090B</color>
 </resources>

@@ -135,7 +135,7 @@ private fun RoutineCard(
     GymCard(Modifier.fillMaxWidth(), onClick = onOpen) {
         Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
-                Text(item.routine.name.ifBlank { "Sin nombre" }, style = MaterialTheme.typography.titleLarge)
+                Text(item.routine.name.ifBlank { "Sin nombre" }.uppercase(), style = MaterialTheme.typography.titleLarge)
                 if (item.routine.description.isNotBlank()) {
                     Text(item.routine.description, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
                 }

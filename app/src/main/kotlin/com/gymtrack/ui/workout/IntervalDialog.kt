@@ -1,5 +1,10 @@
 package com.gymtrack.ui.workout
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +50,7 @@ import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenPadding
 import com.gymtrack.ui.components.SecondaryButton
 import com.gymtrack.ui.theme.Brand
+import com.gymtrack.ui.theme.TimerStyle
 import kotlin.math.ceil
 
 /** Configuración (antes de empezar) y pantalla de cuenta atrás del modo intervalos. */
@@ -150,10 +156,14 @@ private fun IntervalRunScreen(run: IntervalUi, onPause: () -> Unit, onResume: ()
                 Spacer(Modifier.height(24.dp))
                 Text(label, style = MaterialTheme.typography.headlineLarge, color = color, fontWeight = FontWeight.Bold)
                 if (!snap.finished) {
-                    Text(
-                        "$seconds", fontSize = 160.sp, fontWeight = FontWeight.Bold, color = color,
+                    AnimatedContent(
+                        targetState = seconds,
+                        transitionSpec = { fadeIn(tween(120)) togetherWith fadeOut(tween(80)) },
+                        label = "intervalSeconds",
                         modifier = Modifier.semantics { contentDescription = "$label, quedan $seconds segundos" },
-                    )
+                    ) { sec ->
+                        Text("$sec", style = TimerStyle, fontSize = 160.sp, fontWeight = FontWeight.Bold, color = color)
+                    }
                     LinearProgressIndicator(
                         progress = { if (snap.phaseTotalMs <= 0) 0f else (snap.phaseRemainingMs.toFloat() / snap.phaseTotalMs).coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth(0.8f), color = color, trackColor = c.surfaceHigh,

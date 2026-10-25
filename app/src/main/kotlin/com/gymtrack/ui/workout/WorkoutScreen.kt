@@ -1,6 +1,12 @@
 package com.gymtrack.ui.workout
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,6 +70,7 @@ import com.gymtrack.ui.components.SecondaryButton
 import com.gymtrack.ui.library.ExercisePickerSheet
 import com.gymtrack.ui.library.LibraryViewModel
 import com.gymtrack.ui.theme.Brand
+import com.gymtrack.ui.theme.TimerStyle
 
 @Composable
 fun WorkoutScreen(
@@ -248,11 +255,17 @@ private fun RestPanel(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(if (paused) "DESCANSO EN PAUSA" else "DESCANSO", style = MaterialTheme.typography.labelSmall, color = c.textSecondary)
-                Text(
-                    Formatting.duration(remainingSec), style = MaterialTheme.typography.headlineLarge,
-                    color = if (paused) c.warning else c.primary,
+                AnimatedContent(
+                    targetState = remainingSec,
+                    transitionSpec = { fadeIn(tween(140)) togetherWith fadeOut(tween(90)) },
+                    label = "restSeconds",
                     modifier = Modifier.semantics { contentDescription = "Descanso, quedan ${Formatting.duration(remainingSec)}" },
-                )
+                ) { sec ->
+                    Text(
+                        Formatting.duration(sec), style = MaterialTheme.typography.headlineLarge.merge(TimerStyle),
+                        color = if (paused) c.warning else c.primary,
+                    )
+                }
             }
             TextButton(onClick = { onAdjust(-15) }, modifier = Modifier.heightIn(min = MinTouch)) { Text("−15", color = c.text) }
             TextButton(onClick = { onAdjust(15) }, modifier = Modifier.heightIn(min = MinTouch)) { Text("+15", color = c.text) }
@@ -262,8 +275,13 @@ private fun RestPanel(
             IconButton(onClick = onRestart, modifier = Modifier.size(MinTouch)) { Icon(Icons.Default.Refresh, contentDescription = "Reiniciar descanso") }
             IconButton(onClick = onSkip, modifier = Modifier.size(MinTouch)) { Icon(Icons.Default.SkipNext, contentDescription = "Saltar descanso") }
         }
+        // La barra se desliza de forma continua en vez de saltar cada segundo.
+        val restProgress by animateFloatAsState(
+            targetValue = if (totalSec <= 0) 0f else (remainingSec.toFloat() / totalSec).coerceIn(0f, 1f),
+            animationSpec = tween(900, easing = LinearEasing), label = "restProgress",
+        )
         LinearProgressIndicator(
-            progress = { if (totalSec <= 0) 0f else (remainingSec.toFloat() / totalSec).coerceIn(0f, 1f) },
+            progress = { restProgress },
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp), color = c.primary, trackColor = c.surfaceHigh,
         )
     }
