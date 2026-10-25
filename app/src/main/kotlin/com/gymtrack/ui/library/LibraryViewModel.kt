@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,7 +49,8 @@ class LibraryViewModel(private val c: AppContainer) : ViewModel() {
             RecommendationPrefs(preferredEquipment = preferred, usage = usage),
         )
         LibraryState(false, items, all.size, usage, f)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryState())
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default) // filtrar ~1.400 ejercicios no debe bloquear la interfaz
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryState())
 
     fun setQuery(q: String) = filters.update { it.copy(query = q) }
     fun toggleMuscle(m: MuscleGroup) = filters.update { it.copy(muscles = it.muscles.toggle(m)) }

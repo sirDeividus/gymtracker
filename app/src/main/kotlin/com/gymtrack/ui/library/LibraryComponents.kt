@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -205,13 +207,20 @@ fun ExercisePickerSheet(
     // Lista = ya se eligió músculo/equipo o se está buscando; si no, se muestra la silueta.
     var browsing by remember { mutableStateOf(false) }
     var panel by remember { mutableStateOf<String?>(null) }
-    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val f = state.filters
     androidx.compose.runtime.LaunchedEffect(Unit) { vm.clearFilters(); vm.setQuery("") }
     val showList = browsing || f.query.isNotBlank() || f.muscles.isNotEmpty() || f.equipment.isNotEmpty()
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = c.background) {
-        Column(Modifier.fillMaxSize()) {
+    // Pantalla completa (no hoja inferior): respeta barras del sistema y teclado, y arrastrar la lista
+    // no cierra el selector por accidente.
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = {
+            if (showList) { vm.clearFilters(); vm.setQuery(""); browsing = false; panel = null } else onDismiss()
+        },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+      androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = c.background) {
+        Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = {
                     if (showList) { vm.clearFilters(); vm.setQuery(""); browsing = false; panel = null } else onDismiss()
@@ -300,6 +309,7 @@ fun ExercisePickerSheet(
                 }
             }
         }
+      }
     }
     if (creating) {
         ExerciseEditorDialog(
