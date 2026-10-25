@@ -17,6 +17,8 @@ enum class WeightUnit(val symbol: String, val kgPerUnit: Double) {
 object Formatting {
     /** Número con coma decimal y sin ceros sobrantes: 42.5 → "42,5", 40.0 → "40". */
     fun number(value: Double, maxDecimals: Int = 1): String {
+        // NaN/∞ (p. ej. la media de una lista vacía) no se pueden redondear: nunca deben tumbar la pantalla.
+        if (value.isNaN() || value.isInfinite()) return "—"
         val factor = Math.pow(10.0, maxDecimals.toDouble())
         val rounded = (value * factor).roundToLong() / factor
         val text = if (rounded == rounded.toLong().toDouble()) {

@@ -59,7 +59,9 @@ fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenE
 
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
         ScreenHeader("Progreso")
-        if (!st.hasData && !st.loading) {
+        // El primer fotograma llega antes que los datos: no dibujamos estadísticas vacías.
+        if (st.loading) return@Column
+        if (!st.hasData) {
             EmptyState(
                 Icons.Default.ShowChart, "Aún no hay datos que mostrar",
                 "Finaliza tu primer entrenamiento con series completadas y aquí verás la evolución de tus cargas, tu frecuencia semanal, las series por músculo y tus récords.",
@@ -103,7 +105,7 @@ fun ProgressScreen(vm: ProgressViewModel, contentPadding: PaddingValues, onOpenE
             item {
                 GymCard(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding)) {
                     SectionTitle("Frecuencia semanal")
-                    val avg = st.weeklySessions.map { it.second }.average()
+                    val avg = st.weeklySessions.map { it.second }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
                     Text("Media de ${Formatting.number(avg)} sesiones por semana (últimas 8)", style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
                     BarChart(
                         values = st.weeklySessions.map { it.second.toDouble() },

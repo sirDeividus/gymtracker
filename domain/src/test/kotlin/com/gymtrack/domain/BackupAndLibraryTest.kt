@@ -113,6 +113,13 @@ class BackupAndLibraryTest {
         assertTrue(ExerciseRecommender.search(ExerciseLibrary.all, "").size == ExerciseLibrary.all.size)
     }
 
+    @Test fun `numeros no validos no lanzan excepcion`() {
+        assertEquals("—", Formatting.number(Double.NaN))
+        assertEquals("—", Formatting.number(emptyList<Double>().average()))
+        assertEquals("—", Formatting.number(Double.POSITIVE_INFINITY, 2))
+        assertEquals("—", Formatting.weight(Double.NaN, WeightUnit.KG, false))
+    }
+
     @Test fun `formato de numeros con coma decimal`() {
         assertEquals("42,5 kg", Formatting.weight(42.5, WeightUnit.KG))
         assertEquals("40 kg", Formatting.weight(40.0, WeightUnit.KG))
