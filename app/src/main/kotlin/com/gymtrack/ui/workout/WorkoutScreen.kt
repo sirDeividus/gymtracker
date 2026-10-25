@@ -9,6 +9,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -63,6 +69,7 @@ import com.gymtrack.domain.Formatting
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.EmptyState
+import com.gymtrack.ui.components.GradientCapsuleButton
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenPadding
@@ -70,6 +77,7 @@ import com.gymtrack.ui.components.SecondaryButton
 import com.gymtrack.ui.library.ExercisePickerSheet
 import com.gymtrack.ui.library.LibraryViewModel
 import com.gymtrack.ui.theme.Brand
+import com.gymtrack.ui.theme.ClockStyle
 import com.gymtrack.ui.theme.TimerStyle
 
 @Composable
@@ -144,7 +152,7 @@ fun WorkoutScreen(
                 }
                 Text(
                     Formatting.duration(state.elapsedSec.toInt()),
-                    style = MaterialTheme.typography.titleLarge, color = c.primary,
+                    style = ClockStyle, color = c.primary, maxLines = 1,
                     modifier = Modifier.semantics { contentDescription = "Tiempo transcurrido ${Formatting.duration(state.elapsedSec.toInt())}" },
                 )
                 Box {
@@ -197,9 +205,17 @@ fun WorkoutScreen(
                     onRestart = vm::restartRest, onSkip = vm::skipRest,
                 )
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SecondaryButton("Ejercicio", { picker = true }, Modifier.weight(1f).heightIn(min = 56.dp), icon = Icons.Default.Add)
-                BigButton("Finalizar", { finishDialog = true }, Modifier.weight(1.6f))
+            // Acciones: añadir ejercicio (círculo discreto) y «Finalizar» como cápsula centrada, sin ocupar todo el ancho.
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = ScreenPadding, vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = { picker = true },
+                    modifier = Modifier.size(MinTouch).border(1.5.dp, c.outline, CircleShape),
+                ) { Icon(Icons.Default.Add, contentDescription = "Añadir ejercicio") }
+                Spacer(Modifier.width(12.dp))
+                GradientCapsuleButton("FINALIZAR", { finishDialog = true }, Modifier.widthIn(min = 180.dp), icon = Icons.Default.Check)
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp + contentPadding.calculateBottomPadding()))

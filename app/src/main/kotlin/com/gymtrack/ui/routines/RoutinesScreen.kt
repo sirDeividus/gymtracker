@@ -36,7 +36,7 @@ import com.gymtrack.domain.RoutineTemplates
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.EmptyState
-import com.gymtrack.ui.components.GradientCapsuleButton
+import com.gymtrack.ui.components.PlayCircleButton
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenHeader
@@ -157,8 +157,11 @@ private fun RoutineCard(
                 DropdownMenuItem(text = { Text("Eliminar", color = c.error) }, onClick = { menu = false; onDelete() })
             }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.End) {
-            GradientCapsuleButton(startLabel, onStart, enabled = startEnabled)
+        Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
+            PlayCircleButton(
+                onClick = onStart, enabled = startEnabled,
+                contentDescription = (if (startLabel == "CONTINUAR") "Continuar entrenamiento" else "Entrenar con ${item.routine.name.ifBlank { "esta rutina" }}"),
+            )
         }
     }
 }

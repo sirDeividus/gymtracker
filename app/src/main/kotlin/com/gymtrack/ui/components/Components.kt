@@ -1,5 +1,6 @@
 package com.gymtrack.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -56,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -109,9 +111,12 @@ fun GymCard(
     val c = Brand.colors
     val shape = RoundedCornerShape(radius)
     val source = remember { MutableInteractionSource() }
-    val base = (if (onClick != null) modifier.pressScale(source) else modifier)
+    val pressed by source.collectIsPressedAsState()
+    // Efecto de elevación sutil al pulsar: la tarjeta se aclara un tono.
+    val surface by animateColorAsState(if (pressed && onClick != null) c.surfaceHigh else c.surface, tween(130), label = "cardSurface")
+    val base = (if (onClick != null) modifier.pressScale(source, 0.98f) else modifier)
         .clip(shape)
-        .background(c.surface)
+        .background(surface)
         .border(BorderStroke(1.dp, if (highlighted) c.primary.copy(alpha = 0.6f) else c.outline), shape)
         .let { if (onClick != null) it.clickable(interactionSource = source, indication = LocalIndication.current, onClick = onClick) else it }
     Column(base.padding(contentPadding), content = content)
@@ -181,6 +186,25 @@ fun GradientCapsuleButton(
             Spacer(Modifier.width(8.dp))
         }
         Text(text, fontWeight = FontWeight.Black, letterSpacing = 1.sp, fontSize = 15.sp, maxLines = 1)
+    }
+}
+
+/** Icono Play dentro de un círculo del color de acento (zona táctil de 48 dp). */
+@Composable
+fun PlayCircleButton(onClick: () -> Unit, contentDescription: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val c = Brand.colors
+    val source = remember { MutableInteractionSource() }
+    Box(
+        modifier.size(MinTouch).pressScale(source, 0.92f).clip(CircleShape)
+            .background(if (enabled) c.primary else c.surfaceHigh)
+            .clickable(
+                interactionSource = source, indication = LocalIndication.current, enabled = enabled,
+                role = androidx.compose.ui.semantics.Role.Button, onClick = onClick,
+            )
+            .semantics { this.contentDescription = contentDescription },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = if (enabled) c.onGradient else c.textMuted)
     }
 }
 
@@ -296,7 +320,7 @@ fun <T> ChipSelector(
 ) {
     val c = Brand.colors
     androidx.compose.foundation.lazy.LazyRow(
-        modifier, horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier, horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = ScreenPadding),
     ) {
         items(options.size) { i ->
@@ -306,8 +330,9 @@ fun <T> ChipSelector(
                 selected = isSel,
                 onClick = { onToggle(o) },
                 label = { Text(label(o)) },
+                shape = CircleShape,
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = c.surface,
+                    containerColor = Color.Transparent,
                     labelColor = c.text,
                     selectedContainerColor = c.primary,
                     selectedLabelColor = c.onPrimary,
@@ -363,8 +388,11 @@ fun NumberInput(
     highlight: Boolean = false,
     textStyle: TextStyle = NumberStyle,
     description: String? = null,
+    /** Estilo limpio: sin caja, solo una línea inferior (se ilumina con el acento al enfocar). */
+    minimal: Boolean = false,
 ) {
     val c = Brand.colors
+    var focused by remember { mutableStateOf(false) }
     var tfv by remember { mutableStateOf(TextFieldValue(value)) }
     LaunchedEffect(value) {
         if (parseNumber(tfv.text, decimal) != parseNumber(value, decimal)) tfv = TextFieldValue(value)
@@ -384,21 +412,40 @@ fun NumberInput(
         keyboardOptions = KeyboardOptions(keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number),
         modifier = modifier
             .heightIn(min = MinTouch)
-            .onFocusChanged { if (it.isFocused) tfv = tfv.copy(selection = TextRange(0, tfv.text.length)) }
+            .onFocusChanged {
+                focused = it.isFocused
+                if (it.isFocused) tfv = tfv.copy(selection = TextRange(0, tfv.text.length))
+            }
             .semantics { if (description != null) contentDescription = description },
         decorationBox = { inner ->
-            Box(
-                Modifier.fillMaxWidth().heightIn(min = MinTouch)
-                    .clip(shape)
-                    .background(c.surfaceHigh)
-                    .border(1.dp, if (highlight) c.warning else c.outline, shape)
-                    .padding(horizontal = 4.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (tfv.text.isEmpty()) {
-                    Text(placeholder, style = textStyle.copy(color = c.textSecondary.copy(alpha = 0.6f)), textAlign = TextAlign.Center)
+            if (minimal) {
+                val line = if (focused) c.primary else c.outline
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = MinTouch).drawBehind {
+                        val w = 1.5.dp.toPx()
+                        drawLine(line, Offset(0f, size.height - w / 2), Offset(size.width, size.height - w / 2), strokeWidth = w)
+                    },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (tfv.text.isEmpty()) {
+                        Text(placeholder, style = textStyle.copy(color = c.textMuted.copy(alpha = 0.7f)), textAlign = TextAlign.Center)
+                    }
+                    inner()
                 }
-                inner()
+            } else {
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = MinTouch)
+                        .clip(shape)
+                        .background(c.surfaceHigh)
+                        .border(1.dp, if (highlight) c.warning else c.outline, shape)
+                        .padding(horizontal = 4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (tfv.text.isEmpty()) {
+                        Text(placeholder, style = textStyle.copy(color = c.textSecondary.copy(alpha = 0.6f)), textAlign = TextAlign.Center)
+                    }
+                    inner()
+                }
             }
         },
     )

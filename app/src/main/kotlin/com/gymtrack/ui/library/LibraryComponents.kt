@@ -87,7 +87,7 @@ fun ExerciseBrowser(
 ) {
     val c = Brand.colors
     val f = state.filters
-    LazyColumn(modifier, contentPadding = PaddingValues(bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(modifier, contentPadding = PaddingValues(bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(

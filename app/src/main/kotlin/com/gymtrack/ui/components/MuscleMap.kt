@@ -54,7 +54,7 @@ fun MuscleMap(setsByMuscle: Map<MuscleGroup, Int>, modifier: Modifier = Modifier
             listOf(0f, 0.25f, 0.5f, 0.75f, 1f).forEach { t ->
                 Spacer(
                     Modifier.size(width = 22.dp, height = 8.dp).clip(RoundedCornerShape(4.dp))
-                        .background(if (t == 0f) c.outline else trainedColor(c.silhouette, c.primary, t)),
+                        .background(if (t == 0f) c.silhouette else trainedColor(c.silhouette, c.primary, t)),
                 )
             }
             Text("MÁS", style = MaterialTheme.typography.labelSmall, color = c.textMuted)
@@ -72,27 +72,24 @@ private fun BodyView(zones: List<MapZone>, sets: Map<MuscleGroup, Int>, max: Int
         val k = size.width / 100f
         fun intensity(m: MuscleGroup): Float = (sets[m] ?: 0).toFloat() / max
 
-        // 1) Silueta base
-        for (z in zones) if (z.muscle == null) z.shapes.forEach { drawMapShape(it, c.silhouette, k) }
+        // 1) Silueta y músculos sin entrenar: un único gris oscuro (diseño minimalista).
+        for (z in zones) z.shapes.forEach { drawMapShape(it, c.silhouette, k) }
 
-        // 2) Halo de los músculos entrenados (capas concéntricas, sin desenfoque nativo)
+        // 2) Halo suave alrededor de lo entrenado (dos capas, sin desenfoque nativo).
         for (z in zones) {
             val m = z.muscle ?: continue
             val t = intensity(m)
             if (t <= 0f) continue
-            for ((grow, alpha) in listOf(4.5f to 0.04f, 3f to 0.06f, 1.5f to 0.10f)) {
-                z.shapes.forEach { drawMapShape(it, c.primary.copy(alpha = alpha + 0.10f * t), k, grow) }
+            for ((grow, alpha) in listOf(3.5f to 0.06f, 1.8f to 0.11f)) {
+                z.shapes.forEach { drawMapShape(it, c.primary.copy(alpha = alpha + 0.12f * t), k, grow) }
             }
         }
 
-        // 3) Zonas: gris apenas visible si no se entrenaron, rojo si sí
+        // 3) El músculo entrenado se ilumina con el acento.
         for (z in zones) {
             val m = z.muscle ?: continue
             val t = intensity(m)
-            val color = if (t <= 0f) c.outline else trainedColor(c.silhouette, c.primary, t)
-            z.shapes.forEach { drawMapShape(it, color, k) }
-            // 4) Brillo superior sutil (sombreado) solo en lo entrenado
-            if (t > 0f) z.shapes.forEach { drawMapSheen(it, Color.White.copy(alpha = 0.06f + 0.10f * t), k) }
+            if (t > 0f) z.shapes.forEach { drawMapShape(it, trainedColor(c.silhouette, c.primary, t), k) }
         }
     }
 }
@@ -109,23 +106,6 @@ private fun DrawScope.drawMapShape(s: MapShape, color: Color, k: Float, grow: Fl
             topLeft = Offset((s.x - grow) * k, (s.y - grow) * k),
             size = Size((s.w + 2 * grow) * k, (s.h + 2 * grow) * k),
             cornerRadius = CornerRadius((s.r + grow) * k, (s.r + grow) * k),
-        )
-    }
-}
-
-/** Franja de luz en el 40 % superior de la forma. */
-private fun DrawScope.drawMapSheen(s: MapShape, color: Color, k: Float) {
-    when (s) {
-        is MapShape.Oval -> drawOval(
-            color,
-            topLeft = Offset((s.cx - s.rx * 0.8f) * k, (s.cy - s.ry * 0.95f) * k),
-            size = Size(2 * s.rx * 0.8f * k, s.ry * 0.7f * k),
-        )
-        is MapShape.Rect -> drawRoundRect(
-            color,
-            topLeft = Offset((s.x + s.w * 0.1f) * k, (s.y + s.h * 0.04f) * k),
-            size = Size(s.w * 0.8f * k, s.h * 0.35f * k),
-            cornerRadius = CornerRadius(s.r * 0.8f * k, s.r * 0.8f * k),
         )
     }
 }

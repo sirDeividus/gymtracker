@@ -10,12 +10,13 @@ Minimalismo oscuro, tarjetas tipo Bento y un único acento de alta energía. Los
 | `brand_background` | `#09090B` | Fondo (negro zinc; ahorra batería en OLED) |
 | `brand_surface` | `#18181B` | Tarjetas |
 | `brand_outline` | `#27272A` | Bordes sutiles |
-| `brand_surface_high` | `#1F1F23` | Campos, diálogos, fondos de estado |
-| `brand_primary` | `#FF5722` | **Acento**: solo acción principal, temporizadores y racha |
+| `brand_silhouette` | `#2D2D30` | Silueta del mapa de músculos |
+| `brand_surface_high` | `#1C1C1F` | Campos, diálogos, fondos de estado |
+| `brand_primary` | `#FF4500` | **Acento**: solo acción principal, temporizadores y racha |
 | `brand_on_primary` | `#09090B` | Texto sobre el acento (contraste 6,3:1; con blanco sería 3,2:1) |
 | `brand_text` / `brand_text_secondary` | `#FAFAFA` / `#A1A1AA` | Texto (≥ 4,5:1 sobre tarjetas) |
 
-Acento alternativo del documento: **Volt `#CCFF00`** — basta cambiar `brand_primary` (el texto oscuro encima sigue valiendo).
+Acento alternativo: **Volt `#CCFF00`** o el rojo `#FF1E46` — basta cambiar `brand_primary` (el texto oscuro encima sigue valiendo).
 Sin degradados.
 
 ## 2. Tipografía y jerarquía
