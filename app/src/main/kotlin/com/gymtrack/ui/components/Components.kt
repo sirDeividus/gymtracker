@@ -105,7 +105,7 @@ fun GymCard(
     onClick: (() -> Unit)? = null,
     highlighted: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(16.dp),
-    radius: androidx.compose.ui.unit.Dp = 20.dp,
+    radius: androidx.compose.ui.unit.Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val c = Brand.colors

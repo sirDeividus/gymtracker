@@ -284,7 +284,8 @@ private fun Label(text: String) {
 @Composable
 private fun BentoTile(label: String, value: String, modifier: Modifier = Modifier, hint: String? = null, accent: Boolean = false) {
     val c = Brand.colors
-    GymCard(modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
+    // Compacta: padding de 12 dp (estilo Hevy).
+    GymCard(modifier.fillMaxWidth(), contentPadding = PaddingValues(12.dp)) {
         Label(label)
         Text(value, style = MaterialTheme.typography.headlineMedium, color = if (accent) c.primary else c.text, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
         if (hint != null) Text(hint, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)

@@ -7,16 +7,16 @@ Minimalismo oscuro, tarjetas tipo Bento y un único acento de alta energía. Los
 
 | Token (`brand.xml`) | Valor | Uso |
 |---|---|---|
-| `brand_background` | `#09090B` | Fondo (negro zinc; ahorra batería en OLED) |
-| `brand_surface` | `#18181B` | Tarjetas |
-| `brand_outline` | `#27272A` | Bordes sutiles |
-| `brand_silhouette` | `#2D2D30` | Silueta del mapa de músculos |
+| `brand_background` | `#070708` | Fondo (negro zinc; ahorra batería en OLED) |
+| `brand_surface` | `#141416` | Tarjetas |
+| `brand_outline` | `#222225` | Bordes sutiles |
+| `brand_silhouette` | `#1E1E21` | Silueta del mapa de músculos |
 | `brand_surface_high` | `#1C1C1F` | Campos, diálogos, fondos de estado |
-| `brand_primary` | `#FF4500` | **Acento**: solo acción principal, temporizadores y racha |
+| `brand_primary` | `#FF1E46` | **Acento**: solo acción principal, temporizadores y racha |
 | `brand_on_primary` | `#09090B` | Texto sobre el acento (contraste 6,3:1; con blanco sería 3,2:1) |
 | `brand_text` / `brand_text_secondary` | `#FAFAFA` / `#A1A1AA` | Texto (≥ 4,5:1 sobre tarjetas) |
 
-Acento alternativo: **Volt `#CCFF00`** o el rojo `#FF1E46` — basta cambiar `brand_primary` (el texto oscuro encima sigue valiendo).
+Acentos alternativos probados: naranja `#FF4500` o Volt `#CCFF00` — basta cambiar `brand_primary` (el texto oscuro encima sigue valiendo).
 Sin degradados.
 
 ## 2. Tipografía y jerarquía
@@ -26,7 +26,7 @@ Sin degradados.
   tabular (`TimerStyle`) para que no "salten".
 
 ## 3. Patrones de layout
-* **Bento Box**: tarjetas con esquinas de 16 dp (pequeñas) y 24 dp (destacadas), borde de 1 dp.
+* **Bento Box**: tarjetas con esquinas de 16 dp, borde de 1 dp.
 * Espaciado múltiplo de 4/8 dp. Zonas táctiles ≥ 48 dp.
 * Una sola acción principal por pantalla; en Inicio es el **botón flotante** «Iniciar entrenamiento».
 

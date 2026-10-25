@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
@@ -29,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.gymtrack.domain.MuscleGroup
 import com.gymtrack.ui.theme.Brand
+import kotlin.math.max
 
 /**
  * Mapa corporal (frente y espalda) con formas propias: gratis, sin recursos de terceros y con los colores de marca.
@@ -85,12 +87,30 @@ private fun BodyView(zones: List<MapZone>, sets: Map<MuscleGroup, Int>, max: Int
             }
         }
 
-        // 3) El músculo entrenado se ilumina con el acento.
+        // 3) Músculo entrenado: degradado radial interno (centro intenso, borde suave), no un bloque plano.
         for (z in zones) {
             val m = z.muscle ?: continue
             val t = intensity(m)
-            if (t > 0f) z.shapes.forEach { drawMapShape(it, trainedColor(c.silhouette, c.primary, t), k) }
+            if (t > 0f) z.shapes.forEach { drawMapShapeRadial(it, c.primary, t, k) }
         }
+    }
+}
+
+/** Relleno con degradado radial interno: opacidad alta en el centro y suave hacia el borde. */
+private fun DrawScope.drawMapShapeRadial(s: MapShape, accent: Color, t: Float, k: Float) {
+    val (center, radius) = when (s) {
+        is MapShape.Oval -> Offset(s.cx * k, s.cy * k) to max(s.rx, s.ry) * k
+        is MapShape.Rect -> Offset((s.x + s.w / 2) * k, (s.y + s.h / 2) * k) to max(s.w, s.h) / 2f * k
+    }
+    val brush = Brush.radialGradient(
+        colors = listOf(accent.copy(alpha = 0.60f + 0.40f * t), accent.copy(alpha = 0.28f + 0.30f * t)),
+        center = center, radius = radius * 1.05f,
+    )
+    when (s) {
+        is MapShape.Oval -> drawOval(brush, topLeft = Offset((s.cx - s.rx) * k, (s.cy - s.ry) * k), size = Size(2 * s.rx * k, 2 * s.ry * k))
+        is MapShape.Rect -> drawRoundRect(
+            brush, topLeft = Offset(s.x * k, s.y * k), size = Size(s.w * k, s.h * k), cornerRadius = CornerRadius(s.r * k, s.r * k),
+        )
     }
 }
 
