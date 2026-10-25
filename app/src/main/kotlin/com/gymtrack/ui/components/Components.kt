@@ -63,6 +63,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -131,24 +132,9 @@ fun BigButton(
     enabled: Boolean = true,
     icon: ImageVector? = null,
 ) {
-    val c = Brand.colors
-    val source = remember { MutableInteractionSource() }
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        interactionSource = source,
-        modifier = modifier.pressScale(source).heightIn(min = 60.dp).fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = c.primary, contentColor = c.onPrimary,
-            disabledContainerColor = c.surfaceHigh, disabledContentColor = c.textSecondary,
-        ),
-    ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(10.dp))
-        }
-        Text(text, style = MaterialTheme.typography.titleMedium)
+    // Acción principal: cápsula con degradado centrada al 85 % del ancho (sin bloques planos gigantes).
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        GradientCapsuleButton(text.uppercase(), onClick, Modifier.fillMaxWidth(0.85f).heightIn(min = 56.dp), enabled, icon)
     }
 }
 
@@ -210,6 +196,17 @@ fun PlayCapsuleButton(onClick: () -> Unit, contentDescription: String, modifier:
 }
 
 @Composable
+fun gymSwitchColors() = androidx.compose.material3.SwitchDefaults.colors(
+    checkedThumbColor = Brand.colors.onGradient, checkedTrackColor = Brand.colors.primary, checkedBorderColor = Brand.colors.primary,
+    uncheckedThumbColor = Brand.colors.textSecondary, uncheckedTrackColor = Brand.colors.surfaceHigh, uncheckedBorderColor = Brand.colors.outline,
+)
+
+@Composable
+fun gymCheckboxColors() = androidx.compose.material3.CheckboxDefaults.colors(
+    checkedColor = Brand.colors.primary, checkmarkColor = Brand.colors.onGradient, uncheckedColor = Brand.colors.textMuted,
+)
+
+@Composable
 fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
@@ -269,7 +266,7 @@ fun ScreenHeader(
             }
         }
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.headlineMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(title.uppercase(), style = MaterialTheme.typography.headlineMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (subtitle != null) {
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Brand.colors.textSecondary)
             }
@@ -292,8 +289,13 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = Brand.colors.textSecondary, modifier = Modifier.size(44.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+        Box(
+            Modifier.size(72.dp).clip(CircleShape).background(Brand.colors.surface).border(1.dp, Brand.colors.outline, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = Brand.colors.textSecondary, modifier = Modifier.size(32.dp))
+        }
+        Text(title.uppercase(), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
         Text(message, style = MaterialTheme.typography.bodyMedium, color = Brand.colors.textSecondary, textAlign = TextAlign.Center)
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(4.dp))
@@ -488,13 +490,22 @@ fun LineChart(
                 drawLine(c.outline, Offset(0f, gy), Offset(w, gy), strokeWidth = 1.dp.toPx())
             }
             if (values.size > 1) {
+                // Área plana translúcida bajo la curva (sin degradados).
+                val area = Path()
+                area.moveTo(x(0), h - pad)
+                values.forEachIndexed { i, v -> area.lineTo(x(i), y(v)) }
+                area.lineTo(x(values.size - 1), h - pad)
+                area.close()
+                drawPath(area, c.primary.copy(alpha = 0.10f))
                 val path = Path()
                 values.forEachIndexed { i, v -> if (i == 0) path.moveTo(x(i), y(v)) else path.lineTo(x(i), y(v)) }
-                drawPath(path, c.primary, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+                drawPath(path, c.primary, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
             values.forEachIndexed { i, v ->
-                drawCircle(c.background, radius = 6.dp.toPx(), center = Offset(x(i), y(v)))
-                drawCircle(c.primary, radius = 4.dp.toPx(), center = Offset(x(i), y(v)))
+                val last = i == values.lastIndex
+                if (last) drawCircle(c.primary.copy(alpha = 0.25f), radius = 11.dp.toPx(), center = Offset(x(i), y(v)))
+                drawCircle(c.background, radius = if (last) 6.dp.toPx() else 5.dp.toPx(), center = Offset(x(i), y(v)))
+                drawCircle(c.primary, radius = if (last) 4.5.dp.toPx() else 3.dp.toPx(), center = Offset(x(i), y(v)))
             }
         }
         if (startLabel != null || endLabel != null) {
@@ -515,6 +526,8 @@ fun BarChart(
     description: String,
     height: androidx.compose.ui.unit.Dp = 120.dp,
     formatValue: (Double) -> String = { Formatting.number(it, 0) },
+    /** El acento se reserva para la barra más reciente; el resto va en gris. */
+    highlightLast: Boolean = true,
 ) {
     val c = Brand.colors
     if (values.isEmpty()) return
@@ -531,7 +544,13 @@ fun BarChart(
                 Box(
                     Modifier.fillMaxWidth().height((height * (v / max).toFloat()).coerceAtLeast(3.dp))
                         .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                        .background(if (v > 0) c.primary else c.outline),
+                        .background(
+                            when {
+                                v <= 0 -> c.outline
+                                !highlightLast || i == values.lastIndex -> c.primary
+                                else -> c.textMuted.copy(alpha = 0.55f)
+                            },
+                        ),
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(labels.getOrElse(i) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary, maxLines = 1)

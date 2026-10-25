@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -138,16 +139,18 @@ fun GymTrackRoot() {
             if (showBottom) {
                 Column {
                     active?.let { ActiveBanner(it) { nav.navigate(Routes.WORKOUT) { launchSingleTop = true } } }
-                    NavigationBar(containerColor = c.surface) {
+                    HorizontalDivider(color = c.outline, thickness = 1.dp)
+                    NavigationBar(containerColor = c.background, tonalElevation = 0.dp) {
                         tabs.forEach { tab ->
                             NavigationBarItem(
                                 selected = route == tab.route,
                                 onClick = { if (route != tab.route) nav.navigateTab(tab.route) },
                                 icon = { Icon(tab.icon, contentDescription = null) },
-                                label = { Text(tab.label) },
+                                label = { Text(tab.label.uppercase(), style = MaterialTheme.typography.labelSmall) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = c.onPrimary, indicatorColor = c.primary,
-                                    selectedTextColor = c.primary, unselectedIconColor = c.textSecondary, unselectedTextColor = c.textSecondary,
+                                    selectedIconColor = c.primary, selectedTextColor = c.primary,
+                                    indicatorColor = c.primary.copy(alpha = 0.14f),
+                                    unselectedIconColor = c.textSecondary, unselectedTextColor = c.textSecondary,
                                 ),
                             )
                         }

@@ -41,6 +41,7 @@ import com.gymtrack.ui.components.ChipSelector
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.Dates
 import com.gymtrack.ui.components.GymCard
+import com.gymtrack.ui.components.gymSwitchColors
 import com.gymtrack.ui.components.NumberInput
 import com.gymtrack.ui.components.ScreenHeader
 import com.gymtrack.ui.components.ScreenPadding
@@ -182,7 +183,7 @@ private fun stringRes(id: Int): String = androidx.compose.ui.res.stringResource(
 private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = onChange, colors = gymSwitchColors())
     }
 }
 

@@ -64,7 +64,8 @@ private val GymTypography = Typography(
 private val GymShapes = Shapes(
     small = RoundedCornerShape(10.dp),
     medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
 /** Títulos de ejercicios y rutinas: pesados y en mayúsculas (aplicar .uppercase() al texto). */

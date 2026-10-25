@@ -1,6 +1,7 @@
 package com.gymtrack.ui.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -151,6 +152,7 @@ private fun MonthCalendar(
                                             else -> androidx.compose.ui.graphics.Color.Transparent
                                         },
                                     )
+                                    .let { if (date == today && !sel) it.border(1.5.dp, c.primary, CircleShape) else it }
                                     .let { if (did) it.clickable { onSelect(date) } else it }
                                     .semantics { contentDescription = "$dayNum" + if (did) ", con entrenamiento" else "" },
                                 contentAlignment = Alignment.Center,

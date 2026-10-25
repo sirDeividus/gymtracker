@@ -68,6 +68,7 @@ import com.gymtrack.ui.components.EmptyState
 import com.gymtrack.ui.components.ExerciseThumb
 import com.gymtrack.ui.components.hasExerciseMedia
 import com.gymtrack.ui.components.GymCard
+import com.gymtrack.ui.components.gymCheckboxColors
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.NumberInput
 import com.gymtrack.ui.components.ScreenHeader
@@ -452,6 +453,7 @@ private fun CopyFromRoutineDialog(vm: RoutineEditViewModel, others: List<Routine
                             Checkbox(
                                 checked = it2.row.id in selected,
                                 onCheckedChange = { on -> selected = if (on) selected + it2.row.id else selected - it2.row.id },
+                                colors = gymCheckboxColors(),
                             )
                             Column(Modifier.weight(1f)) {
                                 Text(it2.exercise?.name ?: "Ejercicio", style = MaterialTheme.typography.bodyLarge)

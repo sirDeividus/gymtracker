@@ -61,6 +61,7 @@ import com.gymtrack.ui.components.ExerciseAnimation
 import com.gymtrack.ui.components.ExerciseThumb
 import com.gymtrack.ui.components.hasExerciseMedia
 import com.gymtrack.ui.components.GymCard
+import com.gymtrack.ui.components.gymSwitchColors
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenPadding
 import com.gymtrack.ui.components.SecondaryButton
@@ -288,7 +289,7 @@ fun ExerciseEditorDialog(
                             Text("Unilateral", style = MaterialTheme.typography.titleMedium)
                             Text("Registrar cada lado por separado", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                         }
-                        Switch(checked = unilateral, onCheckedChange = { unilateral = it })
+                        Switch(checked = unilateral, onCheckedChange = { unilateral = it }, colors = gymSwitchColors())
                     }
                     OutlinedTextField(
                         value = description, onValueChange = { description = it }, label = { Text("Descripción breve") },
