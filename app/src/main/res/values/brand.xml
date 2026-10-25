@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  IDENTIDAD DE MARCA — edita solo este archivo para personalizar la app:
+    * nombre visible (app_name) y lema
+    * paleta de colores (la UI Compose lee estos recursos)
+    * fondo/primer plano del icono (ver drawable/ic_launcher_foreground.xml)
+-->
+<resources>
+    <string name="app_name">GymTrack</string>
+    <string name="brand_tagline">Entrena. Registra. Progresa.</string>
+
+    <color name="brand_background">#101110</color>
+    <color name="brand_surface">#1A1C1A</color>
+    <color name="brand_surface_high">#242724</color>
+    <color name="brand_outline">#2F322E</color>
+    <color name="brand_primary">#C6FF4D</color>
+    <color name="brand_on_primary">#101110</color>
+    <color name="brand_text">#F5F5F2</color>
+    <color name="brand_text_secondary">#92958F</color>
+    <color name="brand_warning">#FFB020</color>
+    <color name="brand_error">#E5645A</color>
+
+    <color name="brand_icon_background">#101110</color>
+</resources>

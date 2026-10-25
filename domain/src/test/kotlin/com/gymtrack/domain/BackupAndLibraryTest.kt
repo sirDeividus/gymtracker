@@ -97,6 +97,17 @@ class BackupAndLibraryTest {
         assertTrue(onlyDumbbell.isNotEmpty() && onlyDumbbell.all { it.equipment == Equipment.DUMBBELL })
     }
 
+    @Test fun `navegar combina busqueda filtros y orden`() {
+        val lib = ExerciseLibrary.all
+        val r = ExerciseRecommender.browse(lib, "press", setOf(MuscleGroup.CHEST, MuscleGroup.SHOULDERS), setOf(Equipment.DUMBBELL))
+        assertTrue(r.isNotEmpty())
+        assertTrue(r.all { it.name.contains("ress") && it.equipment == Equipment.DUMBBELL })
+        assertTrue(r.all { it.primaryMuscle == MuscleGroup.CHEST || it.primaryMuscle == MuscleGroup.SHOULDERS })
+        val byMuscle = ExerciseRecommender.browse(lib, sort = RecommendationSort.MUSCLE).map { it.primaryMuscle.ordinal }
+        assertEquals(byMuscle.sorted(), byMuscle)
+        assertEquals(lib.size, ExerciseRecommender.browse(lib).size)
+    }
+
     @Test fun `busqueda ignora acentos y mayusculas`() {
         assertTrue(ExerciseRecommender.search(ExerciseLibrary.all, "TRICEPS").any { it.name.contains("tríceps") })
         assertTrue(ExerciseRecommender.search(ExerciseLibrary.all, "").size == ExerciseLibrary.all.size)
