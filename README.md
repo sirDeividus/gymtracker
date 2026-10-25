@@ -4,11 +4,13 @@ App Android nativa (Kotlin + Jetpack Compose + Room) para registrar entrenamient
 fiables. Funciona **sin conexión, sin cuenta y sin permisos innecesarios**.
 
 > **Estado honesto de la verificación**
-> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 94 pruebas JUnit pasando**.
-> * `app/` (Android): código completo, pero **no se ha podido compilar ni ejecutar** donde se escribió
->   (el entorno bloqueaba Google Maven, necesario para el Android Gradle Plugin, Compose y el SDK).
->   La primera sincronización de Gradle en Android Studio puede mostrar algún error de compilación
->   que habrá que corregir. Tampoco se han ejecutado las pruebas instrumentadas ni se ha generado APK.
+> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 99 pruebas JUnit pasando**.
+> * `app/` (Android): el propietario confirmó que **compila y funciona en su dispositivo** con una versión anterior.
+>   Los cambios posteriores de interfaz (rediseño, modo intervalos, mapa muscular, medios) solo se han revisado
+>   estáticamente: su entorno de desarrollo no podía compilar Android (Google Maven bloqueado), así que puede
+>   aparecer algún error de compilación o ajuste visual en la primera sincronización.
+> * Las pruebas instrumentadas (persistencia, recuperación de sesión, migraciones, copia de seguridad) están escritas
+>   pero **no se han ejecutado**. No hay APK publicado.
 
 ## Abrir y ejecutar en Android Studio
 
@@ -42,14 +44,14 @@ Sin `keystore.properties`, `assembleRelease` genera un APK sin firmar.
 ## Pruebas
 
 ```bash
-cd domain && ../gradlew test                  # lógica de entrenamiento (94 pruebas; no necesita Android)
+cd domain && ../gradlew test                  # lógica de entrenamiento (99 pruebas; no necesita Android)
 ./gradlew :app:connectedDebugAndroidTest      # persistencia, recuperación de sesión, migraciones y copia
                                               # de seguridad con Room real (necesita dispositivo/emulador)
 ```
 
 ## Personalizar la marca
 
-Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta —por defecto negro zinc con acento naranja; ver `DESIGN.md`—; la UI de Compose lee estos
+Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta —por defecto negro con acento rojo eléctrico `#FF1E46`; ver `DESIGN.md`—; la UI de Compose lee estos
 recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` (icono). El `applicationId` está en
 `app/build.gradle.kts`.
 
@@ -109,7 +111,7 @@ Si distribuyes la app o el uso no es personal, consulta antes sus
 
 ## Limitaciones y pendiente
 
-* **Sin compilar/ejecutar la parte Android** (ver arriba): falta confirmar compilación, ejecutar las pruebas
+* **Parte Android sin verificar tras los últimos cambios** (ver arriba): falta confirmar compilación, ejecutar las pruebas
   instrumentadas, probar el arrastre para reordenar en un dispositivo y revisar el diseño en distintos tamaños.
 * El modo intervalos avisa (vibración/sonido) solo con la app abierta; si bloqueas la pantalla el reloj sigue, pero el aviso puede no sonar.
 * Solo tema oscuro (decisión de producto); no hay tema claro.
