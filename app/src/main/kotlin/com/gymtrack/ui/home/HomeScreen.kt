@@ -30,6 +30,7 @@ import com.gymtrack.domain.Formatting
 import com.gymtrack.domain.RoutineReason
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.Dates
+import com.gymtrack.ui.components.ExerciseThumbOrInitial
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenPadding
@@ -98,9 +99,26 @@ fun HomeScreen(
                             },
                             style = MaterialTheme.typography.labelSmall, color = c.primary,
                         )
-                        Text(rec.routine.name, style = MaterialTheme.typography.titleLarge)
+                        Text(rec.routine.name, style = MaterialTheme.typography.headlineMedium)
+                        if (st.todayExercises.isNotEmpty()) {
+                            Text(
+                                "${st.todayExercises.size} ejercicios · ${st.todaySets} series · ≈ ${st.todayMinutes} min",
+                                style = MaterialTheme.typography.bodyLarge, color = c.textSecondary,
+                            )
+                        }
                         rec.routine.lastUsedAt?.let {
                             Text("Última vez: ${Dates.relative(it)}", style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
+                        }
+                        if (st.todayExercises.isNotEmpty()) {
+                            Row(
+                                Modifier.padding(top = 14.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                st.todayExercises.take(4).forEach { ExerciseThumbOrInitial(it.id, it.name, 64.dp) }
+                                val extra = st.todayExercises.size - 4
+                                if (extra > 0) Text("+$extra", style = MaterialTheme.typography.titleMedium, color = c.textSecondary)
+                            }
                         }
                     } else {
                         Text("EMPIEZA AQUÍ", style = MaterialTheme.typography.labelSmall, color = c.primary)

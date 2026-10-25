@@ -1,5 +1,6 @@
 package com.gymtrack.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,6 +48,21 @@ fun ExerciseThumb(exerciseId: String, modifier: Modifier = Modifier, size: Dp = 
         contentScale = ContentScale.Crop,
         modifier = modifier.size(size).clip(RoundedCornerShape(10.dp)),
     )
+}
+
+/** Miniatura si hay imagen instalada; si no, un cuadrado con la inicial para mantener el ritmo visual. */
+@Composable
+fun ExerciseThumbOrInitial(exerciseId: String, name: String, size: Dp = 64.dp, modifier: Modifier = Modifier) {
+    if (hasExerciseMedia(exerciseId)) {
+        ExerciseThumb(exerciseId, modifier, size)
+    } else {
+        androidx.compose.foundation.layout.Box(
+            modifier.size(size).clip(RoundedCornerShape(10.dp)).background(Brand.colors.surfaceHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(name.firstOrNull()?.uppercase().orEmpty(), style = MaterialTheme.typography.titleLarge, color = Brand.colors.textSecondary)
+        }
+    }
 }
 
 /** GIF animado (o la imagen si solo hay miniatura) con la atribución obligatoria. */

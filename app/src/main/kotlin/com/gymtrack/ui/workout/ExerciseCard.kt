@@ -170,7 +170,7 @@ fun ExerciseCard(
             }
             Spacer(Modifier.width(12.dp))
             if (hasExerciseMedia(e.exerciseId)) {
-                ExerciseThumb(e.exerciseId, Modifier.clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" }, size = 48.dp)
+                ExerciseThumb(e.exerciseId, Modifier.clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" }, size = 64.dp)
                 Spacer(Modifier.width(10.dp))
             }
             Column(Modifier.weight(1f)) {
@@ -183,10 +183,22 @@ fun ExerciseCard(
                     TrackingType.DISTANCE -> "${e.targetSets} series"
                     else -> "${e.targetSets} × ${repsRange(e.repMin, e.repMax)} reps"
                 }
+                val loadKg = item.sets.mapNotNull { it.weightKg }.maxOrNull()
+                val weightLabel = when {
+                    tracking == TrackingType.WEIGHT_REPS && loadKg != null && loadKg > 0 -> " · ${Formatting.weight(loadKg, unit)}"
+                    tracking == TrackingType.BODYWEIGHT && loadKg != null && loadKg != 0.0 -> " · ${Formatting.bodyweightLoad(loadKg, unit)}"
+                    else -> ""
+                }
                 Text(
-                    if (e.skipped) "Omitido" else "$target · ${item.completedSets}/${item.sets.size} series",
-                    style = MaterialTheme.typography.bodySmall, color = if (e.skipped) c.warning else c.textSecondary,
+                    if (e.skipped) "Omitido" else target + weightLabel,
+                    style = MaterialTheme.typography.bodyMedium, color = if (e.skipped) c.warning else c.textSecondary,
                 )
+                if (!e.skipped) {
+                    Text(
+                        "${item.completedSets}/${item.sets.size} series",
+                        style = MaterialTheme.typography.labelMedium, color = if (item.completedSets > 0) c.primary else c.textSecondary,
+                    )
+                }
             }
             IconButton(onClick = { menu = true }, modifier = Modifier.size(MinTouch)) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Opciones de ${e.exerciseName}")

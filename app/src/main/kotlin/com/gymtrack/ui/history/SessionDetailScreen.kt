@@ -95,7 +95,7 @@ fun SessionDetailScreen(
                 GymCard(Modifier.fillMaxWidth(), onClick = { onOpenExercise(e.exerciseId) }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (hasExerciseMedia(e.exerciseId)) {
-                            ExerciseThumb(e.exerciseId, size = 48.dp)
+                            ExerciseThumb(e.exerciseId, size = 56.dp)
                             Spacer(Modifier.width(12.dp))
                         }
                         Text(e.exerciseName, style = MaterialTheme.typography.titleMedium)

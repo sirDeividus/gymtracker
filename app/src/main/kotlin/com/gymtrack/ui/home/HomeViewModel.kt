@@ -25,6 +25,8 @@ import java.time.LocalDate
 
 data class NextGoal(val exerciseName: String, val routineName: String, val text: String)
 
+data class TodayExercise(val id: String, val name: String)
+
 data class HomeState(
     val loading: Boolean = true,
     val settings: UserSettings = UserSettings(),
@@ -40,6 +42,11 @@ data class HomeState(
     /** Variación porcentual del volumen respecto a la sesión anterior de la misma rutina. */
     val volumeDeltaPct: Double? = null,
     val nextGoal: NextGoal? = null,
+    /** Ejercicios de la rutina recomendada (para las miniaturas) y sus totales. */
+    val todayExercises: List<TodayExercise> = emptyList(),
+    val todaySets: Int = 0,
+    /** Estimación orientativa: series × (trabajo + descanso). */
+    val todayMinutes: Int = 0,
 )
 
 class HomeViewModel(private val c: AppContainer) : ViewModel() {
@@ -83,18 +90,22 @@ class HomeViewModel(private val c: AppContainer) : ViewModel() {
             .entries.sortedByDescending { it.value }.take(6).map { it.key to it.value }
 
         // "Tu próximo objetivo": solo con historial real del ejercicio.
+        val plan = recommendation?.let { c.workout.previewRoutine(it.routine.id) }.orEmpty()
         val goal = recommendation?.let { rec ->
-            val plan = c.workout.previewRoutine(rec.routine.id)
             val pick = plan.firstOrNull { it.suggestion.kind == SuggestionKind.INCREASE }
                 ?: plan.firstOrNull { it.suggestion.kind != SuggestionKind.FIRST_TIME }
             pick?.let { NextGoal(it.spec.exercise.name, rec.routine.name, it.suggestion.reason) }
         }
+        val todaySets = plan.sumOf { it.spec.sets }
+        val todaySeconds = plan.sumOf { p -> p.spec.sets * ((p.spec.targetDurationSec ?: 40) + p.spec.restSec) }
         return HomeState(
             loading = false, settings = settings, active = active, routines = routineItems, recommendation = recommendation,
             last = last, recent = items.take(3), totalSessions = items.size,
             totalTimeSec = s.sessions.sumOf { (((it.endedAt ?: it.startedAt) - it.startedAt) / 1000).coerceAtLeast(0) },
             sessionsThisWeek = Stats.sessionsInWeekOf(now, s.sessions.map { it.startedAt }, zone),
             recentMuscles = muscles, volumeDeltaPct = delta, nextGoal = goal,
+            todayExercises = plan.map { TodayExercise(it.spec.exercise.id, it.spec.exercise.name) },
+            todaySets = todaySets, todayMinutes = (todaySeconds + 59) / 60,
         )
     }
 

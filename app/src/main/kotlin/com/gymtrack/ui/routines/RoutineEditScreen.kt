@@ -296,7 +296,7 @@ private fun ExerciseRow(
             }
             item.exercise?.let { ex ->
                 if (hasExerciseMedia(ex.id)) {
-                    ExerciseThumb(ex.id, size = 48.dp)
+                    ExerciseThumb(ex.id, size = 60.dp)
                     Spacer(Modifier.width(10.dp))
                 }
             }

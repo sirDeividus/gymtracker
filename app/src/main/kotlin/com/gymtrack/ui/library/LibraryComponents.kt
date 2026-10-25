@@ -154,7 +154,7 @@ fun ExerciseRow(ex: Exercise, uses: Int, onClick: () -> Unit, modifier: Modifier
     GymCard(modifier.fillMaxWidth(), onClick = onClick, contentPadding = PaddingValues(14.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
         if (hasExerciseMedia(ex.id)) {
-            ExerciseThumb(ex.id, size = 52.dp)
+            ExerciseThumb(ex.id, size = 60.dp)
             Spacer(Modifier.width(12.dp))
         }
         Column(Modifier.weight(1f)) {
