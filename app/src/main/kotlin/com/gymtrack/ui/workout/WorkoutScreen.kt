@@ -63,6 +63,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.domain.Formatting
@@ -138,23 +140,26 @@ fun WorkoutScreen(
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding()) {
-            // ---- Cabecera
+            // ---- Cabecera: cronómetro centrado e imponente (monoespaciado, blanco brillante)
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onLeave, modifier = Modifier.size(MinTouch)) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Salir sin finalizar (el entrenamiento se conserva)")
                 }
-                Column(Modifier.weight(1f)) {
-                    Text(workout.session.routineName, style = MaterialTheme.typography.titleLarge, maxLines = 1)
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        Formatting.duration(state.elapsedSec.toInt()),
+                        style = ClockStyle, color = c.text, maxLines = 1, textAlign = TextAlign.Center,
+                        modifier = Modifier.semantics { contentDescription = "Tiempo transcurrido ${Formatting.duration(state.elapsedSec.toInt())}" },
+                    )
+                    Text(
+                        workout.session.routineName.uppercase(), style = MaterialTheme.typography.labelMedium,
+                        color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
                     Text(
                         "${workout.finishedExercises}/${workout.exercises.size} ejercicios · ${workout.completedSets}/${workout.totalSets} series",
                         style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
                     )
                 }
-                Text(
-                    Formatting.duration(state.elapsedSec.toInt()),
-                    style = ClockStyle, color = c.primary, maxLines = 1,
-                    modifier = Modifier.semantics { contentDescription = "Tiempo transcurrido ${Formatting.duration(state.elapsedSec.toInt())}" },
-                )
                 Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.size(MinTouch)) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Más opciones")
@@ -194,6 +199,9 @@ fun WorkoutScreen(
                         unit = unit, prs = state.prs, actions = actions,
                     )
                 }
+                item(key = "add-exercise") {
+                    SecondaryButton("AÑADIR EJERCICIO", { picker = true }, Modifier.fillMaxWidth(), icon = Icons.Default.Add)
+                }
             }
 
             // ---- Descanso + acciones
@@ -205,17 +213,9 @@ fun WorkoutScreen(
                     onRestart = vm::restartRest, onSkip = vm::skipRest,
                 )
             }
-            // Acciones: añadir ejercicio (círculo discreto) y «Finalizar» como cápsula centrada, sin ocupar todo el ancho.
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = ScreenPadding, vertical = 12.dp),
-                horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(
-                    onClick = { picker = true },
-                    modifier = Modifier.size(MinTouch).border(1.5.dp, c.outline, CircleShape),
-                ) { Icon(Icons.Default.Add, contentDescription = "Añadir ejercicio") }
-                Spacer(Modifier.width(12.dp))
-                GradientCapsuleButton("FINALIZAR", { finishDialog = true }, Modifier.widthIn(min = 180.dp), icon = Icons.Default.Check)
+            // «Finalizar»: cápsula flotante centrada con el degradado rojo (85 % del ancho).
+            Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.Center) {
+                GradientCapsuleButton("FINALIZAR", { finishDialog = true }, Modifier.fillMaxWidth(0.85f).heightIn(min = 56.dp), icon = Icons.Default.Check)
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp + contentPadding.calculateBottomPadding()))

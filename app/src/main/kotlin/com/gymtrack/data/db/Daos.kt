@@ -100,6 +100,9 @@ interface RoutineDao {
     @Query("SELECT * FROM routine_exercises")
     suspend fun getAllRoutineExercises(): List<RoutineExerciseEntity>
 
+    @Query("SELECT * FROM routine_exercises")
+    fun observeAllRoutineExercises(): Flow<List<RoutineExerciseEntity>>
+
     @Upsert
     suspend fun upsertExercise(item: RoutineExerciseEntity)
 

@@ -7,6 +7,7 @@ import com.gymtrack.data.db.RoutineEntity
 import com.gymtrack.data.db.RoutineExerciseEntity
 import com.gymtrack.data.settings.UserSettings
 import com.gymtrack.domain.Exercise
+import com.gymtrack.domain.MuscleGroup
 import com.gymtrack.domain.RoutineDays
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,8 @@ data class RoutineListItem(
     val routine: RoutineEntity,
     val exerciseCount: Int,
     val setCount: Int,
+    /** Grupos musculares principales de la rutina, de más a menos ejercicios. */
+    val muscles: List<MuscleGroup> = emptyList(),
 )
 
 data class RoutinesState(
@@ -34,11 +37,17 @@ data class RoutinesState(
 
 class RoutinesViewModel(private val c: AppContainer) : ViewModel() {
     val state: StateFlow<RoutinesState> =
-        combine(c.routines.routines, c.routines.counts, c.workout.activeSession) { routines, counts, active ->
+        combine(c.routines.routines, c.routines.counts, c.workout.activeSession, c.routines.allExercises, c.exercises.allById) { routines, counts, active, rows, exercises ->
             val byId = counts.associateBy { it.routineId }
+            val musclesByRoutine = rows.groupBy { it.routineId }.mapValues { (_, list) ->
+                list.mapNotNull { exercises[it.exerciseId]?.primaryMuscle }
+                    .groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
+            }
             RoutinesState(
                 loading = false,
-                items = routines.map { RoutineListItem(it, byId[it.id]?.exerciseCount ?: 0, byId[it.id]?.setCount ?: 0) },
+                items = routines.map {
+                    RoutineListItem(it, byId[it.id]?.exerciseCount ?: 0, byId[it.id]?.setCount ?: 0, musclesByRoutine[it.id].orEmpty())
+                },
                 hasActiveSession = active != null,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RoutinesState())

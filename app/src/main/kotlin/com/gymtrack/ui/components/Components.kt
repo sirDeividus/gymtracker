@@ -189,14 +189,15 @@ fun GradientCapsuleButton(
     }
 }
 
-/** Icono Play dentro de un círculo del color de acento (zona táctil de 48 dp). */
+/** Cápsula pequeña con PremiumRedGradient e icono Play blanco (zona táctil de 64 × 48 dp). */
 @Composable
-fun PlayCircleButton(onClick: () -> Unit, contentDescription: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun PlayCapsuleButton(onClick: () -> Unit, contentDescription: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val c = Brand.colors
     val source = remember { MutableInteractionSource() }
+    val fill: Brush = if (enabled) c.primaryGradient else SolidColor(c.surfaceHigh)
     Box(
-        modifier.size(MinTouch).pressScale(source, 0.92f).clip(CircleShape)
-            .background(if (enabled) c.primary else c.surfaceHigh)
+        modifier.size(width = 64.dp, height = MinTouch).pressScale(source, 0.94f).clip(CircleShape)
+            .background(fill, CircleShape)
             .clickable(
                 interactionSource = source, indication = LocalIndication.current, enabled = enabled,
                 role = androidx.compose.ui.semantics.Role.Button, onClick = onClick,

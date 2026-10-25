@@ -14,6 +14,7 @@ class RoutineRepository(private val db: GymDatabase) {
 
     val routines: Flow<List<RoutineEntity>> = dao.observeAll()
     val counts: Flow<List<RoutineCounts>> = dao.observeCounts()
+    val allExercises: Flow<List<RoutineExerciseEntity>> = dao.observeAllRoutineExercises()
 
     fun observe(id: String): Flow<RoutineEntity?> = dao.observe(id)
     fun observeExercises(routineId: String): Flow<List<RoutineExerciseEntity>> = dao.observeExercises(routineId)

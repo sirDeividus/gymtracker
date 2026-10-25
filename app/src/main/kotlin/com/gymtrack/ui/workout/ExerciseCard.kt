@@ -273,7 +273,6 @@ fun ExerciseCard(
                         repMin = e.repMin, repMax = e.repMax, targetDuration = e.targetDurationSec,
                         unilateral = e.unilateral, records = prs[s.id], actions = actions,
                     )
-                    if (index < item.sets.lastIndex) HorizontalDivider(color = c.outline, thickness = 1.dp)
                 }
                 TextButton(onClick = { actions.addSet(e.id) }, modifier = Modifier.heightIn(min = MinTouch)) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = c.primary)
@@ -412,29 +411,29 @@ private fun SetRow(
             when (tracking) {
                 TrackingType.WEIGHT_REPS -> {
                     FieldBox(W_FIELD) {
-                        NumberInput(weightText, prevWeightText, { actions.setWeight(set.id, it, 1) }, decimal = true, highlight = false, description = "Peso serie $label", minimal = true)
+                        NumberInput(weightText, prevWeightText, { actions.setWeight(set.id, it, 1) }, decimal = true, highlight = false, description = "Peso serie $label")
                     }
                     FieldBox(W_FIELD) {
-                        NumberInput(set.reps?.toString().orEmpty(), repsRange(repMin, repMax), { actions.setReps(set.id, it) }, decimal = false, description = "Repeticiones serie $label", minimal = true)
+                        NumberInput(set.reps?.toString().orEmpty(), repsRange(repMin, repMax), { actions.setReps(set.id, it) }, decimal = false, description = "Repeticiones serie $label")
                     }
                 }
                 TrackingType.BODYWEIGHT -> {
                     if (bwMode != 0) FieldBox(W_FIELD) {
-                        NumberInput(weightText, "0", { actions.setWeight(set.id, it, if (bwMode < 0) -1 else 1) }, decimal = true, description = "Peso adicional serie $label", minimal = true)
+                        NumberInput(weightText, "0", { actions.setWeight(set.id, it, if (bwMode < 0) -1 else 1) }, decimal = true, description = "Peso adicional serie $label")
                     }
                     FieldBox(W_FIELD) {
-                        NumberInput(set.reps?.toString().orEmpty(), repsRange(repMin, repMax), { actions.setReps(set.id, it) }, decimal = false, description = "Repeticiones serie $label", minimal = true)
+                        NumberInput(set.reps?.toString().orEmpty(), repsRange(repMin, repMax), { actions.setReps(set.id, it) }, decimal = false, description = "Repeticiones serie $label")
                     }
                 }
                 TrackingType.DURATION -> FieldBox(W_FIELD) {
-                    NumberInput(set.durationSec?.toString().orEmpty(), (targetDuration ?: 30).toString(), { actions.setDuration(set.id, it) }, decimal = false, description = "Segundos serie $label", minimal = true)
+                    NumberInput(set.durationSec?.toString().orEmpty(), (targetDuration ?: 30).toString(), { actions.setDuration(set.id, it) }, decimal = false, description = "Segundos serie $label")
                 }
                 TrackingType.DISTANCE -> {
                     FieldBox(W_FIELD) {
-                        NumberInput(set.distanceM?.let { Formatting.number(it / 1000.0, 3) }.orEmpty(), "0", { actions.setDistance(set.id, it) }, decimal = true, description = "Kilómetros serie $label", minimal = true)
+                        NumberInput(set.distanceM?.let { Formatting.number(it / 1000.0, 3) }.orEmpty(), "0", { actions.setDistance(set.id, it) }, decimal = true, description = "Kilómetros serie $label")
                     }
                     FieldBox(W_FIELD) {
-                        NumberInput(set.durationSec?.let { Formatting.number(it / 60.0, 2) }.orEmpty(), "0", { actions.setMinutes(set.id, it) }, decimal = true, description = "Minutos serie $label", minimal = true)
+                        NumberInput(set.durationSec?.let { Formatting.number(it / 60.0, 2) }.orEmpty(), "0", { actions.setMinutes(set.id, it) }, decimal = true, description = "Minutos serie $label")
                     }
                 }
             }

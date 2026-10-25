@@ -1,5 +1,9 @@
 package com.gymtrack.ui.routines
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,7 +40,7 @@ import com.gymtrack.domain.RoutineTemplates
 import com.gymtrack.ui.components.BigButton
 import com.gymtrack.ui.components.ConfirmDialog
 import com.gymtrack.ui.components.EmptyState
-import com.gymtrack.ui.components.PlayCircleButton
+import com.gymtrack.ui.components.PlayCapsuleButton
 import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.ScreenHeader
@@ -144,6 +148,11 @@ private fun RoutineCard(
                     "${item.exerciseCount} ejercicios · ${item.setCount} series",
                     style = MaterialTheme.typography.bodyMedium, color = c.textSecondary, modifier = Modifier.padding(top = 4.dp),
                 )
+                if (item.muscles.isNotEmpty()) {
+                    Row(Modifier.padding(top = 10.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item.muscles.take(5).forEach { MuscleChip(it.label) }
+                    }
+                }
                 if (item.routine.daysMask != 0) {
                     Text(daysText(item.routine.daysMask), style = MaterialTheme.typography.bodySmall, color = c.primary, modifier = Modifier.padding(top = 2.dp))
                 }
@@ -158,12 +167,22 @@ private fun RoutineCard(
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
-            PlayCircleButton(
+            PlayCapsuleButton(
                 onClick = onStart, enabled = startEnabled,
                 contentDescription = (if (startLabel == "CONTINUAR") "Continuar entrenamiento" else "Entrenar con ${item.routine.name.ifBlank { "esta rutina" }}"),
             )
         }
     }
+}
+
+/** Chip de texto minimalista: borde fino, sin relleno. */
+@Composable
+private fun MuscleChip(text: String) {
+    val c = Brand.colors
+    Text(
+        text, style = MaterialTheme.typography.bodySmall, color = c.textSecondary, maxLines = 1,
+        modifier = Modifier.border(1.dp, c.outline, RoundedCornerShape(8.dp)).padding(horizontal = 10.dp, vertical = 4.dp),
+    )
 }
 
 @Composable

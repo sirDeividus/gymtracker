@@ -71,7 +71,7 @@ private val GymShapes = Shapes(
 val ExerciseTitleStyle = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, lineHeight = 20.sp, letterSpacing = 0.5.sp)
 
 /** Cronómetro principal del entrenamiento: monoespaciado e imponente. */
-val ClockStyle = TextStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 32.sp, lineHeight = 36.sp)
+val ClockStyle = TextStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 38.sp)
 
 /** Cifras que cambian cada segundo: ancho fijo (tabular) para que el texto no "salte". */
 val TimerStyle = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum")
