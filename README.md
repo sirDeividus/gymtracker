@@ -4,7 +4,7 @@ App Android nativa (Kotlin + Jetpack Compose + Room) para registrar entrenamient
 fiables. Funciona **sin conexión, sin cuenta y sin permisos innecesarios**.
 
 > **Estado honesto de la verificación**
-> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 84 pruebas JUnit pasando**.
+> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 94 pruebas JUnit pasando**.
 > * `app/` (Android): código completo, pero **no se ha podido compilar ni ejecutar** donde se escribió
 >   (el entorno bloqueaba Google Maven, necesario para el Android Gradle Plugin, Compose y el SDK).
 >   La primera sincronización de Gradle en Android Studio puede mostrar algún error de compilación
@@ -42,7 +42,7 @@ Sin `keystore.properties`, `assembleRelease` genera un APK sin firmar.
 ## Pruebas
 
 ```bash
-cd domain && ../gradlew test                  # lógica de entrenamiento (84 pruebas; no necesita Android)
+cd domain && ../gradlew test                  # lógica de entrenamiento (94 pruebas; no necesita Android)
 ./gradlew :app:connectedDebugAndroidTest      # persistencia, recuperación de sesión, migraciones y copia
                                               # de seguridad con Room real (necesita dispositivo/emulador)
 ```
@@ -69,6 +69,11 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
   quitar y repetir serie; RPE opcional; saltar/añadir/quitar ejercicio; notas; marca de dolor o técnica;
   temporizador de descanso (pausa, reinicio, ±15 s, saltar, vibración/sonido opcionales, aviso en segundo plano);
   récords en vivo sin interrumpir; pantalla siempre encendida; **la sesión se recupera tras cerrar la app o reiniciar**.
+* **Intervalos / Tabata**: en cualquier ejercicio por duración, «Modo intervalos» con cuenta atrás automática
+  (preparación de 5 s, trabajo, descanso, rondas), aviso por vibración/sonido en cada cambio, pausa, y cada ronda
+  completa una serie. Preajustes Tabata 20/10, 30/30 y 40/20. La plantilla **«Tabata + cardio»** (programada para el
+  miércoles) combina «Tabata de abdominales» (8 × 20 s, descanso 10 s) y «Correr en caminadora».
+* **Cardio**: distancia en **km** y tiempo en **minutos**, con el ritmo (min/km) calculado.
 * **Peso corporal** sin kilos obligatorios (peso corporal / + lastre / − asistencia).
 * **Progresión sugerida** con motivo y editable (ver `docs/ARCHITECTURE.md`), incrementos configurables, kg/lb.
 * **Resumen** al finalizar: duración, ejercicios, series, volumen (marcado como orientativo), récords, comparación con la
@@ -105,6 +110,7 @@ Si distribuyes la app o el uso no es personal, consulta antes sus
 
 * **Sin compilar/ejecutar la parte Android** (ver arriba): falta confirmar compilación, ejecutar las pruebas
   instrumentadas, probar el arrastre para reordenar en un dispositivo y revisar el diseño en distintos tamaños.
+* El modo intervalos avisa (vibración/sonido) solo con la app abierta; si bloqueas la pantalla el reloj sigue, pero el aviso puede no sonar.
 * Solo tema oscuro (decisión de producto); no hay tema claro.
 * Los nombres de la biblioteca ampliada están en inglés (el dataset no los trae en español); las instrucciones sí.
   Su clasificación (movimiento, registro, unilateral) es heurística y puede requerir ajustes puntuales.

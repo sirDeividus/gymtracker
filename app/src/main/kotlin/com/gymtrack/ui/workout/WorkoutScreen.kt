@@ -108,6 +108,7 @@ fun WorkoutScreen(
             addSet = vm::addSet, removeSet = vm::removeSet, setSkipped = vm::setSkipped, removeExercise = vm::removeExercise,
             setNotes = vm::setNotes, setDiscomfort = vm::setDiscomfort, applySuggestion = vm::applySuggestion,
             dismissSuggestion = vm::dismissSuggestion, setBodyweightMode = vm::setBodyweightMode,
+            setMinutes = vm::setMinutes, startInterval = vm::openIntervalSetup,
         )
     }
     val progress by animateFloatAsState(workout.progress, label = "progress")
@@ -188,6 +189,14 @@ fun WorkoutScreen(
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp + contentPadding.calculateBottomPadding()))
     }
+
+    val intervalSetup by vm.intervalSetup.collectAsStateWithLifecycle()
+    val intervalRun by vm.interval.collectAsStateWithLifecycle()
+    IntervalDialog(
+        setup = intervalSetup, run = intervalRun,
+        onBegin = vm::beginInterval, onCancelSetup = vm::cancelIntervalSetup,
+        onPause = vm::pauseInterval, onResume = vm::resumeInterval, onStop = vm::stopInterval,
+    )
 
     if (picker) ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false })
 

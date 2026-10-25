@@ -43,7 +43,8 @@ class RoutineRepository(private val db: GymDatabase) {
         db.withTransaction {
             dao.upsert(
                 RoutineEntity(
-                    id = id, name = template.name, description = template.description, daysMask = 0,
+                    id = id, name = template.name, description = template.description,
+                    daysMask = com.gymtrack.domain.RoutineDays.toMask(template.days),
                     createdAt = now, updatedAt = now, sortOrder = dao.maxSortOrder() + 1,
                 ),
             )

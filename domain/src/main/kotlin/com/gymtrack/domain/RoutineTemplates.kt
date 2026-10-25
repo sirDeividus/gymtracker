@@ -13,6 +13,8 @@ data class RoutineTemplate(
     val name: String,
     val description: String,
     val items: List<TemplateItem>,
+    /** Días sugeridos (el usuario puede cambiarlos). */
+    val days: Set<java.time.DayOfWeek> = emptySet(),
 )
 
 /** Puntos de partida editables, construidos solo con ejercicios de la biblioteca. No son obligatorios. */
@@ -72,6 +74,14 @@ object RoutineTemplates {
                 TemplateItem("ex_romanian_deadlift", 2, 8, 10),
                 TemplateItem("ex_plank", 3, 1, 1, 60, durationSec = 30),
             ),
+        ),
+        RoutineTemplate(
+            "Tabata + cardio", "Abdominales en intervalos (20 s / 10 s × 8) y carrera en caminadora",
+            listOf(
+                TemplateItem("ex_tabata_abs", 8, 1, 1, restSec = 10, durationSec = 20),
+                TemplateItem("ex_treadmill_run", 1, 1, 1, restSec = 0),
+            ),
+            days = setOf(java.time.DayOfWeek.WEDNESDAY),
         ),
     )
 }

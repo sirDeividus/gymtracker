@@ -211,6 +211,13 @@ class WorkoutRepository(
         }
     }
 
+    /** Marca como completada una serie cronometrada por el modo intervalos (no inicia el descanso normal). */
+    suspend fun completeTimedSet(setId: String, durationSec: Int) {
+        val cur = sessions.getSet(setId) ?: return
+        if (cur.completed) return
+        sessions.upsertSet(cur.copy(durationSec = durationSec, completed = true, completedAt = now()))
+    }
+
     suspend fun uncompleteSet(setId: String) {
         val cur = sessions.getSet(setId) ?: return
         sessions.upsertSet(cur.copy(completed = false, completedAt = null))

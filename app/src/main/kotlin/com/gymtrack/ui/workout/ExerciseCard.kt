@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -66,6 +67,7 @@ import com.gymtrack.ui.components.GymCard
 import com.gymtrack.ui.components.hasExerciseMedia
 import com.gymtrack.ui.components.MinTouch
 import com.gymtrack.ui.components.NumberInput
+import com.gymtrack.ui.components.SecondaryButton
 import com.gymtrack.ui.theme.Brand
 import kotlin.math.abs
 
@@ -87,6 +89,8 @@ class ExerciseActions(
     val applySuggestion: (String) -> Unit,
     val dismissSuggestion: (String) -> Unit,
     val setBodyweightMode: (List<SetRecordEntity>, Int) -> Unit,
+    val setMinutes: (String, String) -> Unit,
+    val startInterval: (String) -> Unit,
 )
 
 private fun repsRange(min: Int, max: Int) = if (min == max) "$min" else "$min–$max"
@@ -189,6 +193,9 @@ fun ExerciseCard(
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text("Añadir serie") }, onClick = { menu = false; actions.addSet(e.id) })
+                if (tracking == TrackingType.DURATION) {
+                    DropdownMenuItem(text = { Text("Modo intervalos (Tabata)") }, onClick = { menu = false; actions.startInterval(e.id) })
+                }
                 DropdownMenuItem(text = { Text(if (showNotes) "Ocultar notas" else "Notas del ejercicio") }, onClick = { menu = false; showNotes = !showNotes })
                 DropdownMenuItem(
                     text = { Text(if (e.discomfort) "Quitar aviso de dolor/técnica" else "Marcar dolor o técnica deteriorada") },
@@ -254,6 +261,9 @@ fun ExerciseCard(
                     Icon(Icons.Default.Add, contentDescription = null, tint = c.primary)
                     Spacer(Modifier.width(6.dp))
                     Text("Añadir serie", color = c.primary)
+                }
+                if (tracking == TrackingType.DURATION && item.sets.any { !it.completed }) {
+                    SecondaryButton("Modo intervalos (Tabata)", { actions.startInterval(e.id) }, Modifier.fillMaxWidth(), icon = Icons.Default.Timer)
                 }
                 if (showNotes) {
                     var notes by remember(e.id) { mutableStateOf(e.notes) }
@@ -329,7 +339,7 @@ private fun fieldLabels(tracking: TrackingType, bwMode: Int, unit: WeightUnit): 
     TrackingType.WEIGHT_REPS -> listOf("PESO (${unit.symbol})", "REPS")
     TrackingType.BODYWEIGHT -> if (bwMode == 0) listOf("REPS") else listOf(if (bwMode > 0) "+${unit.symbol}" else "−${unit.symbol}", "REPS")
     TrackingType.DURATION -> listOf("SEGUNDOS")
-    TrackingType.DISTANCE -> listOf("DIST. (m)", "SEG")
+    TrackingType.DISTANCE -> listOf("KM", "MIN")
 }
 
 @Composable
@@ -403,14 +413,23 @@ private fun SetRow(
                 }
                 TrackingType.DISTANCE -> {
                     FieldBox(W_FIELD) {
-                        NumberInput(set.distanceM?.let { Formatting.number(it) }.orEmpty(), "0", { actions.setDistance(set.id, it) }, decimal = true, description = "Distancia en metros serie $label")
+                        NumberInput(set.distanceM?.let { Formatting.number(it / 1000.0, 3) }.orEmpty(), "0", { actions.setDistance(set.id, it) }, decimal = true, description = "Kilómetros serie $label")
                     }
                     FieldBox(W_FIELD) {
-                        NumberInput(set.durationSec?.toString().orEmpty(), "0", { actions.setDuration(set.id, it) }, decimal = false, description = "Segundos serie $label")
+                        NumberInput(set.durationSec?.let { Formatting.number(it / 60.0, 2) }.orEmpty(), "0", { actions.setMinutes(set.id, it) }, decimal = true, description = "Minutos serie $label")
                     }
                 }
             }
             CompleteButton(set.completed, label) { actions.toggleComplete(set) }
+        }
+        val dist = set.distanceM
+        val dur = set.durationSec
+        if (tracking == TrackingType.DISTANCE && dist != null && dur != null && dist > 0 && dur > 0) {
+            Text(
+                "Ritmo ${Formatting.duration((dur / (dist / 1000.0)).toInt())} /km",
+                style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
+                modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
+            )
         }
         if (!records.isNullOrEmpty() && set.completed) {
             Row(Modifier.padding(start = 8.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {

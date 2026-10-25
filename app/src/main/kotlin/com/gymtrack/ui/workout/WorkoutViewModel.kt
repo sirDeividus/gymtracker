@@ -15,10 +15,17 @@ import com.gymtrack.domain.ExerciseBests
 import com.gymtrack.domain.Formatting
 import com.gymtrack.domain.PersonalRecord
 import com.gymtrack.domain.PrReplay
+import com.gymtrack.domain.IntervalPhase
+import com.gymtrack.domain.IntervalPlan
+import com.gymtrack.domain.IntervalSnapshot
+import com.gymtrack.domain.IntervalTimer
 import com.gymtrack.domain.RestTimerState
 import com.gymtrack.domain.TrackingType
 import com.gymtrack.notify.RestNotifier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +50,19 @@ data class WorkoutUiState(
 ) {
     val elapsedSec: Long
         get() = workout?.let { ((nowMs - it.session.startedAt) / 1000).coerceAtLeast(0) } ?: 0
+}
+
+/** Configuración previa del modo intervalos para un ejercicio por duración. */
+data class IntervalSetup(val exerciseId: String, val exerciseName: String, val workSec: Int, val restSec: Int, val rounds: Int)
+
+data class IntervalUi(val exerciseName: String, val plan: IntervalPlan, val snapshot: IntervalSnapshot, val paused: Boolean)
+
+private class IntervalRun(val setIds: List<String>, val plan: IntervalPlan, val startMs: Long, val name: String) {
+    var pausedAt: Long? = null
+    var pausedTotal = 0L
+    var done = 0
+    var lastKey: Pair<IntervalPhase, Int>? = null
+    fun elapsed(now: Long): Long = (pausedAt ?: now) - startMs - pausedTotal
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -144,8 +164,15 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
 
     fun setDistance(setId: String, text: String) {
         if (text.isBlank()) return edit(setId) { it.copy(distanceM = null) }
-        val v = Formatting.parseDecimal(text) ?: return
-        edit(setId) { it.copy(distanceM = v) }
+        val km = Formatting.parseDecimal(text) ?: return
+        edit(setId) { it.copy(distanceM = km * 1000) }
+    }
+
+    /** Minutos (admite decimales) → segundos. */
+    fun setMinutes(setId: String, text: String) {
+        if (text.isBlank()) return edit(setId) { it.copy(durationSec = null) }
+        val min = Formatting.parseDecimal(text) ?: return
+        edit(setId) { it.copy(durationSec = Math.round(min * 60).toInt()) }
     }
 
     fun setRpe(setId: String, rpe: Double?) = edit(setId) { it.copy(rpe = rpe) }
@@ -234,6 +261,92 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
     fun restartRest() = withSession { c.workout.restartRest(it) }
     fun skipRest() = withSession { c.workout.skipRest(it) }
     fun adjustRest(deltaSec: Int) = withSession { c.workout.adjustRest(it, deltaSec) }
+
+    // ------------------------------------------------------------ Modo intervalos (Tabata)
+
+    val intervalSetup = MutableStateFlow<IntervalSetup?>(null)
+    val interval = MutableStateFlow<IntervalUi?>(null)
+    private var run: IntervalRun? = null
+    private var runJob: Job? = null
+
+    /** Abre la configuración con los valores del ejercicio: trabajo = duración objetivo, descanso = su descanso. */
+    fun openIntervalSetup(sessionExerciseId: String) {
+        val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == sessionExerciseId } ?: return
+        val pending = ex.sets.count { !it.completed }
+        if (pending == 0) {
+            events.tryEmit("No quedan series pendientes en este ejercicio")
+            return
+        }
+        intervalSetup.value = IntervalSetup(
+            sessionExerciseId, ex.entity.exerciseName,
+            workSec = (ex.entity.targetDurationSec ?: 20).coerceIn(5, 300),
+            restSec = ex.entity.restSec.coerceIn(0, 120),
+            rounds = pending.coerceAtMost(20),
+        )
+    }
+
+    fun cancelIntervalSetup() { intervalSetup.value = null }
+
+    /** Cada ronda de trabajo completa una serie pendiente del ejercicio, en orden. */
+    fun beginInterval(workSec: Int, restSec: Int) {
+        val setup = intervalSetup.value ?: return
+        val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == setup.exerciseId } ?: return
+        val ids = ex.sets.filter { !it.completed }.map { it.id }.take(20)
+        if (ids.isEmpty()) return
+        val plan = IntervalPlan(workSec, restSec, ids.size)
+        intervalSetup.value = null
+        val r = IntervalRun(ids, plan, System.currentTimeMillis(), setup.exerciseName)
+        run = r
+        runJob?.cancel()
+        runJob = viewModelScope.launch {
+            while (isActive) {
+                tickInterval(r)
+                if (r.done >= plan.rounds) break
+                delay(200)
+            }
+        }
+    }
+
+    private suspend fun tickInterval(r: IntervalRun) {
+        val snap = IntervalTimer.snapshot(r.plan, r.elapsed(System.currentTimeMillis()))
+        while (r.done < snap.completedRounds && r.done < r.setIds.size) {
+            c.workout.completeTimedSet(r.setIds[r.done], r.plan.workSec)
+            r.done++
+        }
+        val key = snap.phase to snap.round
+        if (key != r.lastKey) {
+            val first = r.lastKey == null
+            r.lastKey = key
+            if (!first) intervalAlert()
+        }
+        interval.value = IntervalUi(r.name, r.plan, snap, r.pausedAt != null)
+    }
+
+    private fun intervalAlert() {
+        val s = state.value.settings
+        if (s.vibration) RestNotifier.vibrate(c.context)
+        if (s.sound) RestNotifier.beep()
+    }
+
+    fun pauseInterval() {
+        run?.let { if (it.pausedAt == null) it.pausedAt = System.currentTimeMillis() }
+    }
+
+    fun resumeInterval() {
+        run?.let {
+            val p = it.pausedAt ?: return
+            it.pausedTotal += System.currentTimeMillis() - p
+            it.pausedAt = null
+        }
+    }
+
+    /** Termina o cierra el modo intervalos. Las rondas ya completadas se conservan. */
+    fun stopInterval() {
+        runJob?.cancel()
+        runJob = null
+        run = null
+        interval.value = null
+    }
 
     // ------------------------------------------------------------ Finalizar / descartar
 

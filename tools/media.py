@@ -56,7 +56,7 @@ CURATED = {
     "standing_calf_raise": "lever standing calf raise", "seated_calf_raise": "lever seated calf raise",
     "crunch": "crunch floor", "hanging_leg_raise": "hanging straight leg raise", "cable_crunch": "cable kneeling crunch",
     "ab_wheel": "wheel rollerout", "russian_twist": "russian twist", "dead_bug": "dead bug",
-    "kettlebell_swing": "kettlebell swing", "burpee": "burpee", "running": "run",
+    "kettlebell_swing": "kettlebell swing", "burpee": "burpee", "running": "run", "treadmill_run": "run",
 }
 
 
