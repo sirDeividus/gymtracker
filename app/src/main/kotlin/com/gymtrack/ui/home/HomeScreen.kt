@@ -58,6 +58,8 @@ import com.gymtrack.ui.components.SectionTitle
 import com.gymtrack.ui.components.pressScale
 import com.gymtrack.ui.history.HistoryItem
 import com.gymtrack.ui.theme.Brand
+import com.gymtrack.ui.theme.DeepBlack
+import com.gymtrack.ui.theme.TextMuted
 import com.gymtrack.ui.theme.ExerciseTitleStyle
 import com.gymtrack.ui.workout.StartWorkoutDialog
 import java.time.DayOfWeek
@@ -92,7 +94,7 @@ fun HomeScreen(
     val unit = st.settings.unit
     val today = LocalDate.now().dayOfWeek
 
-    Box(Modifier.fillMaxSize().padding(contentPadding)) {
+    Box(Modifier.fillMaxSize().background(DeepBlack).padding(contentPadding)) {
         LazyColumn(
             Modifier.fillMaxSize(),
             // Espacio inferior para que el botón flotante no tape el contenido.
@@ -114,7 +116,7 @@ fun HomeScreen(
             // ---- Bento 1: semana (grande) + racha y series
             item {
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    GymCard(Modifier.weight(1.4f).fillMaxHeight(), radius = 24.dp, contentPadding = PaddingValues(16.dp)) {
+                    GymCard(Modifier.weight(1.4f).fillMaxHeight(), contentPadding = PaddingValues(16.dp)) {
                         Label("Esta semana")
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text("${st.sessionsThisWeek}", fontSize = 48.sp, fontWeight = FontWeight.Black, lineHeight = 52.sp)
@@ -136,7 +138,7 @@ fun HomeScreen(
 
             // ---- Rutina del día / sesión en curso (hero)
             item {
-                GymCard(Modifier.fillMaxWidth(), radius = 24.dp, contentPadding = PaddingValues(20.dp)) {
+                GymCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(20.dp)) {
                     val active = st.active
                     val rec = st.recommendation
                     if (active != null) {
@@ -226,7 +228,7 @@ fun HomeScreen(
             // ---- Mapa de músculos recientes
             if (st.recentMuscles.isNotEmpty()) {
                 item {
-                    GymCard(Modifier.fillMaxWidth(), radius = 24.dp) {
+                    GymCard(Modifier.fillMaxWidth()) {
                         SectionTitle("Músculos entrenados · últimos 14 días")
                         val max = st.recentMuscles.maxOf { it.second }.coerceAtLeast(1)
                         MuscleMap(st.recentMuscles.toMap(), Modifier.padding(top = 10.dp, bottom = 6.dp))
@@ -273,7 +275,7 @@ fun HomeScreen(
 
 @Composable
 private fun Label(text: String) {
-    Text(text.uppercase(), style = MaterialTheme.typography.labelMedium, color = Brand.colors.textSecondary, letterSpacing = 1.5.sp)
+    Text(text.uppercase(), style = MaterialTheme.typography.labelMedium, color = TextMuted)
 }
 
 /** Tarjeta pequeña de la cuadrícula. El acento solo se usa para la racha. */

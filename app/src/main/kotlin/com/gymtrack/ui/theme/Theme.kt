@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
@@ -27,9 +28,13 @@ data class BrandColors(
     val surfaceHigh: Color,
     val outline: Color,
     val primary: Color,
+    val primaryEnd: Color,
+    val primaryGradient: Brush,
     val onPrimary: Color,
     val text: Color,
     val textSecondary: Color,
+    val textMuted: Color,
+    val silhouette: Color,
     val warning: Color,
     val error: Color,
 )
@@ -46,13 +51,13 @@ private val GymTypography = Typography(
     headlineLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Black, fontSize = 32.sp, lineHeight = 38.sp),
     headlineMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Black, fontSize = 26.sp, lineHeight = 32.sp),
     titleLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 22.sp),
+    titleMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, lineHeight = 22.sp),
     bodyLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 16.sp, lineHeight = 22.sp),
     bodyMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp),
     bodySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 12.sp, lineHeight = 16.sp),
     labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.4.sp),
-    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 0.6.sp),
-    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 0.6.sp),
+    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.5.sp),
+    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.5.sp),
 )
 
 private val GymShapes = Shapes(
@@ -80,9 +85,13 @@ fun GymTrackTheme(content: @Composable () -> Unit) {
         surfaceHigh = colorResource(R.color.brand_surface_high),
         outline = colorResource(R.color.brand_outline),
         primary = colorResource(R.color.brand_primary),
+        primaryEnd = colorResource(R.color.brand_primary_end),
+        primaryGradient = Brush.horizontalGradient(listOf(colorResource(R.color.brand_primary), colorResource(R.color.brand_primary_end))),
         onPrimary = colorResource(R.color.brand_on_primary),
         text = colorResource(R.color.brand_text),
         textSecondary = colorResource(R.color.brand_text_secondary),
+        textMuted = colorResource(R.color.brand_text_muted),
+        silhouette = colorResource(R.color.brand_silhouette),
         warning = colorResource(R.color.brand_warning),
         error = colorResource(R.color.brand_error),
     )

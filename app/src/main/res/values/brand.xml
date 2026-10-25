@@ -9,17 +9,23 @@
     <string name="app_name">GymTrack</string>
     <string name="brand_tagline">Entrena. Registra. Progresa.</string>
 
-    <color name="brand_background">#09090B</color>
-    <color name="brand_surface">#18181B</color>
-    <color name="brand_surface_high">#1F1F23</color>
-    <color name="brand_outline">#27272A</color>
-    <color name="brand_primary">#FF5722</color>
-    <color name="brand_on_primary">#09090B</color>
+    <color name="brand_background">#070708</color>
+    <color name="brand_surface">#141416</color>
+    <color name="brand_surface_high">#1C1C1F</color>
+    <color name="brand_outline">#232326</color>
+    <color name="brand_primary">#FF1E46</color>
+    <!-- Final del degradado de acento (PremiumRedGradient: brand_primary → brand_primary_end), solo para cápsulas de acción -->
+    <color name="brand_primary_end">#FF4D6D</color>
+    <color name="brand_on_primary">#070708</color>
     <color name="brand_text">#FAFAFA</color>
     <color name="brand_text_secondary">#A1A1AA</color>
+    <!-- Etiquetas de 11 sp en mayúsculas (TextMuted). El texto descriptivo usa brand_text_secondary. -->
+    <color name="brand_text_muted">#71717A</color>
+    <!-- Silueta del mapa de músculos -->
+    <color name="brand_silhouette">#1E1E21</color>
     <color name="brand_warning">#FACC15</color>
     <!-- Error/borrado: salmón pálido, distinto del rojo de marca para no confundirlos -->
     <color name="brand_error">#FFB4AB</color>
 
-    <color name="brand_icon_background">#09090B</color>
+    <color name="brand_icon_background">#070708</color>
 </resources>

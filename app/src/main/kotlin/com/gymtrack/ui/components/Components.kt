@@ -98,7 +98,7 @@ fun GymCard(
     onClick: (() -> Unit)? = null,
     highlighted: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(16.dp),
-    radius: androidx.compose.ui.unit.Dp = 16.dp,
+    radius: androidx.compose.ui.unit.Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val c = Brand.colors
@@ -177,7 +177,7 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier, action: (@Composab
         Text(
             text.uppercase(),
             style = MaterialTheme.typography.labelMedium,
-            color = Brand.colors.textSecondary,
+            color = Brand.colors.textMuted,
             modifier = Modifier.weight(1f),
         )
         action?.invoke()
