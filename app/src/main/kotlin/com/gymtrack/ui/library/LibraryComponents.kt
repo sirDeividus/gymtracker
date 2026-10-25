@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -236,16 +237,21 @@ fun ExercisePickerSheet(
                 colors = fieldColors(),
             )
             if (!showList) {
-                Box(Modifier.weight(1f).fillMaxWidth()) {
+                // El botón va ARRIBA (siempre visible) y la silueta se desplaza si la pantalla es baja.
+                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            if (back) "ESPALDA" else "FRENTE", style = MaterialTheme.typography.labelLarge, color = c.textMuted,
+                            modifier = Modifier.weight(1f),
+                        )
+                        GradientCapsuleButton(
+                            "GIRAR", { back = !back }, Modifier.heightIn(min = 48.dp), icon = Icons.Default.Refresh,
+                        )
+                    }
                     MuscleSelector(
                         back = back,
                         onSelect = { m -> vm.clearFilters(); vm.toggleMuscle(m); browsing = true },
-                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
-                    )
-                    GradientCapsuleButton(
-                        if (back) "VER FRENTE" else "GIRAR", { back = !back },
-                        Modifier.align(Alignment.BottomEnd).padding(end = ScreenPadding, bottom = 24.dp),
-                        icon = Icons.Default.Refresh,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
                     )
                 }
             } else {
