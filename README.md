@@ -1,0 +1,111 @@
+# GymTrack
+
+App Android nativa (Kotlin + Jetpack Compose + Room) para registrar entrenamientos de fuerza rápido y con datos
+fiables. Funciona **sin conexión, sin cuenta y sin permisos innecesarios**.
+
+> **Estado honesto de la verificación**
+> * `domain/` (toda la lógica de entrenamiento): **compilado y probado — 84 pruebas JUnit pasando**.
+> * `app/` (Android): código completo, pero **no se ha podido compilar ni ejecutar** donde se escribió
+>   (el entorno bloqueaba Google Maven, necesario para el Android Gradle Plugin, Compose y el SDK).
+>   La primera sincronización de Gradle en Android Studio puede mostrar algún error de compilación
+>   que habrá que corregir. Tampoco se han ejecutado las pruebas instrumentadas ni se ha generado APK.
+
+## Abrir y ejecutar en Android Studio
+
+1. Android Studio **Ladybug (2024.2)** o posterior, con JDK 17+ (el JBR incluido sirve) y Android SDK 35.
+2. `File ▸ Open…` y elige la carpeta del proyecto. Deja que Gradle sincronice (descarga Gradle 8.10.2 vía wrapper).
+3. Elige un dispositivo/emulador con Android 8.0 (API 26) o superior y pulsa **Run ▸ app**.
+
+## Generar el APK
+
+```bash
+./gradlew :app:assembleDebug      # → app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Lanzamiento firmado.** Crea un keystore (`keytool -genkey -v -keystore gymtrack.jks -alias gymtrack -keyalg RSA -keysize 2048 -validity 10000`)
+y un archivo `keystore.properties` en la raíz (ignorado por git):
+
+```
+storeFile=gymtrack.jks
+storePassword=…
+keyAlias=gymtrack
+keyPassword=…
+```
+
+```bash
+./gradlew :app:assembleRelease    # APK firmado, con R8 + reducción de recursos
+./gradlew :app:bundleRelease      # AAB para Play Store
+```
+
+Sin `keystore.properties`, `assembleRelease` genera un APK sin firmar.
+
+## Pruebas
+
+```bash
+cd domain && ../gradlew test                  # lógica de entrenamiento (84 pruebas; no necesita Android)
+./gradlew :app:connectedDebugAndroidTest      # persistencia, recuperación de sesión, migraciones y copia
+                                              # de seguridad con Room real (necesita dispositivo/emulador)
+```
+
+## Personalizar la marca
+
+Todo en un solo sitio: `app/src/main/res/values/brand.xml` (nombre, lema y paleta; la UI de Compose lee estos
+recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` (icono). El `applicationId` está en
+`app/build.gradle.kts`.
+
+## Funcionalidades implementadas
+
+* **Rutinas**: crear, editar, duplicar y eliminar; días de entrenamiento; añadir/quitar ejercicios; **reordenar arrastrando**
+  (y con menú Subir/Bajar para accesibilidad); series, rango de repeticiones, duración objetivo, peso inicial, descanso y
+  notas; copiar ejercicios de otra rutina; totales de ejercicios y series; **autoguardado**; plantillas editables
+  (Push, Pull, Piernas, Torso, Full Body). Eliminar una rutina no toca el historial.
+* **Biblioteca**: 92 ejercicios revisados + **biblioteca ampliada opcional de 1.324** (datos MIT de
+  [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset), instrucciones en español);
+  búsqueda instantánea (sin acentos), filtros por 12 grupos musculares y 7 equipamientos, orden por relevancia
+  (según tu uso real) / grupo / equipamiento / nombre, ejercicios personalizados, métodos de registro (peso y reps,
+  peso corporal, duración, distancia/tiempo) y unilaterales por lado.
+* **Entrenamiento activo**: tabla `SERIE | ANTERIOR | PESO | REPS | ✓`; el número de series coincide con la
+  rutina; completar con un toque (valores precargados de la última sesión); editar series completadas; añadir,
+  quitar y repetir serie; RPE opcional; saltar/añadir/quitar ejercicio; notas; marca de dolor o técnica;
+  temporizador de descanso (pausa, reinicio, ±15 s, saltar, vibración/sonido opcionales, aviso en segundo plano);
+  récords en vivo sin interrumpir; pantalla siempre encendida; **la sesión se recupera tras cerrar la app o reiniciar**.
+* **Peso corporal** sin kilos obligatorios (peso corporal / + lastre / − asistencia).
+* **Progresión sugerida** con motivo y editable (ver `docs/ARCHITECTURE.md`), incrementos configurables, kg/lb.
+* **Resumen** al finalizar: duración, ejercicios, series, volumen (marcado como orientativo), récords, comparación con la
+  sesión anterior de la rutina, notas. Descartar ≠ finalizar, con confirmación.
+* **Historial**: calendario mensual, lista, detalle exacto de cada sesión, evolución por ejercicio.
+* **Progreso**: evolución (carga, 1RM estimado, repeticiones, volumen, duración) por ejercicio y periodo, frecuencia
+  semanal, series por grupo muscular, volumen semanal y récords personales, con estados vacíos útiles.
+* **Inicio**: saludo, ENTRENAR / continuar, rutina de hoy o recomendada, resumen semanal, último entrenamiento con
+  variación de volumen, "Tu próximo objetivo" (solo con historial real), músculos recientes.
+* **Copia de seguridad** JSON exportable/importable con validación y confirmación antes de sobrescribir (transacción
+  atómica: si falla, no se modifica nada).
+
+## Imágenes y GIF de ejercicios (opcional, uso personal)
+
+Las imágenes y animaciones del dataset son **© Gym visual** y no están bajo la licencia MIT, por lo que **no se
+incluyen en este repositorio** (que es público). La app las muestra automáticamente, con su atribución, si las copias
+tú en local:
+
+```bash
+git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset /ruta/exercises-dataset
+python3 tools/media.py copy /ruta/exercises-dataset              # imágenes + GIF (≈137 MB de APK)
+python3 tools/media.py copy /ruta/exercises-dataset --no-gifs    # solo miniaturas (≈9 MB)
+```
+
+Si distribuyes la app o el uso no es personal, consulta antes sus
+[términos](https://gymvisual.com/content/3-terms-and-conditions-of-use). Detalles en `THIRD_PARTY_NOTICES.md`.
+
+## Limitaciones y pendiente
+
+* **Sin compilar/ejecutar la parte Android** (ver arriba): falta confirmar compilación, ejecutar las pruebas
+  instrumentadas, probar el arrastre para reordenar en un dispositivo y revisar el diseño en distintos tamaños.
+* Solo tema oscuro (decisión de producto); no hay tema claro.
+* Los nombres de la biblioteca ampliada están en inglés (el dataset no los trae en español); las instrucciones sí.
+  Su clasificación (movimiento, registro, unilateral) es heurística y puede requerir ajustes puntuales.
+* Los medios solo existen para los ejercicios con equivalente exacto en el dataset (76 de los 92 básicos + toda la ampliada).
+* El aviso de fin de descanso en segundo plano usa una alarma inexacta (respeta el ahorro de batería): puede
+  retrasarse unos segundos o minutos con optimización agresiva.
+* La copia de seguridad incluye sesiones finalizadas, no la sesión en curso ni las descartadas.
+* Sin pruebas de interfaz (Compose UI tests) ni internacionalización (solo español).
+* Auto-copia de seguridad de Android activada (Room + ajustes); si no la quieres, ponla a `false` en el manifiesto.
