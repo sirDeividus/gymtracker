@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -316,7 +317,7 @@ fun ExercisePickerSheet(
             initial = null,
             onDismiss = { creating = false },
             onSave = { f2, done ->
-                vm.saveCustom(null, f2.name, f2.primary, f2.secondary, f2.equipment, f2.movement, f2.tracking, f2.unilateral, f2.description, f2.cues) { err ->
+                vm.saveCustom(null, f2.name, f2.primary, f2.secondary, f2.equipment, f2.movement, f2.tracking, f2.unilateral, f2.description, f2.cues, f2.video, f2.removeVideo) { err ->
                     if (err == null) creating = false
                     done(err)
                 }
@@ -348,7 +349,10 @@ private fun ExerciseGridCard(ex: Exercise, onClick: () -> Unit) {
 class ExerciseForm(
     val name: String, val primary: MuscleGroup, val secondary: List<MuscleGroup>, val equipment: Equipment,
     val movement: MovementType, val tracking: TrackingType, val unilateral: Boolean, val description: String, val cues: String,
+    val video: java.io.File? = null, val removeVideo: Boolean = false,
 )
+
+private fun mb(bytes: Long): String = if (bytes < 0) "?" else if (bytes < 1_000_000) "${bytes / 1000} KB" else String.format(java.util.Locale.US, "%.1f MB", bytes / 1_000_000.0)
 
 @Composable
 fun ExerciseEditorDialog(
@@ -367,6 +371,27 @@ fun ExerciseEditorDialog(
     var description by rememberSaveable { mutableStateOf(initial?.description.orEmpty()) }
     var cues by rememberSaveable { mutableStateOf(initial?.cues.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var newVideo by remember { mutableStateOf<com.gymtrack.data.media.CompressedVideo?>(null) }
+    var removeVideo by remember { mutableStateOf(false) }
+    var compressing by remember { mutableStateOf(false) }
+    var videoError by remember { mutableStateOf<String?>(null) }
+    val hasSavedVideo = remember(initial?.id) { initial != null && (context.applicationContext as com.gymtrack.GymTrackApp).container.media.videoFile(initial.id) != null }
+    val pickVideo = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri != null) {
+            compressing = true; videoError = null
+            scope.launch {
+                val r = com.gymtrack.data.media.VideoCompressor.compress(context, uri)
+                compressing = false
+                r.onSuccess { newVideo?.file?.delete(); newVideo = it; removeVideo = false }
+                    .onFailure { videoError = "No se pudo reducir el video (${it.message ?: "formato no compatible"})" }
+            }
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { /* el temporal se limpia al guardar o cancelar */ } }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = c.background) {
@@ -409,6 +434,31 @@ fun ExerciseEditorDialog(
                         style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
                         modifier = Modifier.padding(horizontal = ScreenPadding),
                     )
+                    Label("Video de demostración (opcional)")
+                    Column(Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val nv = newVideo
+                        Text(
+                            when {
+                                compressing -> "Reduciendo el video… puede tardar unos segundos."
+                                nv != null -> "Listo: ${mb(nv.originalBytes)} → ${mb(nv.finalBytes)}. Se guarda en tu teléfono."
+                                hasSavedVideo && !removeVideo -> "Este ejercicio ya tiene un video guardado."
+                                else -> "Se reduce solo a 480 px, sin audio y máximo ${com.gymtrack.data.media.VideoCompressor.MAX_SECONDS} s (≈1 MB)."
+                            },
+                            style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
+                        )
+                        videoError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = c.error) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            SecondaryButton(
+                                if (nv != null || (hasSavedVideo && !removeVideo)) "CAMBIAR VIDEO" else "ELEGIR VIDEO",
+                                { pickVideo.launch(androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly)) },
+                                enabled = !compressing,
+                            )
+                            if (compressing) androidx.compose.material3.CircularProgressIndicator(Modifier.size(24.dp), color = c.primary, strokeWidth = 2.dp)
+                            if (nv != null || (hasSavedVideo && !removeVideo)) {
+                                TextButton(onClick = { newVideo?.file?.delete(); newVideo = null; removeVideo = hasSavedVideo }) { Text("Quitar", color = c.error) }
+                            }
+                        }
+                    }
                     Label("Tipo de movimiento")
                     ChipSelector(MovementType.values().toList(), setOf(movement), { it.label }, { movement = it })
                     Row(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding), verticalAlignment = Alignment.CenterVertically) {
@@ -430,7 +480,7 @@ fun ExerciseEditorDialog(
                 BigButton(
                     "Guardar ejercicio",
                     onClick = {
-                        onSave(ExerciseForm(name, primary, secondary, equipment, movement, tracking, unilateral, description, cues)) { err -> error = err }
+                        onSave(ExerciseForm(name, primary, secondary, equipment, movement, tracking, unilateral, description, cues, newVideo?.file, removeVideo)) { err -> error = err }
                     },
                     modifier = Modifier.padding(ScreenPadding).navigationBarsPaddingCompat(),
                 )
@@ -534,7 +584,7 @@ fun LibraryScreen(
             initial = initial,
             onDismiss = { creating = false; editing = null },
             onSave = { f, done ->
-                vm.saveCustom(initial?.id, f.name, f.primary, f.secondary, f.equipment, f.movement, f.tracking, f.unilateral, f.description, f.cues) { err ->
+                vm.saveCustom(initial?.id, f.name, f.primary, f.secondary, f.equipment, f.movement, f.tracking, f.unilateral, f.description, f.cues, f.video, f.removeVideo) { err ->
                     if (err == null) { creating = false; editing = null }
                     done(err)
                 }

@@ -61,16 +61,24 @@ class LibraryViewModel(private val c: AppContainer) : ViewModel() {
     fun saveCustom(
         id: String?, name: String, primary: MuscleGroup, secondary: List<MuscleGroup>, equipment: Equipment,
         movement: MovementType, tracking: TrackingType, unilateral: Boolean, description: String, cues: String,
+        video: java.io.File? = null, removeVideo: Boolean = false,
         onResult: (String?) -> Unit,
     ) {
         viewModelScope.launch {
             val r = c.exercises.saveCustom(id, name, primary, secondary, equipment, movement, tracking, unilateral, description, cues)
+            r.getOrNull()?.let { ex ->
+                when {
+                    video != null -> c.media.attachVideo(ex.id, video)
+                    removeVideo -> c.media.removeVideo(ex.id)
+                }
+            }
+            if (r.isFailure) video?.delete()
             onResult(r.exceptionOrNull()?.message)
         }
     }
 
     fun deleteCustom(id: String) {
-        viewModelScope.launch { c.exercises.deleteCustom(id) }
+        viewModelScope.launch { c.exercises.deleteCustom(id); c.media.removeVideo(id) }
     }
 
     private fun <T> Set<T>.toggle(x: T): Set<T> = if (x in this) this - x else this + x

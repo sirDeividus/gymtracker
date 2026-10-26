@@ -94,6 +94,9 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
   descanso por ejercicio. **Bloqueo durante el descanso**: la pantalla ignora toques (bolsillo) hasta que mantienes pulsado el candado.
 * **Añadir ejercicio**: silueta corporal tocable (Girar frente/espalda) → cuadrícula de ejercicios del músculo elegido, con filtros.
 * **Editar ejercicio** de rutina a pantalla completa con una tarjeta por serie (todas comparten objetivo).
+* **Demostración a pantalla completa**: el GIF se anima en la miniatura del entrenamiento y, al tocarlo, se abre ajustado a la pantalla.
+  En ejercicios personalizados puedes subir tu propio video: se reduce solo (480 px, sin audio, máx. 10 s, ≈1 MB, Media3 Transformer)
+  y queda en el almacenamiento privado (no entra en la copia JSON).
 * **Fotos de progreso y peso corporal** (Progreso → Fotos y peso): cámara o galería, pose, nota, comparación antes/después
   y gráfica de peso. Se guardan en el almacenamiento privado de la app; no se suben a ningún sitio.
 

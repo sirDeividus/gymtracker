@@ -170,7 +170,7 @@ fun ExerciseCard(
             com.gymtrack.ui.components.ExerciseImageFill(
                 e.exerciseId, e.exerciseName,
                 Modifier.size(52.dp).clickable { showMedia = true }.semantics { contentDescription = "Ver demostración de ${e.exerciseName}" },
-                shape = CircleShape,
+                shape = CircleShape, animated = true,
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {

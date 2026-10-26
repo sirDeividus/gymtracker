@@ -45,6 +45,7 @@ class AppContainer(val context: Context) {
     val imageLoader: ImageLoader = ImageLoader.Builder(context)
         .components {
             if (Build.VERSION.SDK_INT >= 28) add(ImageDecoderDecoder.Factory()) else add(GifDecoder.Factory())
+            add(coil.decode.VideoFrameDecoder.Factory()) // primer fotograma de los videos propios
         }
         .build()
 
