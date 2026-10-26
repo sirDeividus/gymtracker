@@ -22,7 +22,7 @@ import kotlin.coroutines.resume
 class CompressedVideo(val file: File, val originalBytes: Long, val finalBytes: Long)
 
 /**
- * Reduce un video para que pese poco: lado corto 480 px, ~0,8 Mbps, sin audio y máximo 10 s
+ * Reduce un video para que pese poco: altura 480 px, ~0,8 Mbps, sin audio y máximo 10 s
  * (≈1 MB). Usa Media3 Transformer (codificación por hardware); debe llamarse desde el hilo principal.
  */
 object VideoCompressor {
@@ -45,7 +45,7 @@ object VideoCompressor {
             .build()
         val edited = EditedMediaItem.Builder(item)
             .setRemoveAudio(true)
-            .setEffects(Effects(emptyList(), listOf(Presentation.createForShortSide(SHORT_SIDE))))
+            .setEffects(Effects(emptyList(), listOf(Presentation.createForHeight(SHORT_SIDE))))
             .build()
         val encoder = DefaultEncoderFactory.Builder(context)
             .setRequestedVideoEncoderSettings(VideoEncoderSettings.Builder().setBitrate(BITRATE).build())
