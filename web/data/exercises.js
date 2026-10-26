@@ -1,0 +1,1319 @@
+export default [
+{
+"id": "ex_bench_press",
+"name": "Press de banca con barra",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "BARBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Empuje horizontal en banco plano con barra.",
+"cues": "Escápulas juntas y abajo; pies firmes; baja la barra al pecho medio con control."
+},
+{
+"id": "ex_incline_bench_press",
+"name": "Press inclinado con barra",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "BARBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press en banco inclinado (30–45°) que enfatiza el pecho superior.",
+"cues": "Inclinación moderada para no sobrecargar los hombros."
+},
+{
+"id": "ex_dumbbell_bench_press",
+"name": "Press de banca con mancuernas",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "DUMBBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press plano con mancuernas, mayor recorrido que con barra.",
+"cues": "Codos a unos 45–60° del torso."
+},
+{
+"id": "ex_incline_dumbbell_press",
+"name": "Press inclinado con mancuernas",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "DUMBBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press inclinado con mancuernas para el pecho superior.",
+"cues": "Controla la bajada; no choques las mancuernas arriba."
+},
+{
+"id": "ex_machine_chest_press",
+"name": "Press de pecho en máquina",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "MACHINE",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press guiado, estable y adecuado para series cercanas al fallo.",
+"cues": "Ajusta el asiento para que las asas queden a la altura del pecho."
+},
+{
+"id": "ex_dumbbell_fly",
+"name": "Aperturas con mancuernas",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento de pecho con arco amplio.",
+"cues": "Codos ligeramente flexionados; no bajes más allá de lo cómodo para el hombro."
+},
+{
+"id": "ex_cable_crossover",
+"name": "Cruce de poleas",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "CABLE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento con tensión constante.",
+"cues": "Junta las manos delante del pecho sin encoger los hombros."
+},
+{
+"id": "ex_pec_deck",
+"name": "Contractora (pec deck)",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aperturas en máquina guiada.",
+"cues": "Pecho alto, espalda apoyada."
+},
+{
+"id": "ex_push_up",
+"name": "Flexiones",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS",
+"CORE"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Empuje con peso corporal.",
+"cues": "Cuerpo en línea recta; pecho cerca del suelo."
+},
+{
+"id": "ex_incline_push_up",
+"name": "Flexiones inclinadas (manos elevadas)",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Variante más fácil de flexiones con las manos elevadas.",
+"cues": "Útil para progresar hacia flexiones en suelo."
+},
+{
+"id": "ex_decline_push_up",
+"name": "Flexiones declinadas (pies elevados)",
+"muscle": "CHEST",
+"secondary": [
+"SHOULDERS",
+"TRICEPS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Variante más difícil de flexiones con los pies elevados.",
+"cues": "Mantén el core firme."
+},
+{
+"id": "ex_chest_dip",
+"name": "Fondos en paralelas (pecho)",
+"muscle": "CHEST",
+"secondary": [
+"TRICEPS",
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Fondos con torso inclinado hacia delante.",
+"cues": "Baja hasta una profundidad cómoda para el hombro."
+},
+{
+"id": "ex_pull_up",
+"name": "Dominadas",
+"muscle": "BACK",
+"secondary": [
+"BICEPS",
+"FOREARMS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PULL",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Tirón vertical con agarre pronado.",
+"cues": "Inicia el movimiento deprimiendo las escápulas; barbilla sobre la barra."
+},
+{
+"id": "ex_chin_up",
+"name": "Dominadas supinas",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PULL",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Tirón vertical con agarre supino, mayor participación del bíceps.",
+"cues": "Evita balancearte."
+},
+{
+"id": "ex_assisted_pull_up",
+"name": "Dominadas asistidas (máquina)",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "MACHINE",
+"movement": "PULL",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Dominadas con asistencia; registra la asistencia como peso negativo.",
+"cues": "Reduce la asistencia progresivamente."
+},
+{
+"id": "ex_lat_pulldown",
+"name": "Jalón al pecho",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "CABLE",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Tirón vertical en polea alta.",
+"cues": "Lleva la barra a la parte alta del pecho sin inclinarte en exceso."
+},
+{
+"id": "ex_barbell_row",
+"name": "Remo con barra",
+"muscle": "BACK",
+"secondary": [
+"BICEPS",
+"HAMSTRINGS"
+],
+"equipment": "BARBELL",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Remo con el torso inclinado.",
+"cues": "Espalda neutra; tira hacia el abdomen."
+},
+{
+"id": "ex_dumbbell_row",
+"name": "Remo con mancuerna a una mano",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "DUMBBELL",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": true,
+"description": "Remo unilateral apoyado en banco.",
+"cues": "Evita rotar el torso."
+},
+{
+"id": "ex_seated_cable_row",
+"name": "Remo sentado en polea",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "CABLE",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Remo horizontal en polea baja.",
+"cues": "Pecho alto; junta las escápulas al final."
+},
+{
+"id": "ex_machine_row",
+"name": "Remo en máquina",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "MACHINE",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Remo guiado con apoyo en el pecho.",
+"cues": "Controla la fase excéntrica."
+},
+{
+"id": "ex_tbar_row",
+"name": "Remo en barra T",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "BARBELL",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Remo con barra anclada.",
+"cues": "Mantén la columna neutra."
+},
+{
+"id": "ex_straight_arm_pulldown",
+"name": "Pullover en polea",
+"muscle": "BACK",
+"secondary": [
+"CHEST"
+],
+"equipment": "CABLE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento de dorsal con brazos casi rectos.",
+"cues": "Codos ligeramente flexionados."
+},
+{
+"id": "ex_deadlift",
+"name": "Peso muerto convencional",
+"muscle": "BACK",
+"secondary": [
+"HAMSTRINGS",
+"GLUTES",
+"FOREARMS"
+],
+"equipment": "BARBELL",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Levantamiento de suelo; ejercicio global de cadena posterior.",
+"cues": "Barra pegada a las piernas; espalda neutra; empuja el suelo."
+},
+{
+"id": "ex_back_extension",
+"name": "Extensiones lumbares (banco romano)",
+"muscle": "BACK",
+"secondary": [
+"GLUTES",
+"HAMSTRINGS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "HINGE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Extensión de cadera y lumbar en banco.",
+"cues": "No hiperextiendas arriba."
+},
+{
+"id": "ex_overhead_press",
+"name": "Press militar con barra",
+"muscle": "SHOULDERS",
+"secondary": [
+"TRICEPS",
+"CORE"
+],
+"equipment": "BARBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press vertical de pie con barra.",
+"cues": "Glúteos y abdomen apretados; barra en línea sobre la cabeza."
+},
+{
+"id": "ex_dumbbell_shoulder_press",
+"name": "Press de hombros con mancuernas",
+"muscle": "SHOULDERS",
+"secondary": [
+"TRICEPS"
+],
+"equipment": "DUMBBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press vertical sentado o de pie.",
+"cues": "No arquees la zona lumbar."
+},
+{
+"id": "ex_machine_shoulder_press",
+"name": "Press de hombros en máquina",
+"muscle": "SHOULDERS",
+"secondary": [
+"TRICEPS"
+],
+"equipment": "MACHINE",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press vertical guiado.",
+"cues": "Ajusta el asiento a la altura de los hombros."
+},
+{
+"id": "ex_lateral_raise",
+"name": "Elevaciones laterales",
+"muscle": "SHOULDERS",
+"secondary": [],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento del deltoides lateral.",
+"cues": "Sube hasta la altura de los hombros; evita impulso."
+},
+{
+"id": "ex_cable_lateral_raise",
+"name": "Elevaciones laterales en polea",
+"muscle": "SHOULDERS",
+"secondary": [],
+"equipment": "CABLE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": true,
+"description": "Elevación lateral con tensión constante.",
+"cues": "Codo ligeramente flexionado."
+},
+{
+"id": "ex_rear_delt_fly",
+"name": "Pájaros (deltoides posterior)",
+"muscle": "SHOULDERS",
+"secondary": [
+"BACK"
+],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aperturas inclinadas para el deltoides posterior.",
+"cues": "Cargas ligeras y control."
+},
+{
+"id": "ex_face_pull",
+"name": "Face pull",
+"muscle": "SHOULDERS",
+"secondary": [
+"BACK"
+],
+"equipment": "CABLE",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Tirón a la cara con cuerda; salud del hombro.",
+"cues": "Codos altos, rota hacia fuera al final."
+},
+{
+"id": "ex_front_raise",
+"name": "Elevaciones frontales",
+"muscle": "SHOULDERS",
+"secondary": [
+"CHEST"
+],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento del deltoides anterior.",
+"cues": "Sin balanceo."
+},
+{
+"id": "ex_upright_row",
+"name": "Remo al mentón",
+"muscle": "SHOULDERS",
+"secondary": [
+"BACK"
+],
+"equipment": "BARBELL",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Remo vertical con agarre ancho.",
+"cues": "Agarre a la anchura de los hombros; no subas por encima del pecho si hay molestias."
+},
+{
+"id": "ex_pike_push_up",
+"name": "Flexiones en pica",
+"muscle": "SHOULDERS",
+"secondary": [
+"TRICEPS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Empuje vertical con peso corporal.",
+"cues": "Caderas altas; cabeza entre los brazos."
+},
+{
+"id": "ex_barbell_curl",
+"name": "Curl con barra",
+"muscle": "BICEPS",
+"secondary": [
+"FOREARMS"
+],
+"equipment": "BARBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl de bíceps con barra recta.",
+"cues": "Codos pegados al torso."
+},
+{
+"id": "ex_ez_bar_curl",
+"name": "Curl con barra Z",
+"muscle": "BICEPS",
+"secondary": [
+"FOREARMS"
+],
+"equipment": "BARBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl con barra Z, más cómodo para las muñecas.",
+"cues": "Sin balanceo."
+},
+{
+"id": "ex_dumbbell_curl",
+"name": "Curl con mancuernas",
+"muscle": "BICEPS",
+"secondary": [
+"FOREARMS"
+],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl alterno o simultáneo con mancuernas.",
+"cues": "Supina la muñeca al subir."
+},
+{
+"id": "ex_hammer_curl",
+"name": "Curl martillo",
+"muscle": "BICEPS",
+"secondary": [
+"FOREARMS"
+],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl con agarre neutro; trabaja braquial y braquiorradial.",
+"cues": "Muñecas neutras."
+},
+{
+"id": "ex_incline_dumbbell_curl",
+"name": "Curl inclinado con mancuernas",
+"muscle": "BICEPS",
+"secondary": [],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl en banco inclinado con gran estiramiento.",
+"cues": "Hombros atrás y quietos."
+},
+{
+"id": "ex_preacher_curl",
+"name": "Curl predicador",
+"muscle": "BICEPS",
+"secondary": [],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl con apoyo de brazos.",
+"cues": "No bloquees del todo abajo."
+},
+{
+"id": "ex_cable_curl",
+"name": "Curl en polea",
+"muscle": "BICEPS",
+"secondary": [],
+"equipment": "CABLE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Curl con tensión constante.",
+"cues": "Codos fijos."
+},
+{
+"id": "ex_close_grip_bench",
+"name": "Press banca agarre cerrado",
+"muscle": "TRICEPS",
+"secondary": [
+"CHEST",
+"SHOULDERS"
+],
+"equipment": "BARBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Press con agarre estrecho que enfatiza el tríceps.",
+"cues": "Agarre un poco más estrecho que los hombros."
+},
+{
+"id": "ex_triceps_pushdown",
+"name": "Extensión de tríceps en polea (cuerda)",
+"muscle": "TRICEPS",
+"secondary": [],
+"equipment": "CABLE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Extensión de codos en polea alta.",
+"cues": "Codos pegados al cuerpo."
+},
+{
+"id": "ex_skullcrusher",
+"name": "Press francés con barra Z",
+"muscle": "TRICEPS",
+"secondary": [],
+"equipment": "BARBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Extensión de tríceps tumbado.",
+"cues": "Codos apuntando al techo."
+},
+{
+"id": "ex_overhead_triceps_extension",
+"name": "Extensión de tríceps sobre la cabeza",
+"muscle": "TRICEPS",
+"secondary": [],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Extensión con una mancuerna o cuerda sobre la cabeza.",
+"cues": "Gran estiramiento; sin arquear la espalda."
+},
+{
+"id": "ex_triceps_dip",
+"name": "Fondos en paralelas (tríceps)",
+"muscle": "TRICEPS",
+"secondary": [
+"CHEST",
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Fondos con torso vertical.",
+"cues": "Evita bajar más allá de lo cómodo para el hombro."
+},
+{
+"id": "ex_bench_dip",
+"name": "Fondos en banco",
+"muscle": "TRICEPS",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PUSH",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Fondos con las manos en un banco.",
+"cues": "Hombros alejados de las orejas."
+},
+{
+"id": "ex_wrist_curl",
+"name": "Curl de muñeca",
+"muscle": "FOREARMS",
+"secondary": [],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Flexión de muñeca con antebrazos apoyados.",
+"cues": "Recorrido completo y cargas ligeras."
+},
+{
+"id": "ex_reverse_wrist_curl",
+"name": "Curl de muñeca inverso",
+"muscle": "FOREARMS",
+"secondary": [],
+"equipment": "DUMBBELL",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Extensión de muñeca.",
+"cues": "Cargas ligeras."
+},
+{
+"id": "ex_farmer_carry",
+"name": "Paseo del granjero",
+"muscle": "FOREARMS",
+"secondary": [
+"CORE",
+"SHOULDERS"
+],
+"equipment": "DUMBBELL",
+"movement": "CARRY",
+"tracking": "DISTANCE",
+"unilateral": false,
+"description": "Caminar cargando mancuernas; agarre y core.",
+"cues": "Postura erguida, pasos cortos."
+},
+{
+"id": "ex_dead_hang",
+"name": "Colgarse de la barra",
+"muscle": "FOREARMS",
+"secondary": [
+"BACK",
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "PULL",
+"tracking": "DURATION",
+"unilateral": false,
+"description": "Suspensión isométrica; agarre y hombros.",
+"cues": "Hombros activos, sin encoger."
+},
+{
+"id": "ex_back_squat",
+"name": "Sentadilla con barra",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES",
+"HAMSTRINGS",
+"CORE"
+],
+"equipment": "BARBELL",
+"movement": "SQUAT",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Sentadilla trasera, ejercicio base de tren inferior.",
+"cues": "Rodillas siguen la línea de los pies; torso firme."
+},
+{
+"id": "ex_front_squat",
+"name": "Sentadilla frontal",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES",
+"CORE"
+],
+"equipment": "BARBELL",
+"movement": "SQUAT",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Sentadilla con la barra delante, más torso vertical.",
+"cues": "Codos altos."
+},
+{
+"id": "ex_goblet_squat",
+"name": "Sentadilla goblet",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES",
+"CORE"
+],
+"equipment": "DUMBBELL",
+"movement": "SQUAT",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Sentadilla sujetando una mancuerna al pecho.",
+"cues": "Ideal para aprender el patrón."
+},
+{
+"id": "ex_leg_press",
+"name": "Prensa de piernas",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES",
+"HAMSTRINGS"
+],
+"equipment": "MACHINE",
+"movement": "SQUAT",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Empuje de piernas en máquina.",
+"cues": "No bloquees las rodillas arriba; no despegues la pelvis."
+},
+{
+"id": "ex_hack_squat",
+"name": "Hack squat",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES"
+],
+"equipment": "MACHINE",
+"movement": "SQUAT",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Sentadilla guiada en máquina.",
+"cues": "Pies a la anchura de los hombros."
+},
+{
+"id": "ex_leg_extension",
+"name": "Extensión de cuádriceps",
+"muscle": "QUADS",
+"secondary": [],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento de cuádriceps en máquina.",
+"cues": "Pausa breve arriba."
+},
+{
+"id": "ex_walking_lunge",
+"name": "Zancadas caminando",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES",
+"HAMSTRINGS"
+],
+"equipment": "DUMBBELL",
+"movement": "LUNGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Zancadas alternas avanzando.",
+"cues": "Paso largo, torso erguido."
+},
+{
+"id": "ex_bulgarian_split_squat",
+"name": "Sentadilla búlgara",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES"
+],
+"equipment": "DUMBBELL",
+"movement": "LUNGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": true,
+"description": "Sentadilla a una pierna con el pie trasero elevado.",
+"cues": "Registra cada lado por separado."
+},
+{
+"id": "ex_bodyweight_squat",
+"name": "Sentadilla con peso corporal",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES"
+],
+"equipment": "BODYWEIGHT",
+"movement": "SQUAT",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Sentadilla sin carga.",
+"cues": "Talones apoyados."
+},
+{
+"id": "ex_wall_sit",
+"name": "Sentadilla isométrica en pared",
+"muscle": "QUADS",
+"secondary": [
+"GLUTES"
+],
+"equipment": "BODYWEIGHT",
+"movement": "SQUAT",
+"tracking": "DURATION",
+"unilateral": false,
+"description": "Isométrico de cuádriceps contra la pared.",
+"cues": "Muslos paralelos al suelo."
+},
+{
+"id": "ex_romanian_deadlift",
+"name": "Peso muerto rumano",
+"muscle": "HAMSTRINGS",
+"secondary": [
+"GLUTES",
+"BACK"
+],
+"equipment": "BARBELL",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Bisagra de cadera con piernas casi rectas.",
+"cues": "Empuja la cadera atrás; barra pegada a las piernas."
+},
+{
+"id": "ex_dumbbell_rdl",
+"name": "Peso muerto rumano con mancuernas",
+"muscle": "HAMSTRINGS",
+"secondary": [
+"GLUTES",
+"BACK"
+],
+"equipment": "DUMBBELL",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Rumano con mancuernas.",
+"cues": "Espalda neutra."
+},
+{
+"id": "ex_lying_leg_curl",
+"name": "Curl femoral tumbado",
+"muscle": "HAMSTRINGS",
+"secondary": [
+"CALVES"
+],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento de isquiotibiales tumbado.",
+"cues": "Cadera pegada al banco."
+},
+{
+"id": "ex_seated_leg_curl",
+"name": "Curl femoral sentado",
+"muscle": "HAMSTRINGS",
+"secondary": [
+"CALVES"
+],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento de isquiotibiales sentado.",
+"cues": "Recorrido completo."
+},
+{
+"id": "ex_good_morning",
+"name": "Buenos días con barra",
+"muscle": "HAMSTRINGS",
+"secondary": [
+"GLUTES",
+"BACK"
+],
+"equipment": "BARBELL",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Bisagra de cadera con barra a la espalda.",
+"cues": "Cargas moderadas y espalda neutra."
+},
+{
+"id": "ex_nordic_curl",
+"name": "Curl nórdico",
+"muscle": "HAMSTRINGS",
+"secondary": [],
+"equipment": "BODYWEIGHT",
+"movement": "HINGE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Excéntrico exigente de isquiotibiales.",
+"cues": "Baja lo más lento posible."
+},
+{
+"id": "ex_hip_thrust",
+"name": "Hip thrust con barra",
+"muscle": "GLUTES",
+"secondary": [
+"HAMSTRINGS"
+],
+"equipment": "BARBELL",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Extensión de cadera con la espalda apoyada en un banco.",
+"cues": "Mentón al pecho; pausa arriba."
+},
+{
+"id": "ex_glute_bridge",
+"name": "Puente de glúteos",
+"muscle": "GLUTES",
+"secondary": [
+"HAMSTRINGS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "HINGE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Extensión de cadera en el suelo.",
+"cues": "Aprieta los glúteos arriba."
+},
+{
+"id": "ex_cable_kickback",
+"name": "Patada de glúteo en polea",
+"muscle": "GLUTES",
+"secondary": [
+"HAMSTRINGS"
+],
+"equipment": "CABLE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": true,
+"description": "Extensión de cadera unilateral en polea.",
+"cues": "Sin arquear la lumbar."
+},
+{
+"id": "ex_step_up",
+"name": "Subida al cajón",
+"muscle": "GLUTES",
+"secondary": [
+"QUADS"
+],
+"equipment": "DUMBBELL",
+"movement": "LUNGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": true,
+"description": "Subida a un cajón con una pierna.",
+"cues": "Empuja con la pierna de arriba."
+},
+{
+"id": "ex_sumo_deadlift",
+"name": "Peso muerto sumo",
+"muscle": "GLUTES",
+"secondary": [
+"QUADS",
+"BACK",
+"HAMSTRINGS"
+],
+"equipment": "BARBELL",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Peso muerto con postura ancha.",
+"cues": "Rodillas hacia fuera."
+},
+{
+"id": "ex_hip_abduction",
+"name": "Abducción de cadera en máquina",
+"muscle": "GLUTES",
+"secondary": [],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Aislamiento del glúteo medio.",
+"cues": "Movimiento controlado."
+},
+{
+"id": "ex_standing_calf_raise",
+"name": "Elevación de talones de pie",
+"muscle": "CALVES",
+"secondary": [],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Gemelos con rodillas extendidas.",
+"cues": "Estiramiento completo abajo y pausa arriba."
+},
+{
+"id": "ex_seated_calf_raise",
+"name": "Elevación de talones sentado",
+"muscle": "CALVES",
+"secondary": [],
+"equipment": "MACHINE",
+"movement": "ISOLATION",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Trabaja el sóleo con rodillas flexionadas.",
+"cues": "Recorrido completo."
+},
+{
+"id": "ex_single_leg_calf_raise",
+"name": "Elevación de talones a una pierna",
+"muscle": "CALVES",
+"secondary": [],
+"equipment": "BODYWEIGHT",
+"movement": "ISOLATION",
+"tracking": "BODYWEIGHT",
+"unilateral": true,
+"description": "Gemelos unilaterales con peso corporal.",
+"cues": "Apóyate para mantener el equilibrio."
+},
+{
+"id": "ex_plank",
+"name": "Plancha",
+"muscle": "CORE",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "DURATION",
+"unilateral": false,
+"description": "Isométrico de core.",
+"cues": "Cuerpo en línea; no hundas la cadera."
+},
+{
+"id": "ex_side_plank",
+"name": "Plancha lateral",
+"muscle": "CORE",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "DURATION",
+"unilateral": true,
+"description": "Isométrico lateral de core.",
+"cues": "Registra cada lado por separado."
+},
+{
+"id": "ex_crunch",
+"name": "Crunch abdominal",
+"muscle": "CORE",
+"secondary": [],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Flexión de tronco.",
+"cues": "Sube las costillas hacia la pelvis."
+},
+{
+"id": "ex_hanging_leg_raise",
+"name": "Elevación de piernas colgado",
+"muscle": "CORE",
+"secondary": [
+"FOREARMS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Flexión de cadera colgado de una barra.",
+"cues": "Sin balanceo."
+},
+{
+"id": "ex_cable_crunch",
+"name": "Crunch en polea",
+"muscle": "CORE",
+"secondary": [],
+"equipment": "CABLE",
+"movement": "CORE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Crunch con carga.",
+"cues": "Flexiona la columna, no solo la cadera."
+},
+{
+"id": "ex_ab_wheel",
+"name": "Rueda abdominal",
+"muscle": "CORE",
+"secondary": [
+"SHOULDERS",
+"BACK"
+],
+"equipment": "OTHER",
+"movement": "CORE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Extensión anti-extensión de core.",
+"cues": "Rango corto al empezar."
+},
+{
+"id": "ex_russian_twist",
+"name": "Giros rusos",
+"muscle": "CORE",
+"secondary": [],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Rotación de tronco.",
+"cues": "Movimiento controlado."
+},
+{
+"id": "ex_pallof_press",
+"name": "Press Pallof",
+"muscle": "CORE",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "CABLE",
+"movement": "CORE",
+"tracking": "WEIGHT_REPS",
+"unilateral": true,
+"description": "Anti-rotación con polea.",
+"cues": "Registra cada lado por separado."
+},
+{
+"id": "ex_dead_bug",
+"name": "Bicho muerto",
+"muscle": "CORE",
+"secondary": [],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Control de core en el suelo.",
+"cues": "Lumbar pegada al suelo."
+},
+{
+"id": "ex_kettlebell_swing",
+"name": "Swing con kettlebell",
+"muscle": "FULL_BODY",
+"secondary": [
+"GLUTES",
+"HAMSTRINGS",
+"CORE"
+],
+"equipment": "OTHER",
+"movement": "HINGE",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Bisagra explosiva de cadera.",
+"cues": "El impulso viene de la cadera, no de los brazos."
+},
+{
+"id": "ex_burpee",
+"name": "Burpees",
+"muscle": "FULL_BODY",
+"secondary": [
+"CHEST",
+"QUADS",
+"CORE"
+],
+"equipment": "BODYWEIGHT",
+"movement": "CARDIO",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Ejercicio de cuerpo completo.",
+"cues": "Ritmo sostenible y técnica limpia."
+},
+{
+"id": "ex_clean_and_press",
+"name": "Clean y press con mancuernas",
+"muscle": "FULL_BODY",
+"secondary": [
+"SHOULDERS",
+"GLUTES",
+"BACK"
+],
+"equipment": "DUMBBELL",
+"movement": "PUSH",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Levantamiento global.",
+"cues": "Cargas moderadas."
+},
+{
+"id": "ex_rowing_machine",
+"name": "Remo ergómetro",
+"muscle": "FULL_BODY",
+"secondary": [
+"BACK",
+"QUADS"
+],
+"equipment": "MACHINE",
+"movement": "CARDIO",
+"tracking": "DISTANCE",
+"unilateral": false,
+"description": "Cardio de cuerpo completo; registra distancia y tiempo.",
+"cues": "Empuja con las piernas antes de tirar."
+},
+{
+"id": "ex_running",
+"name": "Carrera",
+"muscle": "FULL_BODY",
+"secondary": [
+"QUADS",
+"CALVES"
+],
+"equipment": "OTHER",
+"movement": "CARDIO",
+"tracking": "DISTANCE",
+"unilateral": false,
+"description": "Carrera continua; registra distancia y tiempo.",
+"cues": "Aumenta el volumen de forma gradual."
+},
+{
+"id": "ex_resistance_band_row",
+"name": "Remo con banda elástica",
+"muscle": "BACK",
+"secondary": [
+"BICEPS"
+],
+"equipment": "BANDS",
+"movement": "PULL",
+"tracking": "WEIGHT_REPS",
+"unilateral": false,
+"description": "Remo con banda; registra la resistencia como carga aproximada.",
+"cues": "Mantén tensión constante."
+},
+{
+"id": "ex_band_pull_apart",
+"name": "Aperturas con banda",
+"muscle": "SHOULDERS",
+"secondary": [
+"BACK"
+],
+"equipment": "BANDS",
+"movement": "PULL",
+"tracking": "BODYWEIGHT",
+"unilateral": false,
+"description": "Separación de banda para deltoides posterior y escápulas.",
+"cues": "Brazos a la altura del pecho."
+},
+{
+"id": "ex_tabata_abs",
+"name": "Tabata de abdominales",
+"muscle": "CORE",
+"secondary": [
+"SHOULDERS"
+],
+"equipment": "BODYWEIGHT",
+"movement": "CORE",
+"tracking": "DURATION",
+"unilateral": false,
+"description": "Bloque de intervalos para el abdomen: 8 rondas de 20 s de trabajo y 10 s de descanso.",
+"cues": "Usa el modo intervalos del entrenamiento. Alterna los movimientos que prefieras (crunch bicicleta, escaladores, elevaciones de piernas, plancha) y mantén la zona lumbar controlada."
+},
+{
+"id": "ex_treadmill_run",
+"name": "Correr en caminadora",
+"muscle": "FULL_BODY",
+"secondary": [
+"QUADS",
+"CALVES"
+],
+"equipment": "MACHINE",
+"movement": "CARDIO",
+"tracking": "DISTANCE",
+"unilateral": false,
+"description": "Cardio continuo en cinta: registra los kilómetros y los minutos.",
+"cues": "Empieza con un calentamiento suave y sube el ritmo de forma gradual. Apoya el pie bajo el centro de gravedad."
+}
+];

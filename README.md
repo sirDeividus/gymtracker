@@ -12,6 +12,10 @@ fiables. Funciona **sin conexión, sin cuenta y sin permisos innecesarios**.
 > * Las pruebas instrumentadas (persistencia, recuperación de sesión, migraciones, copia de seguridad) están escritas
 >   pero **no se han ejecutado**. No hay APK publicado.
 
+## Versión web para iPhone
+
+La carpeta [`web/`](web/README.md) contiene una versión web instalable (PWA) que se añade a la pantalla de inicio del iPhone sin Mac ni cuenta de Apple.
+
 ## Abrir y ejecutar en Android Studio
 
 1. Android Studio **Ladybug (2024.2)** o posterior, con JDK 17+ (el JBR incluido sirve) y Android SDK 35.
