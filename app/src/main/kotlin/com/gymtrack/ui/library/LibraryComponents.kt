@@ -315,6 +315,7 @@ fun ExercisePickerSheet(
     if (creating) {
         ExerciseEditorDialog(
             initial = null,
+            contentPadding = contentPadding,
             onDismiss = { creating = false },
             onSave = { f2, done ->
                 vm.saveCustom(null, f2.name, f2.primary, f2.secondary, f2.equipment, f2.movement, f2.tracking, f2.unilateral, f2.description, f2.cues, f2.video, f2.removeVideo) { err ->
@@ -359,6 +360,7 @@ fun ExerciseEditorDialog(
     initial: Exercise?,
     onDismiss: () -> Unit,
     onSave: (ExerciseForm, (String?) -> Unit) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val c = Brand.colors
     var name by rememberSaveable { mutableStateOf(initial?.name.orEmpty()) }
@@ -393,9 +395,10 @@ fun ExerciseEditorDialog(
     }
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { /* el temporal se limpia al guardar o cancelar */ } }
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    androidx.activity.compose.BackHandler(onBack = onDismiss)
+    run {
         Surface(Modifier.fillMaxSize(), color = c.background) {
-            Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
+            Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding().padding(top = 8.dp)) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = ScreenPadding), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         if (initial == null) "Nuevo ejercicio" else "Editar ejercicio",
@@ -556,6 +559,7 @@ fun LibraryScreen(
     var creating by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf<Exercise?>(null) }
 
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
         com.gymtrack.ui.components.ScreenHeader(
             "Ejercicios", onBack = onBack, subtitle = "${state.total} en la biblioteca",
@@ -582,6 +586,7 @@ fun LibraryScreen(
         val initial = editing
         ExerciseEditorDialog(
             initial = initial,
+            contentPadding = contentPadding,
             onDismiss = { creating = false; editing = null },
             onSave = { f, done ->
                 vm.saveCustom(initial?.id, f.name, f.primary, f.secondary, f.equipment, f.movement, f.tracking, f.unilateral, f.description, f.cues, f.video, f.removeVideo) { err ->
@@ -590,6 +595,7 @@ fun LibraryScreen(
                 }
             },
         )
+    }
     }
     confirmDelete?.let { ex ->
         com.gymtrack.ui.components.ConfirmDialog(

@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -89,49 +90,52 @@ fun ExerciseAnimation(exerciseId: String, modifier: Modifier = Modifier, size: D
     }
 }
 
-/** Demostración a pantalla completa y ajustada al ancho: GIF del catálogo o video propio en bucle. */
+/**
+ * Demostración grande y ajustada al ancho de la pantalla: GIF del catálogo o video propio en bucle.
+ * Es una tarjeta centrada (no ocupa las barras del sistema), así que no depende de los márgenes de ventana.
+ */
 @Composable
 fun ExerciseMediaDialog(exerciseId: String, title: String, onDismiss: () -> Unit) {
     val (ref, app) = rememberMediaRef(exerciseId)
+    val white = androidx.compose.ui.graphics.Color.White
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Black) {
-            Column(Modifier.fillMaxSize()) {
+        androidx.compose.material3.Surface(
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            shape = RoundedCornerShape(20.dp), color = Brand.colors.surface,
+        ) {
+            Column(Modifier.padding(bottom = 12.dp)) {
                 androidx.compose.foundation.layout.Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, modifier = Modifier.weight(1f))
                     androidx.compose.material3.IconButton(onClick = onDismiss) {
-                        androidx.compose.material3.Icon(
-                            androidx.compose.material.icons.Icons.Default.Close, contentDescription = "Cerrar",
-                            tint = androidx.compose.ui.graphics.Color.White,
-                        )
+                        androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.Close, contentDescription = "Cerrar")
                     }
-                    Text(
-                        title, style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color.White,
-                        maxLines = 2, modifier = Modifier.weight(1f),
-                    )
                 }
-                androidx.compose.foundation.layout.Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                androidx.compose.foundation.layout.Box(
+                    Modifier.fillMaxWidth().padding(horizontal = 8.dp).aspectRatio(1f)
+                        .clip(RoundedCornerShape(14.dp)).background(if (ref?.video != null) androidx.compose.ui.graphics.Color.Black else white),
+                    contentAlignment = Alignment.Center,
+                ) {
                     val video = ref?.video
                     val image = ref?.gifUri ?: ref?.thumbUri
                     when {
                         video != null -> LoopingVideo(video, Modifier.fillMaxSize())
                         image != null -> AsyncImage(
                             model = image, contentDescription = "Demostración de $title", imageLoader = app.container.imageLoader,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.White),
+                            contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize(),
                         )
-                        else -> Text("Sin demostración", color = androidx.compose.ui.graphics.Color.White)
+                        else -> Text("Sin demostración", color = Brand.colors.textSecondary)
                     }
                 }
                 if (ref?.video == null) {
                     Text(
                         stringResource(R.string.media_attribution), style = MaterialTheme.typography.bodySmall,
-                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f),
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        color = Brand.colors.textSecondary, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
                     )
                 }
             }

@@ -8,6 +8,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,9 +64,10 @@ fun IntervalDialog(
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStop: () -> Unit,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(),
 ) {
     if (run != null) {
-        IntervalRunScreen(run, onPause, onResume, onStop)
+        IntervalRunScreen(run, onPause, onResume, onStop, contentPadding)
     } else if (setup != null) {
         IntervalSetupDialog(setup, onBegin, onCancelSetup)
     }
@@ -127,7 +129,10 @@ private fun StepRow(label: String, value: Int, onChange: (Int) -> Unit, range: I
 }
 
 @Composable
-private fun IntervalRunScreen(run: IntervalUi, onPause: () -> Unit, onResume: () -> Unit, onStop: () -> Unit) {
+private fun IntervalRunScreen(
+    run: IntervalUi, onPause: () -> Unit, onResume: () -> Unit, onStop: () -> Unit,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues,
+) {
     val c = Brand.colors
     val snap = run.snapshot
     val color = when (snap.phase) {
@@ -142,13 +147,14 @@ private fun IntervalRunScreen(run: IntervalUi, onPause: () -> Unit, onResume: ()
         IntervalPhase.DONE -> "¡LISTO!"
     }
     val seconds = ceil(snap.phaseRemainingMs / 1000.0).toInt()
-    Dialog(
-        onDismissRequest = {},
-        properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = false, dismissOnClickOutside = false),
-    ) {
+    // Superposición dentro de la pantalla (no una ventana aparte): mismos márgenes que el resto de la app.
+    androidx.activity.compose.BackHandler { /* no se sale por accidente: usa Pausar o Terminar */ }
+    run {
         Surface(Modifier.fillMaxSize(), color = c.background) {
             Column(
-                Modifier.fillMaxSize().padding(ScreenPadding),
+                Modifier.fillMaxSize()
+                    .padding(contentPadding).consumeWindowInsets(contentPadding)
+                    .padding(ScreenPadding),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {

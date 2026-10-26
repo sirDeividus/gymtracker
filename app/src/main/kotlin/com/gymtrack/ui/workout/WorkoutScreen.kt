@@ -172,6 +172,9 @@ fun WorkoutScreen(
             .mapValues { (_, l) -> l.sumOf { it.sets.size } }
     }
 
+    val intervalSetup by vm.intervalSetup.collectAsStateWithLifecycle()
+    val intervalRun by vm.interval.collectAsStateWithLifecycle()
+
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding()) {
             // ---- Cabecera: minimizar · cronómetro · despertador (descanso) · Terminar
@@ -272,17 +275,16 @@ fun WorkoutScreen(
                     .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } },
             )
         }
+        IntervalDialog(
+            setup = intervalSetup, run = intervalRun,
+            onBegin = vm::beginInterval, onCancelSetup = vm::cancelIntervalSetup,
+            onPause = vm::pauseInterval, onResume = vm::resumeInterval, onStop = vm::stopInterval,
+            contentPadding = contentPadding,
+        )
         if (picker) ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false }, contentPadding = contentPadding)
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp + contentPadding.calculateBottomPadding()))
     }
 
-    val intervalSetup by vm.intervalSetup.collectAsStateWithLifecycle()
-    val intervalRun by vm.interval.collectAsStateWithLifecycle()
-    IntervalDialog(
-        setup = intervalSetup, run = intervalRun,
-        onBegin = vm::beginInterval, onCancelSetup = vm::cancelIntervalSetup,
-        onPause = vm::pauseInterval, onResume = vm::resumeInterval, onStop = vm::stopInterval,
-    )
 
 
     if (finishDialog) {
