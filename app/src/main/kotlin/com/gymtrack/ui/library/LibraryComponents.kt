@@ -15,8 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -199,6 +199,7 @@ fun ExercisePickerSheet(
     vm: LibraryViewModel,
     onPick: (Exercise) -> Unit,
     onDismiss: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val c = Brand.colors
     val state by vm.state.collectAsStateWithLifecycle()
@@ -211,16 +212,15 @@ fun ExercisePickerSheet(
     androidx.compose.runtime.LaunchedEffect(Unit) { vm.clearFilters(); vm.setQuery("") }
     val showList = browsing || f.query.isNotBlank() || f.muscles.isNotEmpty() || f.equipment.isNotEmpty()
 
-    // Pantalla completa (no hoja inferior): respeta barras del sistema y teclado, y arrastrar la lista
-    // no cierra el selector por accidente.
-    androidx.compose.ui.window.Dialog(
-        onDismissRequest = {
-            if (showList) { vm.clearFilters(); vm.setQuery(""); browsing = false; panel = null } else onDismiss()
-        },
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-    ) {
+    // Superposición a pantalla completa dentro de la propia pantalla (sin ventana aparte): así respeta
+    // exactamente el mismo margen que el resto de la app y arrastrar la lista no la cierra.
+    val goBack = {
+        if (showList) { vm.clearFilters(); vm.setQuery(""); browsing = false; panel = null } else onDismiss()
+    }
+    androidx.activity.compose.BackHandler(onBack = goBack)
+    run {
       androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = c.background) {
-        Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
+        Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = {
                     if (showList) { vm.clearFilters(); vm.setQuery(""); browsing = false; panel = null } else onDismiss()

@@ -272,6 +272,7 @@ fun WorkoutScreen(
                     .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } },
             )
         }
+        if (picker) ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false }, contentPadding = contentPadding)
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp + contentPadding.calculateBottomPadding()))
     }
 
@@ -283,7 +284,6 @@ fun WorkoutScreen(
         onPause = vm::pauseInterval, onResume = vm::resumeInterval, onStop = vm::stopInterval,
     )
 
-    if (picker) ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false })
 
     if (finishDialog) {
         FinishDialog(

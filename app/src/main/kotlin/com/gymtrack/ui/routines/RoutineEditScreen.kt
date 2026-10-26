@@ -3,7 +3,6 @@ package com.gymtrack.ui.routines
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
@@ -140,6 +139,7 @@ fun RoutineEditScreen(
         dragDelta += (cur.offset - target.offset)
     }
 
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding()) {
         ScreenHeader(
             "Editar rutina", onBack = onBack,
@@ -261,12 +261,13 @@ fun RoutineEditScreen(
     }
 
     if (picker) {
-        ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false })
+        ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false }, contentPadding = contentPadding)
     }
     editing?.let { id ->
         state.items.firstOrNull { it.row.id == id }?.let { item ->
-            RoutineExerciseDialog(item, state.settings.unit, onChange = vm::update, onDismiss = { editing = null })
+            RoutineExerciseDialog(item, state.settings.unit, onChange = vm::update, onDismiss = { editing = null }, contentPadding = contentPadding)
         }
+    }
     }
     removing?.let { item ->
         ConfirmDialog(
@@ -363,6 +364,7 @@ private fun RoutineExerciseDialog(
     unit: WeightUnit,
     onChange: (RoutineExerciseEntity) -> Unit,
     onDismiss: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val c = Brand.colors
     val ex = item.exercise
@@ -383,12 +385,10 @@ private fun RoutineExerciseDialog(
         TrackingType.DISTANCE -> "Distancia y tiempo"
     }
 
-    androidx.compose.ui.window.Dialog(
-        onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-    ) {
+    androidx.activity.compose.BackHandler(onBack = onDismiss)
+    run {
         androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = c.background) {
-            Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = ScreenPadding)) {
+            Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).imePadding().padding(horizontal = ScreenPadding)) {
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") }
                     Text("Editar ejercicio", style = MaterialTheme.typography.headlineSmall)
@@ -503,9 +503,6 @@ private fun RoutineExerciseDialog(
     }
     if (showMedia) com.gymtrack.ui.components.ExerciseMediaDialog(item.row.exerciseId, ex?.name.orEmpty()) { showMedia = false }
 }
-
-@Composable
-private fun Modifier.systemBarsPadding(): Modifier = this.then(Modifier.systemBarsPadding())
 
 @Composable
 private fun EditChip(text: String, modifier: Modifier = Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, onClick: (() -> Unit)?) {
