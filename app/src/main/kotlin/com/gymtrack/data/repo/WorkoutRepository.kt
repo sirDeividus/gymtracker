@@ -327,7 +327,7 @@ class WorkoutRepository(
 
     /** Ids de las series pendientes del ejercicio (en orden); añade series si hacen falta [atLeast] (modo intervalos). */
     suspend fun pendingSetIds(sessionExerciseId: String, atLeast: Int): List<String> {
-        fun pending() = sessions.getSetsFor(sessionExerciseId).filter { !it.completed }.sortedBy { it.setNumber }
+        suspend fun pending() = sessions.getSetsFor(sessionExerciseId).filter { !it.completed }.sortedBy { it.setNumber }
         var list = pending()
         var guard = 0
         while (list.size < atLeast && guard++ < 200) {
