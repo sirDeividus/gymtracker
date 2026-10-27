@@ -52,7 +52,7 @@ export async function saveCustomExercise(e) {
 export function newRoutineItem(exId) {
   const ex = exerciseById(exId);
   const dur = ex?.tracking === 'DURATION';
-  return { id: uid(), exerciseId: exId, sets: 3, repMin: dur ? 1 : 8, repMax: dur ? 1 : 12, restSec: S.settings.restSec, startWeightKg: null, durationSec: dur ? 30 : null };
+  return { id: uid(), exerciseId: exId, sets: 3, repMin: dur ? 1 : 8, repMax: dur ? 1 : 12, restSec: S.settings.restSec, startWeightKg: null, durationSec: dur ? 30 : null, cycles: 1, cycleRestSec: 30 };
 }
 
 export function go(hash) { location.hash = hash; }

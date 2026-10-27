@@ -100,8 +100,8 @@ export function routineEditView(id) {
     const w = h('input', { type: 'text', inputmode: 'decimal', value: it.startWeightKg != null ? num(toDisplay(it.startWeightKg, unit), 2) : '', placeholder: `Peso inicial opcional (${unit})`, oninput: (e) => { const p = parseNum(e.target.value); it.startWeightKg = p == null ? null : fromDisplay(p, unit); } });
     const restSel = h('select', { onchange: (e) => { it.restSec = Number(e.target.value); } }, ...[0, 30, 45, 60, 90, 120, 180, 240, 300].map((s) => h('option', { value: s, selected: s === it.restSec }, s ? clock(s) : 'Sin descanso')));
     sheet(ex?.name || 'Ejercicio', [], h('div', { class: 'stack' },
-      stepper('Series', () => it.sets, (v) => { it.sets = v; }, 1, 20),
-      ...(dur ? [stepper('Segundos', () => it.durationSec || 30, (v) => { it.durationSec = v; }, 5, 600)]
+      stepper(dur ? 'Rondas' : 'Series', () => it.sets, (v) => { it.sets = v; }, 1, 20),
+      ...(dur ? [stepper('Trabajo (s)', () => it.durationSec || 30, (v) => { it.durationSec = v; }, 5, 600), stepper('Ciclos', () => it.cycles || 1, (v) => { it.cycles = v; }, 1, 30), stepper('Descanso entre ciclos (s)', () => it.cycleRestSec ?? 30, (v) => { it.cycleRestSec = v; }, 0, 300)]
         : [stepper('Reps mínimas', () => it.repMin, (v) => { it.repMin = v; if (it.repMax < v) it.repMax = v; }, 1, 100), stepper('Reps máximas', () => it.repMax, (v) => { it.repMax = v; if (it.repMin > v) it.repMin = v; }, 1, 100)]),
       ex?.tracking === 'WEIGHT_REPS' ? w : null,
       h('div', null, h('div', { class: 'small muted' }, 'Descanso entre series'), restSel),

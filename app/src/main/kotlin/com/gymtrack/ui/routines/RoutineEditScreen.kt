@@ -453,8 +453,24 @@ private fun RoutineExerciseDialog(
                                 roundsText = it
                                 it.toIntOrNull()?.takeIf { v -> v in 1..20 }?.let { v -> set(row.copy(sets = v)) }
                             }
+                            // Ciclos: se recuerdan por ejercicio (no necesitan cambiar la base de datos).
+                            val ctx = androidx.compose.ui.platform.LocalContext.current
+                            val saved = remember(item.row.exerciseId) { com.gymtrack.data.settings.IntervalPrefs.get(ctx, item.row.exerciseId) }
+                            var cyclesText by remember(item.row.id) { mutableStateOf(saved.cycles.toString()) }
+                            var cycleRestText by remember(item.row.id) { mutableStateOf(saved.cycleRestSec.toString()) }
+                            fun saveCycles() {
+                                val cur = com.gymtrack.data.settings.IntervalPrefs.get(ctx, item.row.exerciseId)
+                                com.gymtrack.data.settings.IntervalPrefs.set(
+                                    ctx, item.row.exerciseId,
+                                    cur.copy(cycles = cyclesText.toIntOrNull()?.takeIf { v -> v in 1..30 } ?: cur.cycles, cycleRestSec = cycleRestText.toIntOrNull()?.takeIf { v -> v in 0..3600 } ?: cur.cycleRestSec),
+                                )
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Box(Modifier.weight(1f)) { LabeledInput("Ciclos", cyclesText, decimal = false) { cyclesText = it; saveCycles() } }
+                                Box(Modifier.weight(1f)) { LabeledInput("Descanso entre ciclos (s)", cycleRestText, decimal = false) { cycleRestText = it; saveCycles() } }
+                            }
                             Text(
-                                "En el entrenamiento se abre un temporizador a pantalla completa; allí también puedes ajustar ciclos, descanso entre ciclos y cuenta atrás.",
+                                "Una ronda = un trabajo + su descanso. Un ciclo repite todas las rondas. En el entrenamiento se abre un temporizador a pantalla completa donde también puedes ajustar la cuenta atrás.",
                                 style = MaterialTheme.typography.bodySmall, color = c.textMuted, modifier = Modifier.padding(bottom = 16.dp),
                             )
                         }

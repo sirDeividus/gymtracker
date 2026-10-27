@@ -1,7 +1,7 @@
 import { h, uid, clock, beep, unlockAudio, sheet, closeSheet, toast } from './util.js';
 import { intervalSnapshot, planTotalSec, intervalSchedule, nextPhase } from './domain.js';
 
-const COLORS = { PREP: '#fffc3f', WORK: '#9dff3f', REST: '#3db8ff', CYCLE_REST: '#ffb020', DONE: '#fffc3f' };
+const COLORS = { PREP: '#f4f4f5', WORK: '#ff1e46', REST: '#38bdf8', CYCLE_REST: '#f5a524', DONE: '#34c759' };
 const TITLE = { PREP: 'PREPÁRATE', WORK: 'ENTRENAR', REST: 'DESCANSA', CYCLE_REST: 'DESCANSO DE CICLO', DONE: '¡LISTO!' };
 const NEXT = { PREP: 'PREPÁRATE', WORK: 'ENTRENAR', REST: 'DESCANSAR', CYCLE_REST: 'DESCANSO DE CICLO', DONE: 'FIN' };
 const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -12,35 +12,37 @@ const saveCfg = (c) => { try { localStorage.setItem(KEY, JSON.stringify(c)); } c
 
 /** Temporizador de intervalos a pantalla completa: se abre listo (en pausa); el botón verde empieza. */
 export function openTabata(se, ex, save, onChange) {
-  let plan = loadCfg();
+  let plan = { workSec: ex.durationSec || ex.sets[0]?.durationSec || 20, restSec: ex.restSec ?? 10, rounds: Math.min(60, Math.max(1, ex.sets.length)), cycles: ex.cycles || 1, cycleRestSec: ex.cycleRestSec ?? 30, prepSec: ex.prepSec ?? 10 };
   let started = false, pausedAt = null, pausedTotal = 0, startMs = 0, filled = 0, lastKey = null, muted = false, sets = [];
   let iv = null, wake = null;
 
-  const el = (css, ...kids) => h('div', { style: css }, ...kids);
-  const timeTotal = h('div', { style: { color: '#fff', fontSize: '38px', fontWeight: 900, textAlign: 'right' } });
-  const nameEl = h('div', { style: { color: '#fff', fontSize: '15px', fontWeight: 700, textAlign: 'right' } }, ex.name);
-  const title = h('div', { style: { fontSize: '40px', fontWeight: 900, textAlign: 'center', color: '#0a0a0a' } });
-  const big = h('div', { style: { fontSize: 'min(30vw,150px)', fontWeight: 900, textAlign: 'center', color: '#0a0a0a', lineHeight: 1, fontVariantNumeric: 'tabular-nums' } });
-  const roundInfo = h('div', { style: { fontSize: '17px', fontWeight: 700, textAlign: 'center', color: '#0a0a0a' } });
-  const main = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '0 12px' } }, title, big, roundInfo);
-  const soundBtn = h('button', { style: btn(), onclick: () => { muted = !muted; draw(); } });
-  const topRow = h('div', { style: { display: 'flex', justifyContent: 'space-between', padding: '14px 18px' } },
-    h('button', { style: btn(), onclick: edit }, '⚙︎ EDITAR TEMPORIZADOR'), soundBtn);
-  const listBtn = h('button', { style: { ...btn(), padding: '16px', textAlign: 'center', width: '100%' }, onclick: showList }, 'VER INTERVALOS  ››');
-  const nextLabel = h('div', { style: { fontSize: '32px', fontWeight: 900, color: '#0a0a0a' } });
-  const nextBox = h('div', { style: { padding: '10px', textAlign: 'center' } }, h('div', { style: { fontSize: '13px', fontWeight: 700, color: 'rgba(10,10,10,.7)' } }, 'SIGUIENTE'), nextLabel);
-  const roundsN = h('div', { style: { fontSize: '56px', fontWeight: 900, color: '#3db8ff', lineHeight: 1.05 } });
-  const cyclesN = h('div', { style: { fontSize: '56px', fontWeight: 900, color: '#ffb020', lineHeight: 1.05 } });
-  const play = h('button', { style: { width: '100px', height: '100px', background: '#9dff3f', border: 0, fontSize: '56px', color: '#0a0a0a' }, 'aria-label': 'Empezar o pausar', onclick: playPause });
-  const counter = (label, n) => h('div', { style: { flex: 1, textAlign: 'center' } }, h('div', { style: { color: '#aaa', fontSize: '13px', fontWeight: 700, whiteSpace: 'pre-line' } }, label), n);
-  const bottom = h('div', { style: { display: 'flex', alignItems: 'center', padding: '8px 8px calc(var(--safe-b) + 8px)', background: '#000' } }, counter('RONDAS\nRESTANTES', roundsN), play, counter('CICLOS\nRESTANTES', cyclesN));
-  const mainBox = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column' } }, topRow, main, listBtn);
-  const ov = h('div', { class: 'overlay', style: { background: '#000', padding: 0 } },
-    h('div', { style: { display: 'flex', alignItems: 'stretch', paddingTop: 'var(--safe-t)', background: '#000' } },
-      h('button', { style: { width: '84px', background: '#f44336', border: 0, color: '#fff', fontSize: '44px' }, 'aria-label': 'Cerrar el temporizador', onclick: close }, '✕'),
-      h('div', { style: { flex: 1, padding: '10px 18px' } }, timeTotal, nameEl)),
-    mainBox, nextBox, bottom);
-  function btn() { return { background: 'transparent', border: 0, color: '#0a0a0a', fontWeight: 800, fontSize: '15px', padding: '6px 0', fontFamily: 'inherit', textAlign: 'left' }; }
+  const timeTotal = h('div', { class: 'small muted' });
+  const nameEl = h('div', { style: { fontWeight: 600, fontSize: '16px' } }, ex.name);
+  const dot = h('i', { style: { width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block' } });
+  const title = h('span', { style: { fontSize: '14px', fontWeight: 600, letterSpacing: '3px' } });
+  const big = h('div', { style: { fontSize: 'min(26vw,128px)', fontWeight: 300, textAlign: 'center', color: 'var(--text)', lineHeight: 1.05, fontFamily: 'ui-monospace,Menlo,monospace', fontVariantNumeric: 'tabular-nums' } });
+  const bar = h('i', { style: { display: 'block', height: '100%', borderRadius: '4px', transition: 'width .2s linear' } });
+  const roundInfo = h('div', { style: { fontSize: '15px', color: 'var(--text2)', marginTop: '14px', textAlign: 'center' } });
+  const main = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' } },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, dot, title), big,
+    h('div', { style: { width: '70%', height: '4px', borderRadius: '4px', background: 'var(--surface2)' } }, bar), roundInfo);
+  const pill = (txt, fn) => h('button', { style: { background: 'transparent', border: '1px solid var(--outline)', color: 'var(--text)', borderRadius: '999px', padding: '8px 14px', fontSize: '13px', fontFamily: 'inherit' }, onclick: fn }, txt);
+  const soundBtn = pill('', () => { muted = !muted; draw(); });
+  const pills = h('div', { style: { display: 'flex', gap: '8px', padding: '14px 0 0' } }, pill('⚙︎ Editar', edit), soundBtn, pill('Intervalos', showList));
+  const nextDot = h('i', { style: { width: '7px', height: '7px', borderRadius: '50%', display: 'inline-block' } });
+  const nextLabel = h('b', { style: { fontSize: '14px' } });
+  const nextBox = h('div', { style: { textAlign: 'center', padding: '0 0 14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' } }, h('span', { style: { fontSize: '12px', letterSpacing: '2px', color: 'var(--muted)' } }, 'SIGUIENTE'), nextDot, nextLabel);
+  const roundsN = h('div', { style: { fontSize: '36px', fontWeight: 300, fontFamily: 'ui-monospace,Menlo,monospace' } });
+  const cyclesN = h('div', { style: { fontSize: '36px', fontWeight: 300, fontFamily: 'ui-monospace,Menlo,monospace' } });
+  const play = h('button', { style: { width: '88px', height: '88px', borderRadius: '50%', border: 0, background: 'linear-gradient(135deg,var(--primary),var(--primary2))', color: '#fff', fontSize: '34px', boxShadow: '0 8px 28px rgba(255,30,70,.3)' }, 'aria-label': 'Empezar o pausar', onclick: playPause });
+  const counter = (label, n) => h('div', { style: { flex: 1, textAlign: 'center' } }, n, h('div', { style: { color: 'var(--muted)', fontSize: '11px', letterSpacing: '2px' } }, label));
+  const bottom = h('div', { style: { display: 'flex', alignItems: 'center', padding: '0 0 calc(var(--safe-b) + 20px)' } }, counter('RONDAS', roundsN), play, counter('CICLOS', cyclesN));
+  const mainBox = h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px', transition: 'background .3s' } }, pills, main, nextBox, bottom);
+  const ov = h('div', { class: 'overlay', style: { padding: 0 } },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 20px 0' } },
+      h('button', { style: { width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--outline)', background: 'transparent', color: 'var(--text)', fontSize: '20px' }, 'aria-label': 'Cerrar el temporizador', onclick: close }, '✕'),
+      h('div', null, nameEl, timeTotal)),
+    mainBox);
   document.body.append(ov);
   try { navigator.wakeLock?.request('screen').then((w) => { wake = w; }).catch(() => {}); } catch { /* sin soporte */ }
 
@@ -74,13 +76,15 @@ export function openTabata(se, ex, save, onChange) {
     const sec = snap.phase === 'DONE' ? 0 : Math.ceil(snap.remainingMs / 1000);
     const rLeft = snap.phase === 'PREP' || snap.phase === 'CYCLE_REST' ? p.rounds : snap.phase === 'WORK' ? p.rounds - snap.round + 1 : snap.phase === 'REST' ? p.rounds - snap.round : 0;
     const cLeft = snap.phase === 'PREP' ? p.cycles : snap.phase === 'WORK' || snap.phase === 'REST' ? p.cycles - snap.cycle + 1 : snap.phase === 'CYCLE_REST' ? p.cycles - snap.cycle : 0;
-    mainBox.style.background = COLORS[snap.phase]; nextBox.style.background = COLORS[nx] || '#eee';
-    timeTotal.textContent = mmss(Math.ceil(snap.totalLeftMs / 1000));
+    const col = COLORS[snap.phase];
+    ov.style.background = `linear-gradient(180deg, ${col}2e 0%, var(--bg) 55%)`;
+    dot.style.background = col; title.style.color = col; bar.style.background = col;
+    bar.style.width = snap.totalMs ? `${(snap.remainingMs / snap.totalMs) * 100}%` : '0%';
+    timeTotal.textContent = `Quedan ${mmss(Math.ceil(snap.totalLeftMs / 1000))}`;
     title.textContent = TITLE[snap.phase]; big.textContent = snap.phase === 'DONE' ? '✓' : mmss(sec);
-    roundInfo.textContent = snap.round > 0 && snap.phase !== 'DONE' ? (p.cycles > 1 ? `Ciclo ${snap.cycle} de ${p.cycles} · ` : '') + `Ronda ${snap.round} de ${p.rounds}` : '';
-    nextLabel.textContent = NEXT[nx]; roundsN.textContent = rLeft; cyclesN.textContent = cLeft;
-    play.textContent = paused ? '▶' : '❚❚'; soundBtn.textContent = muted ? '🔇 SIN SONIDO' : '🔊 SONIDO';
-    if (snap.phase === 'DONE') { play.textContent = '✓'; }
+    roundInfo.textContent = snap.round > 0 && snap.phase !== 'DONE' ? (p.cycles > 1 ? `Ciclo ${snap.cycle}/${p.cycles}  ·  ` : '') + `Ronda ${snap.round}/${p.rounds}` : '';
+    nextDot.style.background = COLORS[nx] || '#999'; nextLabel.textContent = NEXT[nx]; roundsN.textContent = rLeft; cyclesN.textContent = cLeft;
+    play.textContent = snap.phase === 'DONE' ? '✓' : paused ? '▶' : '❚❚'; soundBtn.textContent = muted ? '🔇 Sin sonido' : '🔊 Sonido';
   }
   function close() { clearInterval(iv); try { wake?.release(); } catch { /* ok */ } ov.remove(); toast(filled ? `${filled} series registradas` : 'Temporizador cerrado'); save().then(onChange); }
 
@@ -98,7 +102,7 @@ export function openTabata(se, ex, save, onChange) {
       h('button', { class: 'btn primary block', onclick: () => {
         const n = (k, min, max) => { const v = Number(String(f[k].value).replace(',', '.')); return Math.min(max, Math.max(min, Number.isFinite(v) && String(f[k].value).trim() !== '' ? Math.round(v) : plan[k])); };
         plan = { workSec: n('workSec', 1, 3600), restSec: n('restSec', 0, 3600), rounds: n('rounds', 1, 60), cycles: n('cycles', 1, 30), cycleRestSec: n('cycleRestSec', 0, 3600), prepSec: n('prepSec', 0, 60) };
-        saveCfg(plan); started = false; pausedAt = null; pausedTotal = 0; filled = 0; lastKey = null; sets = []; closeSheet(); draw();
+        ex.cycles = plan.cycles; ex.cycleRestSec = plan.cycleRestSec; ex.prepSec = plan.prepSec; started = false; pausedAt = null; pausedTotal = 0; filled = 0; lastKey = null; sets = []; closeSheet(); draw();
       } }, 'Guardar')));
   }
   function showList() {
@@ -106,7 +110,7 @@ export function openTabata(se, ex, save, onChange) {
     const rows = intervalSchedule(p).map((st) => {
       const cur = st.phase === snap.phase && st.cycle === snap.cycle && st.round === snap.round;
       const name = st.phase === 'PREP' ? 'Preparación' : st.phase === 'WORK' ? `${p.cycles > 1 ? 'C' + st.cycle + ' · ' : ''}Entrenar ${st.round}` : st.phase === 'REST' ? 'Descansar' : 'Descanso de ciclo';
-      return h('div', { class: 'row', style: { padding: '8px 6px', background: cur ? COLORS[st.phase] + '40' : 'transparent' } }, h('i', { style: { width: '14px', height: '14px', background: COLORS[st.phase], display: 'inline-block' } }), h('span', { class: 'grow' }, name), h('b', null, mmss(st.seconds)));
+      return h('div', { class: 'row', style: { padding: '8px 6px', background: cur ? COLORS[st.phase] + '33' : 'transparent' } }, h('i', { style: { width: '14px', height: '14px', background: COLORS[st.phase], display: 'inline-block' } }), h('span', { class: 'grow' }, name), h('b', null, mmss(st.seconds)));
     });
     sheet('Intervalos', [], h('div', { style: { maxHeight: '55vh', overflowY: 'auto' } }, ...rows));
   }

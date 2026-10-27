@@ -2,6 +2,11 @@ package com.gymtrack.ui.workout
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,19 +63,21 @@ import com.gymtrack.ui.components.NumberInput
 import com.gymtrack.ui.theme.Brand
 import kotlin.math.ceil
 
-// Colores del temporizador: cada fase se reconoce de un vistazo (también con el móvil a distancia).
-private val Yellow = Color(0xFFFFFC3F)
-private val Green = Color(0xFF9DFF3F)
-private val Blue = Color(0xFF3DB8FF)
-private val Orange = Color(0xFFFFB020)
-private val Ink = Color(0xFF0A0A0A)
+// Paleta del temporizador, coherente con la app: fondo oscuro, rojo de marca para el trabajo y tonos fríos/neutros
+// para el resto. El color de la fase tiñe suavemente el fondo y los números.
+private val RestBlue = Color(0xFF38BDF8)
+private val DoneGreen = Color(0xFF34C759)
 
-private fun phaseColor(p: IntervalPhase) = when (p) {
-    IntervalPhase.PREP -> Yellow
-    IntervalPhase.WORK -> Green
-    IntervalPhase.REST -> Blue
-    IntervalPhase.CYCLE_REST -> Orange
-    IntervalPhase.DONE -> Yellow
+@Composable
+private fun phaseColor(p: IntervalPhase): Color {
+    val c = Brand.colors
+    return when (p) {
+        IntervalPhase.PREP -> c.text
+        IntervalPhase.WORK -> c.primary
+        IntervalPhase.REST -> RestBlue
+        IntervalPhase.CYCLE_REST -> c.warning
+        IntervalPhase.DONE -> DoneGreen
+    }
 }
 
 private fun phaseTitle(p: IntervalPhase) = when (p) {
@@ -117,10 +124,12 @@ private fun IntervalRunScreen(
     onStop: () -> Unit,
     contentPadding: PaddingValues,
 ) {
+    val c = Brand.colors
     val snap = run.snapshot
     val plan = run.plan
     var showList by remember { mutableStateOf(false) }
     val color = phaseColor(snap.phase)
+    val nextColor = phaseColor(run.nextPhase)
     val seconds = if (snap.finished) 0 else ceil(snap.phaseRemainingMs / 1000.0).toInt()
     val totalLeft = ceil(snap.totalRemainingMs / 1000.0).toInt()
     // Rondas y ciclos que quedan, contando la actual.
@@ -136,80 +145,102 @@ private fun IntervalRunScreen(
         IntervalPhase.CYCLE_REST -> plan.cycles - snap.cycle
         IntervalPhase.DONE -> 0
     }
+    val progress = if (snap.phaseTotalMs <= 0) 0f else (snap.phaseRemainingMs.toFloat() / snap.phaseTotalMs).coerceIn(0f, 1f)
     BackHandler { /* no se sale por accidente: usa la X */ }
-    Surface(Modifier.fillMaxSize(), color = Color.Black) {
-        Column(Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding)) {
-            // ---- Barra superior: cerrar y tiempo total
-            Row(Modifier.fillMaxWidth().height(88.dp), verticalAlignment = Alignment.CenterVertically) {
+    Surface(Modifier.fillMaxSize(), color = c.background) {
+        Column(
+            Modifier.fillMaxSize()
+                .background(Brush.verticalGradient(listOf(color.copy(alpha = 0.18f), c.background), endY = 1400f))
+                .padding(contentPadding).consumeWindowInsets(contentPadding).padding(horizontal = 20.dp),
+        ) {
+            // ---- Barra superior: cerrar · ejercicio · tiempo total
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    Modifier.size(88.dp).background(Color(0xFFF44336)).clickable(onClick = onStop)
+                    Modifier.size(44.dp).clip(CircleShape).border(1.dp, c.outline, CircleShape).clickable(onClick = onStop)
                         .semantics { contentDescription = "Cerrar el temporizador" },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Default.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp)) }
-                Spacer(Modifier.weight(1f))
-                Column(Modifier.padding(end = 20.dp), horizontalAlignment = Alignment.End) {
-                    Text(mmss(totalLeft), color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.SansSerif)
-                    Text(run.exerciseName, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                ) { Icon(Icons.Default.Close, contentDescription = null, tint = c.text, modifier = Modifier.size(22.dp)) }
+                Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                    Text(run.exerciseName, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                    Text("Quedan ${mmss(totalLeft)}", style = MaterialTheme.typography.bodySmall, color = c.textMuted)
                 }
             }
-            // ---- Zona principal con el color de la fase
-            Column(Modifier.weight(1f).fillMaxWidth().background(color), horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Row(Modifier.clickable(onClick = onEdit).heightMin(), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Tune, contentDescription = null, tint = Ink)
-                        Text("  EDITAR\n  TEMPORIZADOR", color = Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 17.sp)
-                    }
-                    Spacer(Modifier.weight(1f))
-                    Row(Modifier.clickable(onClick = onToggleSound).heightMin(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (run.muted) "SIN SONIDO  " else "SONIDO  ", color = Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                        Icon(if (run.muted) Icons.Default.VolumeOff else Icons.Default.VolumeUp, contentDescription = null, tint = Ink)
-                    }
-                }
-                Spacer(Modifier.weight(1f))
-                Text(phaseTitle(snap.phase), color = Ink, fontSize = 46.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
-                Text(
-                    mmss(seconds), color = Ink, fontSize = 124.sp, fontWeight = FontWeight.Black, maxLines = 1,
-                    modifier = Modifier.semantics { contentDescription = "${phaseTitle(snap.phase)}, quedan $seconds segundos" },
-                )
-                if (snap.round > 0 && !snap.finished) {
+            // ---- Acciones secundarias como pastillas discretas
+            Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Pill("Editar", Icons.Default.Tune, onEdit)
+                Pill(if (run.muted) "Sin sonido" else "Sonido", if (run.muted) Icons.Default.VolumeOff else Icons.Default.VolumeUp, onToggleSound)
+                Pill("Intervalos", null) { showList = true }
+            }
+            Spacer(Modifier.weight(1f))
+            // ---- Fase + número gigante + barra fina
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).clip(CircleShape).background(color))
                     Text(
-                        (if (plan.cycles > 1) "Ciclo ${snap.cycle} de ${plan.cycles} · " else "") + "Ronda ${snap.round} de ${plan.rounds}",
-                        color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                        "  " + phaseTitle(snap.phase), color = color, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 3.sp,
                     )
                 }
-                Spacer(Modifier.weight(1f))
-                Row(
-                    Modifier.fillMaxWidth().clickable { showList = true }.padding(vertical = 18.dp),
-                    horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
-                ) { Text("VER INTERVALOS  ››", color = Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
+                Text(
+                    mmss(seconds), color = c.text, fontSize = 112.sp, fontWeight = FontWeight.Light, fontFamily = FontFamily.Monospace, maxLines = 1,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                        .semantics { contentDescription = "${phaseTitle(snap.phase)}, quedan $seconds segundos" },
+                )
+                Box(Modifier.fillMaxWidth(0.7f).height(4.dp).clip(CircleShape).background(c.surfaceHigh)) {
+                    Box(Modifier.fillMaxWidth(progress).height(4.dp).clip(CircleShape).background(color))
+                }
+                if (snap.round > 0 && !snap.finished) {
+                    Text(
+                        (if (plan.cycles > 1) "Ciclo ${snap.cycle}/${plan.cycles}  ·  " else "") + "Ronda ${snap.round}/${plan.rounds}",
+                        color = c.textSecondary, fontSize = 15.sp, modifier = Modifier.padding(top = 14.dp),
+                    )
+                }
             }
+            Spacer(Modifier.weight(1f))
             // ---- Siguiente
-            Column(Modifier.fillMaxWidth().background(phaseColor(run.nextPhase)).padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("SIGUIENTE", color = Ink.copy(alpha = 0.7f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text(nextTitle(run.nextPhase), color = Ink, fontSize = 34.sp, fontWeight = FontWeight.Black)
+            Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                Text("SIGUIENTE  ", color = c.textMuted, fontSize = 12.sp, letterSpacing = 2.sp)
+                Box(Modifier.size(7.dp).clip(CircleShape).background(nextColor))
+                Text("  " + nextTitle(run.nextPhase), color = c.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
             // ---- Rondas · empezar/pausar · ciclos
-            Row(Modifier.fillMaxWidth().height(130.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Counter("RONDAS\nRESTANTES", roundsLeft, Blue, Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth().padding(bottom = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Counter("RONDAS", roundsLeft, Modifier.weight(1f))
                 Box(
-                    Modifier.size(104.dp).background(Green).clickable(onClick = onPlayPause)
+                    Modifier.size(88.dp).clip(CircleShape).background(c.primaryGradient).clickable(onClick = onPlayPause)
                         .semantics { contentDescription = if (run.paused) (if (run.started) "Reanudar" else "Empezar") else "Pausar" },
                     contentAlignment = Alignment.Center,
-                ) { Icon(if (run.paused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = null, tint = Ink, modifier = Modifier.size(64.dp)) }
-                Counter("CICLOS\nRESTANTES", cyclesLeft, Orange, Modifier.weight(1f))
+                ) {
+                    Icon(
+                        if (snap.finished) Icons.Default.Check else if (run.paused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        contentDescription = null, tint = c.onGradient, modifier = Modifier.size(44.dp),
+                    )
+                }
+                Counter("CICLOS", cyclesLeft, Modifier.weight(1f))
             }
         }
     }
     if (showList) IntervalListDialog(plan, snap.phase, snap.cycle, snap.round) { showList = false }
 }
 
-private fun Modifier.heightMin(): Modifier = this.then(Modifier.height(MinTouch))
+@Composable
+private fun Pill(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector?, onClick: () -> Unit) {
+    val c = Brand.colors
+    Row(
+        Modifier.height(36.dp).clip(CircleShape).border(1.dp, c.outline, CircleShape).clickable(onClick = onClick).padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) { Icon(icon, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)) }
+        Text(text, color = c.text, fontSize = 13.sp)
+    }
+}
 
 @Composable
-private fun Counter(label: String, value: Int, color: Color, modifier: Modifier) {
+private fun Counter(label: String, value: Int, modifier: Modifier) {
+    val c = Brand.colors
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = Color(0xFFAAAAAA), fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, lineHeight = 16.sp)
-        Text("$value", color = color, fontSize = 60.sp, fontWeight = FontWeight.Black)
+        Text("$value", color = c.text, fontSize = 36.sp, fontWeight = FontWeight.Light, fontFamily = FontFamily.Monospace)
+        Text(label, color = c.textMuted, fontSize = 11.sp, letterSpacing = 2.sp)
     }
 }
 

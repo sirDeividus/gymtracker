@@ -28,7 +28,7 @@ function buildExercise(exerciseId, it, done) {
   }
   return {
     id: uid(), exerciseId, name: def.name, tracking: def.tracking, muscle: def.muscle, equipment: def.equipment,
-    restSec: item.restSec, repMin: item.repMin, repMax: item.repMax, durationSec: item.durationSec, notes: '', startWeightKg: item.startWeightKg,
+    restSec: item.restSec, repMin: item.repMin, repMax: item.repMax, durationSec: item.durationSec, cycles: item.cycles || 1, cycleRestSec: item.cycleRestSec ?? 30, notes: '', startWeightKg: item.startWeightKg,
     suggestion: suggest(prev, def, item.repMax, stepFor(def)), suggestionDismissed: false, sets,
   };
 }
@@ -106,7 +106,7 @@ export function workoutView() {
 
   function timerButton(ex, done) {
     const work = ex.durationSec || ex.sets[0]?.durationSec || 20;
-    const summary = `${ex.sets.length} × ${work} s` + (ex.restSec > 0 ? ` · descanso ${ex.restSec} s` : '');
+    const summary = (ex.cycles > 1 ? `${ex.cycles} ciclos × ` : '') + `${ex.sets.length} × ${work} s` + (ex.restSec > 0 ? ` · descanso ${ex.restSec} s` : '');
     return h('button', { style: { display: 'flex', alignItems: 'center', gap: '12px', width: '100%', margin: '10px 0 0', padding: '14px 16px', border: 0, borderRadius: '18px', color: '#fff', textAlign: 'left', fontFamily: 'inherit', background: done ? 'var(--ok)' : 'var(--primary)' },
       onclick: () => openTabata(se, ex, () => saveSession(se), render), 'aria-label': 'Abrir el temporizador' },
       h('span', { style: { fontSize: '24px' } }, '⏱'),

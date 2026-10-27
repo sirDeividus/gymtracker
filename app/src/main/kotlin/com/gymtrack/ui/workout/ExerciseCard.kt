@@ -226,7 +226,8 @@ fun ExerciseCard(
         if (!e.skipped && compact) {
             // Un solo botón: abre el temporizador; se marca ✓ y se pone verde cuando todas las series están hechas.
             val work = e.targetDurationSec ?: item.sets.firstOrNull()?.durationSec ?: 20
-            val summary = "${item.sets.size} × $work s" + if (e.restSec > 0) " · descanso ${e.restSec} s" else ""
+            val cycles = com.gymtrack.data.settings.IntervalPrefs.get(androidx.compose.ui.platform.LocalContext.current, e.exerciseId).cycles
+            val summary = (if (cycles > 1) "$cycles ciclos × " else "") + "${item.sets.size} × $work s" + if (e.restSec > 0) " · descanso ${e.restSec} s" else ""
             Row(
                 Modifier.fillMaxWidth().padding(top = 10.dp).heightIn(min = 64.dp).clip(RoundedCornerShape(18.dp))
                     .background(if (done) SetDone else c.primary).clickable { actions.startInterval(e.id) }

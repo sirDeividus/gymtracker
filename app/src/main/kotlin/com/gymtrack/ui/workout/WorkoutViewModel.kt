@@ -322,11 +322,12 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
     private var runJob: Job? = null
     /** Plan inicial tomado del ejercicio de la rutina: trabajo = duración, descanso = su descanso, rondas = sus series. */
     private fun planFor(ex: com.gymtrack.data.repo.ActiveExercise): IntervalPlan = runCatching {
+        val extra = com.gymtrack.data.settings.IntervalPrefs.get(c.context, ex.entity.exerciseId)
         IntervalPlan(
             workSec = (ex.entity.targetDurationSec ?: ex.sets.firstOrNull()?.durationSec ?: 20).coerceIn(1, 3600),
             restSec = ex.entity.restSec.coerceIn(0, 3600),
             rounds = ex.sets.size.coerceIn(1, IntervalPlan.MAX_ROUNDS),
-            prepSec = 10, cycles = 1, cycleRestSec = 30,
+            prepSec = extra.prepSec, cycles = extra.cycles, cycleRestSec = extra.cycleRestSec,
         )
     }.getOrDefault(IntervalPlan(20, 10, 8, 10, 1, 30))
 
@@ -378,6 +379,11 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
         if (plan == null) {
             events.tryEmit("Valores fuera de rango")
             return
+        }
+        // Ciclos, descanso entre ciclos y cuenta atrás se recuerdan para este ejercicio.
+        val exId = state.value.workout?.exercises?.firstOrNull { it.entity.id == r.exerciseId }?.entity?.exerciseId
+        if (exId != null) {
+            com.gymtrack.data.settings.IntervalPrefs.set(c.context, exId, com.gymtrack.data.settings.IntervalPrefs.Config(plan.cycles, plan.cycleRestSec, plan.prepSec))
         }
         r.reset(plan)
     }
