@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import com.gymtrack.domain.IntervalPlan
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -59,7 +61,7 @@ import kotlin.math.ceil
 fun IntervalDialog(
     setup: IntervalSetup?,
     run: IntervalUi?,
-    onBegin: (Int, Int) -> Unit,
+    onBegin: (IntervalSetup) -> Unit,
     onCancelSetup: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -74,26 +76,30 @@ fun IntervalDialog(
 }
 
 @Composable
-private fun IntervalSetupDialog(setup: IntervalSetup, onBegin: (Int, Int) -> Unit, onCancel: () -> Unit) {
+private fun IntervalSetupDialog(setup: IntervalSetup, onBegin: (IntervalSetup) -> Unit, onCancel: () -> Unit) {
     val c = Brand.colors
     var work by remember(setup) { mutableStateOf(setup.workSec) }
     var rest by remember(setup) { mutableStateOf(setup.restSec) }
+    var rounds by remember(setup) { mutableStateOf(setup.rounds) }
+    var cycles by remember(setup) { mutableStateOf(setup.cycles) }
+    var cycleRest by remember(setup) { mutableStateOf(setup.cycleRestSec) }
+    var prep by remember(setup) { mutableStateOf(setup.prepSec) }
     AlertDialog(
         onDismissRequest = onCancel,
         containerColor = c.surfaceHigh,
         title = { Text("Modo intervalos") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(setup.exerciseName, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Cuenta atrás automática con aviso en cada cambio. Cada ronda de trabajo completa una serie pendiente.",
+                    "Cuenta atrás con aviso en cada cambio. Cada ronda de trabajo completa una serie (si faltan series, se añaden).",
                     style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("Tabata 20/10" to (20 to 10), "30/30" to (30 to 30), "40/20" to (40 to 20)).forEach { (label, p) ->
+                    listOf("Tabata 20/10×8" to Triple(20, 10, 8), "30/30" to Triple(30, 30, rounds), "40/20" to Triple(40, 20, rounds)).forEach { (label, p) ->
                         FilterChip(
                             selected = work == p.first && rest == p.second,
-                            onClick = { work = p.first; rest = p.second },
+                            onClick = { work = p.first; rest = p.second; rounds = p.third },
                             label = { Text(label) },
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = c.surface, labelColor = c.text,
@@ -103,13 +109,25 @@ private fun IntervalSetupDialog(setup: IntervalSetup, onBegin: (Int, Int) -> Uni
                     }
                 }
                 StepRow("Trabajo (s)", work, { work = it }, 5..300)
-                StepRow("Descanso (s)", rest, { rest = it }, 0..120)
-                Text("Rondas: ${setup.rounds} (una por serie pendiente; añade series si quieres más).", style = MaterialTheme.typography.bodySmall)
-                val total = 5 + setup.rounds * work + (setup.rounds - 1) * rest
-                Text("Duración total: ${Formatting.duration(total)} (incluye 5 s de preparación)", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                StepRow("Descanso entre rondas (s)", rest, { rest = it }, 0..120)
+                StepRow("Rondas por ciclo", rounds, { rounds = it }, 1..IntervalPlan.MAX_ROUNDS, step = 1)
+                StepRow("Ciclos", cycles, { cycles = it }, 1..IntervalPlan.MAX_CYCLES, step = 1)
+                if (cycles > 1) StepRow("Descanso entre ciclos (s)", cycleRest, { cycleRest = it }, 0..300)
+                StepRow("Cuenta atrás de inicio (s)", prep, { prep = it }, 0..30, step = 1)
+                val plan = IntervalPlan(work, rest, rounds, prep, cycles, if (cycles > 1) cycleRest else 0)
+                Text(
+                    "${plan.totalRounds} rondas de trabajo en total · duración ${Formatting.duration(plan.totalSec)}" +
+                        if (prep > 0) " (incluye $prep s de inicio)" else "",
+                    style = MaterialTheme.typography.bodySmall, color = c.textSecondary,
+                )
             }
         },
-        confirmButton = { TextButton(onClick = { onBegin(work, rest) }, modifier = Modifier.height(MinTouch)) { Text("Comenzar", color = c.primary) } },
+        confirmButton = {
+            TextButton(
+                onClick = { onBegin(setup.copy(workSec = work, restSec = rest, rounds = rounds, cycles = cycles, cycleRestSec = if (cycles > 1) cycleRest else 0, prepSec = prep)) },
+                modifier = Modifier.height(MinTouch),
+            ) { Text("Comenzar", color = c.primary) }
+        },
         dismissButton = { TextButton(onClick = onCancel, modifier = Modifier.height(MinTouch)) { Text("Cancelar", color = c.text) } },
     )
 }
@@ -139,11 +157,13 @@ private fun IntervalRunScreen(
         IntervalPhase.PREP -> c.warning
         IntervalPhase.WORK, IntervalPhase.DONE -> c.primary
         IntervalPhase.REST -> c.textSecondary
+        IntervalPhase.CYCLE_REST -> c.warning
     }
     val label = when (snap.phase) {
         IntervalPhase.PREP -> "PREPÁRATE"
         IntervalPhase.WORK -> "¡TRABAJA!"
         IntervalPhase.REST -> "DESCANSA"
+        IntervalPhase.CYCLE_REST -> "DESCANSO ENTRE CICLOS"
         IntervalPhase.DONE -> "¡LISTO!"
     }
     val seconds = ceil(snap.phaseRemainingMs / 1000.0).toInt()
@@ -175,10 +195,13 @@ private fun IntervalRunScreen(
                         modifier = Modifier.fillMaxWidth(0.8f), color = color, trackColor = c.surfaceHigh,
                     )
                     Spacer(Modifier.height(16.dp))
-                    if (snap.round > 0) Text("Ronda ${snap.round} de ${run.plan.rounds}", style = MaterialTheme.typography.titleLarge)
+                    if (snap.round > 0) Text(
+                        (if (run.plan.cycles > 1) "Ciclo ${snap.cycle} de ${run.plan.cycles} · " else "") + "Ronda ${snap.round} de ${run.plan.rounds}",
+                        style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center,
+                    )
                     Text("Quedan ${Formatting.duration(Math.ceil(snap.totalRemainingMs / 1000.0).toInt())}", style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
                 } else {
-                    Text("${run.plan.rounds} rondas completadas", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 16.dp))
+                    Text("${run.plan.totalRounds} rondas completadas", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 16.dp))
                     Text("Tus series ya están registradas en el entrenamiento.", style = MaterialTheme.typography.bodyMedium, color = c.textSecondary, textAlign = TextAlign.Center)
                 }
                 Spacer(Modifier.height(32.dp))

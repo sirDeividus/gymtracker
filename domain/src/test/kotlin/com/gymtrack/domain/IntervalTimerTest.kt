@@ -63,6 +63,39 @@ class IntervalTimerTest {
         assertFalse(IntervalTimer.snapshot(p, 89_999).finished)
     }
 
+    @Test fun `varios ciclos con descanso entre ciclos`() {
+        // 3 s prep + 2 ciclos × (2 rondas × 10 s + 5 s descanso entre rondas) + 20 s entre ciclos
+        val p = IntervalPlan(workSec = 10, restSec = 5, rounds = 2, prepSec = 3, cycles = 2, cycleRestSec = 20)
+        assertEquals(4, p.totalRounds)
+        assertEquals(3 + 40 + 2 * 5 + 20, p.totalSec)
+        val w1 = IntervalTimer.snapshot(p, 3_000)
+        assertEquals(IntervalPhase.WORK, w1.phase); assertEquals(1, w1.cycle); assertEquals(1, w1.round)
+        val rest = IntervalTimer.snapshot(p, 13_000)
+        assertEquals(IntervalPhase.REST, rest.phase); assertEquals(1, rest.completedRounds)
+        val w2 = IntervalTimer.snapshot(p, 18_000)
+        assertEquals(IntervalPhase.WORK, w2.phase); assertEquals(2, w2.round)
+        val cycleRest = IntervalTimer.snapshot(p, 28_000)
+        assertEquals(IntervalPhase.CYCLE_REST, cycleRest.phase); assertEquals(1, cycleRest.cycle)
+        assertEquals(2, cycleRest.completedRounds); assertEquals(20_000, cycleRest.phaseRemainingMs)
+        val c2 = IntervalTimer.snapshot(p, 48_000)
+        assertEquals(IntervalPhase.WORK, c2.phase); assertEquals(2, c2.cycle); assertEquals(1, c2.round); assertEquals(2, c2.completedRounds)
+        assertEquals(IntervalPhase.DONE, IntervalTimer.snapshot(p, p.totalSec * 1000L).phase)
+        assertEquals(4, IntervalTimer.snapshot(p, p.totalSec * 1000L).completedRounds)
+    }
+
+    @Test fun `cuenta atras de inicio configurable y sin descansos`() {
+        val p = IntervalPlan(workSec = 20, restSec = 0, rounds = 2, prepSec = 10, cycles = 2, cycleRestSec = 0)
+        assertEquals(10 + 80, p.totalSec)
+        assertEquals(IntervalPhase.PREP, IntervalTimer.snapshot(p, 9_999).phase)
+        assertEquals(IntervalPhase.WORK, IntervalTimer.snapshot(p, 10_000).phase)
+        assertEquals(2, IntervalTimer.snapshot(p, 10_000 + 40_000).cycle)
+    }
+
+    @Test fun `ciclos fuera de rango se rechazan`() {
+        assertTrue(runCatching { IntervalPlan(20, 10, 8, cycles = 0) }.isFailure)
+        assertTrue(runCatching { IntervalPlan(20, 10, 8, cycles = 31) }.isFailure)
+    }
+
     @Test fun `tiempo negativo se trata como cero`() {
         assertEquals(IntervalPhase.PREP, IntervalTimer.snapshot(tabata, -500).phase)
     }

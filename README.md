@@ -96,6 +96,8 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
   Toca ANTERIOR para copiar el peso/reps de la sesión pasada; calculadora de discos y generador de calentamiento.
 * **Pantalla de entrenamiento** al estilo Hevy: cronómetro, «Terminar», volumen/series/mapa corporal, filas completadas en verde,
   descanso por ejercicio. **Bloqueo durante el descanso**: la pantalla ignora toques (bolsillo) hasta que mantienes pulsado el candado.
+* **Descanso al cambiar de ejercicio** (Ajustes): al completar la última serie de un ejercicio se usa este tiempo, distinto al descanso entre series.
+* **Modo intervalos/Tabata** configurable: trabajo, descanso, rondas por ciclo, ciclos, descanso entre ciclos y cuenta atrás de inicio.
 * **Añadir ejercicio**: silueta corporal tocable (Girar frente/espalda) → cuadrícula de ejercicios del músculo elegido, con filtros.
 * **Editar ejercicio** de rutina a pantalla completa con una tarjeta por serie (todas comparten objetivo).
 * **Demostración a pantalla completa**: el GIF se anima en la miniatura del entrenamiento y, al tocarlo, se abre ajustado a la pantalla.

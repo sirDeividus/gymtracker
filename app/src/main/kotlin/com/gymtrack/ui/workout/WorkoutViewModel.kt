@@ -54,7 +54,19 @@ data class WorkoutUiState(
 }
 
 /** Configuración previa del modo intervalos para un ejercicio por duración. */
-data class IntervalSetup(val exerciseId: String, val exerciseName: String, val workSec: Int, val restSec: Int, val rounds: Int)
+data class IntervalSetup(
+    val exerciseId: String,
+    val exerciseName: String,
+    val workSec: Int,
+    val restSec: Int,
+    /** Rondas (repeticiones de trabajo) por ciclo. */
+    val rounds: Int,
+    val cycles: Int = 1,
+    /** Descanso entre un ciclo y el siguiente. */
+    val cycleRestSec: Int = 30,
+    /** Cuenta atrás antes de empezar. */
+    val prepSec: Int = IntervalPlan.DEFAULT_PREP_SEC,
+)
 
 data class IntervalUi(val exerciseName: String, val plan: IntervalPlan, val snapshot: IntervalSnapshot, val paused: Boolean)
 
@@ -62,7 +74,7 @@ private class IntervalRun(val setIds: List<String>, val plan: IntervalPlan, val 
     var pausedAt: Long? = null
     var pausedTotal = 0L
     var done = 0
-    var lastKey: Pair<IntervalPhase, Int>? = null
+    var lastKey: Triple<IntervalPhase, Int, Int>? = null
     fun elapsed(now: Long): Long = (pausedAt ?: now) - startMs - pausedTotal
 }
 
@@ -304,27 +316,31 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
             sessionExerciseId, ex.entity.exerciseName,
             workSec = (ex.entity.targetDurationSec ?: 20).coerceIn(5, 300),
             restSec = ex.entity.restSec.coerceIn(0, 120),
-            rounds = pending.coerceAtMost(20),
+            rounds = pending.coerceIn(1, IntervalPlan.MAX_ROUNDS),
         )
     }
 
     fun cancelIntervalSetup() { intervalSetup.value = null }
 
-    /** Cada ronda de trabajo completa una serie pendiente del ejercicio, en orden. */
-    fun beginInterval(workSec: Int, restSec: Int) {
+    /**
+     * Cada ronda de trabajo completa una serie pendiente del ejercicio, en orden; si hay más rondas
+     * (rondas × ciclos) que series pendientes, se añaden las series que falten.
+     */
+    fun beginInterval(cfg: IntervalSetup) {
         val setup = intervalSetup.value ?: return
-        val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == setup.exerciseId } ?: return
-        val ids = ex.sets.filter { !it.completed }.map { it.id }.take(20)
-        if (ids.isEmpty()) return
-        val plan = IntervalPlan(workSec, restSec, ids.size)
+        val plan = runCatching {
+            IntervalPlan(cfg.workSec, cfg.restSec, cfg.rounds, cfg.prepSec, cfg.cycles, cfg.cycleRestSec)
+        }.getOrNull() ?: return
         intervalSetup.value = null
-        val r = IntervalRun(ids, plan, System.currentTimeMillis(), setup.exerciseName)
-        run = r
         runJob?.cancel()
         runJob = viewModelScope.launch {
+            val ids = c.workout.pendingSetIds(setup.exerciseId, plan.totalRounds)
+            if (ids.isEmpty()) return@launch
+            val r = IntervalRun(ids, plan, System.currentTimeMillis(), setup.exerciseName)
+            run = r
             while (isActive) {
                 tickInterval(r)
-                if (r.done >= plan.rounds) break
+                if (r.done >= plan.totalRounds) break
                 delay(200)
             }
         }
@@ -336,7 +352,7 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
             c.workout.completeTimedSet(r.setIds[r.done], r.plan.workSec)
             r.done++
         }
-        val key = snap.phase to snap.round
+        val key = Triple(snap.phase, snap.cycle, snap.round)
         if (key != r.lastKey) {
             val first = r.lastKey == null
             r.lastKey = key

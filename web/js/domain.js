@@ -69,3 +69,31 @@ export function warmupSets(workKg) {
   const mk = (pct, reps) => ({ weightKg: Math.round((workKg * pct) / 2.5) * 2.5, reps });
   return [mk(0.4, 8), mk(0.6, 5), mk(0.8, 3)];
 }
+
+// ---- Intervalos / Tabata (puerto de IntervalTimer.kt): trabajo/descanso × rondas × ciclos
+export function planTotalSec(p) {
+  return p.prepSec + p.rounds * p.cycles * p.workSec + (p.rounds - 1) * p.restSec * p.cycles + (p.cycles - 1) * p.cycleRestSec;
+}
+function timeline(p) {
+  const out = []; let done = 0;
+  for (let c = 1; c <= p.cycles; c++) {
+    for (let r = 1; r <= p.rounds; r++) {
+      out.push({ phase: 'WORK', cycle: c, round: r, ms: p.workSec * 1000, done }); done++;
+      const last = r === p.rounds;
+      if (!last && p.restSec > 0) out.push({ phase: 'REST', cycle: c, round: r, ms: p.restSec * 1000, done });
+      if (last && c < p.cycles && p.cycleRestSec > 0) out.push({ phase: 'CYCLE_REST', cycle: c, round: r, ms: p.cycleRestSec * 1000, done });
+    }
+  }
+  return out;
+}
+export function intervalSnapshot(p, elapsedMs) {
+  const e = Math.max(0, elapsedMs), prep = p.prepSec * 1000;
+  const totalMs = planTotalSec(p) * 1000;
+  if (e < prep) return { phase: 'PREP', cycle: 0, round: 0, remainingMs: prep - e, totalMs: prep, completed: 0, totalLeftMs: totalMs - e };
+  let t = e - prep;
+  for (const s of timeline(p)) {
+    if (t < s.ms) return { phase: s.phase, cycle: s.cycle, round: s.round, remainingMs: s.ms - t, totalMs: s.ms, completed: s.done, totalLeftMs: Math.max(0, totalMs - e) };
+    t -= s.ms;
+  }
+  return { phase: 'DONE', cycle: p.cycles, round: p.rounds, remainingMs: 0, totalMs: 0, completed: p.rounds * p.cycles, totalLeftMs: 0 };
+}

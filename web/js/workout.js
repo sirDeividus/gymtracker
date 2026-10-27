@@ -2,6 +2,7 @@ import { S, exerciseById, saveSession, activeSession, finished, go } from './sta
 import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, beep, unlockAudio, toast, SET_TYPES, sheet, closeSheet } from './util.js';
 import { sessionVolume, completedSets, lastPerformance, suggest, stepFor, warmupSets, isWorking } from './domain.js';
 import { pickExercise } from './views.js';
+import { openTabata } from './tabata.js';
 
 /** Crea una sesión a partir de una rutina (o libre si routine es null). */
 export async function startSession(routine) {
@@ -173,7 +174,12 @@ export function workoutView() {
       // Si dejó el peso vacío, usa el de la sesión anterior (registro en 2 toques).
       if (ex.tracking === 'WEIGHT_REPS' && s.weightKg == null) s.weightKg = s.prev?.weightKg ?? 0;
       s.completed = true;
-      if (ex.restSec > 0) startRest(ex.restSec, false);
+      // Tras la última serie del ejercicio se usa el descanso «al cambiar de ejercicio» (Ajustes);
+      // si era el último ejercicio pendiente, no hace falta descansar.
+      const exDone = ex.sets.every((x) => x.completed);
+      const othersPending = se.exercises.some((e) => e !== ex && e.sets.some((x) => !x.completed));
+      const restSec = !exDone ? ex.restSec : othersPending ? (S.settings.changeRestSec ?? 120) : 0;
+      if (restSec > 0) startRest(restSec, false);
     } else s.completed = false;
     persist(se); render();
   }
@@ -205,6 +211,7 @@ export function workoutView() {
   function exerciseMenu(ex) {
     sheet(ex.name, [
       ex.tracking === 'WEIGHT_REPS' ? ['Añadir calentamiento', () => { const base = ex.sets.find((x) => x.type === 'N')?.weightKg || ex.sets[0]?.prev?.weightKg; const w = warmupSets(base); if (!w.length) { toast('Escribe primero el peso de trabajo (≥ 20 kg)'); return; } ex.sets.unshift(...w.map((x) => ({ id: uid(), type: 'W', weightKg: x.weightKg, reps: x.reps, durationSec: null, completed: false, rpe: null, prev: null }))); persist(se); render(); }] : null,
+      ex.tracking === 'DURATION' ? ['Modo intervalos (Tabata)', () => openTabata(se, ex, () => saveSession(se), render)] : null,
       ['Quitar de la sesión', () => { se.exercises = se.exercises.filter((e) => e !== ex); persist(se); render(); }, true],
     ].filter(Boolean));
   }

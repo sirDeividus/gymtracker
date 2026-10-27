@@ -201,9 +201,20 @@ class WorkoutRepository(
                     val s = settings.current()
                     // En ejercicios unilaterales el descanso empieza al terminar el último lado.
                     val sideDone = cur.side == Side.LEFT.name && se.unilateral
-                    if (s.autoRest && se.restSec > 0 && !sideDone) {
+                    // Tras la última serie de un ejercicio se usa el descanso «al cambiar de ejercicio» (configurable);
+                    // si era el último ejercicio pendiente de la sesión, no hace falta descansar.
+                    val exerciseDone = sessions.getSetsFor(se.id).all { it.completed }
+                    val othersPending = exerciseDone && sessions.getExercises(se.sessionId).any { other ->
+                        other.id != se.id && !other.skipped && sessions.getSetsFor(other.id).any { !it.completed }
+                    }
+                    val restSec = when {
+                        !exerciseDone -> se.restSec
+                        othersPending -> s.exerciseChangeRestSec
+                        else -> 0
+                    }
+                    if (s.autoRest && restSec > 0 && !sideDone) {
                         sessions.get(se.sessionId)?.let { session ->
-                            val t = RestTimerState.start(se.restSec, now())
+                            val t = RestTimerState.start(restSec, now())
                             sessions.update(session.copy(restTotalSec = t.totalSec, restEndsAt = t.endsAtMs, restPausedRemainingMs = null))
                             restStarted = true
                         }
@@ -312,6 +323,18 @@ class WorkoutRepository(
                 )
             }
         }
+    }
+
+    /** Ids de las series pendientes del ejercicio (en orden); añade series si hacen falta [atLeast] (modo intervalos). */
+    suspend fun pendingSetIds(sessionExerciseId: String, atLeast: Int): List<String> {
+        fun pending() = sessions.getSetsFor(sessionExerciseId).filter { !it.completed }.sortedBy { it.setNumber }
+        var list = pending()
+        var guard = 0
+        while (list.size < atLeast && guard++ < 200) {
+            addSet(sessionExerciseId)
+            list = pending()
+        }
+        return list.map { it.id }.take(atLeast)
     }
 
     suspend fun removeSet(setId: String) {

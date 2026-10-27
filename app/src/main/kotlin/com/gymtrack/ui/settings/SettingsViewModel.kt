@@ -37,6 +37,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setUnit(u: WeightUnit) = update { it.copy(unit = u) }
     fun resetIncrementsForUnit(u: WeightUnit) = update { it.copy(increments = IncrementSettings.defaultsFor(u)) }
     fun setRest(sec: Int) = update { it.copy(defaultRestSec = sec.coerceIn(5, 1800)) }
+    fun setChangeRest(sec: Int) = update { it.copy(exerciseChangeRestSec = sec.coerceIn(0, 1800)) }
     fun setAutoRest(on: Boolean) = update { it.copy(autoRest = on) }
     fun setVibration(on: Boolean) = update { it.copy(vibration = on) }
     fun setSound(on: Boolean) = update { it.copy(sound = on) }

@@ -21,6 +21,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 data class UserSettings(
     val unit: WeightUnit = WeightUnit.KG,
     val defaultRestSec: Int = 90,
+    /** Descanso al terminar todas las series de un ejercicio y pasar al siguiente (0 = sin descanso). */
+    val exerciseChangeRestSec: Int = 120,
     val autoRest: Boolean = true,
     val vibration: Boolean = true,
     val sound: Boolean = false,
@@ -36,6 +38,7 @@ class SettingsStore(private val context: Context) {
     private object Keys {
         val unit = stringPreferencesKey("unit")
         val rest = intPreferencesKey("default_rest_sec")
+        val changeRest = intPreferencesKey("exercise_change_rest_sec")
         val autoRest = booleanPreferencesKey("auto_rest")
         val vibration = booleanPreferencesKey("vibration")
         val sound = booleanPreferencesKey("sound")
@@ -60,6 +63,7 @@ class SettingsStore(private val context: Context) {
             val new = transform(prefs.toSettings())
             prefs[Keys.unit] = new.unit.name
             prefs[Keys.rest] = new.defaultRestSec
+            prefs[Keys.changeRest] = new.exerciseChangeRestSec
             prefs[Keys.autoRest] = new.autoRest
             prefs[Keys.vibration] = new.vibration
             prefs[Keys.sound] = new.sound
@@ -82,6 +86,7 @@ class SettingsStore(private val context: Context) {
         return buildMap {
             put("unit", s.unit.name)
             put("defaultRestSec", s.defaultRestSec.toString())
+            put("exerciseChangeRestSec", s.exerciseChangeRestSec.toString())
             put("autoRest", s.autoRest.toString())
             put("vibration", s.vibration.toString())
             put("sound", s.sound.toString())
@@ -100,6 +105,7 @@ class SettingsStore(private val context: Context) {
         cur.copy(
             unit = map["unit"]?.let { n -> WeightUnit.values().firstOrNull { it.name == n } } ?: cur.unit,
             defaultRestSec = map["defaultRestSec"]?.toIntOrNull()?.takeIf { it in 5..1800 } ?: cur.defaultRestSec,
+            exerciseChangeRestSec = map["exerciseChangeRestSec"]?.toIntOrNull()?.takeIf { it in 0..1800 } ?: cur.exerciseChangeRestSec,
             autoRest = map["autoRest"]?.toBooleanStrictOrNull() ?: cur.autoRest,
             vibration = map["vibration"]?.toBooleanStrictOrNull() ?: cur.vibration,
             sound = map["sound"]?.toBooleanStrictOrNull() ?: cur.sound,
@@ -123,6 +129,7 @@ class SettingsStore(private val context: Context) {
         return UserSettings(
             unit = this[Keys.unit]?.let { n -> WeightUnit.values().firstOrNull { it.name == n } } ?: WeightUnit.KG,
             defaultRestSec = this[Keys.rest] ?: 90,
+            exerciseChangeRestSec = this[Keys.changeRest] ?: 120,
             autoRest = this[Keys.autoRest] ?: true,
             vibration = this[Keys.vibration] ?: true,
             sound = this[Keys.sound] ?: false,
