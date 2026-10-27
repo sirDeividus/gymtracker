@@ -220,6 +220,13 @@ fun ExerciseCard(
             }
             PillChip(if (showNotes) "Ocultar nota" else "Nota", Icons.Default.NoteAdd) { showNotes = !showNotes }
         }
+        if (!e.skipped && tracking == TrackingType.DURATION && item.sets.any { !it.completed }) {
+            // Ejercicios por tiempo (abdominales, plancha…): el temporizador Tabata queda a un toque.
+            com.gymtrack.ui.components.GradientCapsuleButton(
+                "TEMPORIZADOR TABATA", { actions.startInterval(e.id) },
+                Modifier.fillMaxWidth().padding(top = 10.dp).heightIn(min = 52.dp), icon = Icons.Default.Timer,
+            )
+        }
 
         AnimatedVisibility(visible = !e.skipped) {
             Column(Modifier.padding(top = 6.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -277,9 +284,6 @@ fun ExerciseCard(
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Agregar Serie", style = MaterialTheme.typography.titleSmall)
-                }
-                if (tracking == TrackingType.DURATION && item.sets.any { !it.completed }) {
-                    SecondaryButton("Modo intervalos (Tabata)", { actions.startInterval(e.id) }, Modifier.fillMaxWidth(), icon = Icons.Default.Timer)
                 }
                 if (showNotes) {
                     var notes by remember(e.id) { mutableStateOf(e.notes) }

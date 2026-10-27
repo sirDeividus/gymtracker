@@ -118,6 +118,7 @@ export function workoutView() {
         h('button', { class: 'pill', onclick: () => restPicker(ex) }, `⏱ Descanso: ${ex.restSec ? clock(ex.restSec) : '--'}`),
         h('button', { class: 'pill', onclick: () => noteEditor(ex) }, ex.notes ? '📝 Nota ✓' : '📝 Nota'),
       ),
+      ex.tracking === 'DURATION' && ex.sets.some((x) => !x.completed) ? h('button', { class: 'btn primary block', style: { margin: '0 0 10px' }, onclick: () => openTabata(se, ex, () => saveSession(se), render) }, '⏱  TEMPORIZADOR TABATA') : null,
       sug && sug.kind !== 'hold' ? h('div', { class: 'banner' },
         h('b', { style: { color: 'var(--primary)', fontSize: '12px', letterSpacing: '.6px' } }, sug.kind === 'first' ? 'PRIMERA VEZ' : 'SUGERENCIA'),
         h('div', null, sug.text),
