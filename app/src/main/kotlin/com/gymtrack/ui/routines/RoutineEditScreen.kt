@@ -430,7 +430,35 @@ private fun RoutineExerciseDialog(
                     }
 
                     // ---- Series: línea de tiempo con una tarjeta por serie (todas comparten el mismo objetivo).
-                    Column(Modifier.padding(top = 20.dp)) {
+                    if (tracking == TrackingType.DURATION) {
+                        // Ejercicio por tiempo (Tabata, plancha…): solo tres números, sin una tarjeta por serie.
+                        var roundsText by remember(item.row.id) { mutableStateOf(item.row.sets.toString()) }
+                        var restRoundText by remember(item.row.id) { mutableStateOf(item.row.restSec.toString()) }
+                        Column(Modifier.padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Box(Modifier.weight(1f)) {
+                                    LabeledInput("Trabajo (s)", durText, decimal = false) {
+                                        durText = it
+                                        it.toIntOrNull()?.takeIf { v -> v in 1..3600 }?.let { v -> set(row.copy(targetDurationSec = v)) }
+                                    }
+                                }
+                                Box(Modifier.weight(1f)) {
+                                    LabeledInput("Descanso (s)", restRoundText, decimal = false) {
+                                        restRoundText = it
+                                        it.toIntOrNull()?.takeIf { v -> v in 0..1800 }?.let { v -> set(row.copy(restSec = v)) }
+                                    }
+                                }
+                            }
+                            LabeledInput("Rondas (series)", roundsText, decimal = false) {
+                                roundsText = it
+                                it.toIntOrNull()?.takeIf { v -> v in 1..20 }?.let { v -> set(row.copy(sets = v)) }
+                            }
+                            Text(
+                                "En el entrenamiento se abre un temporizador a pantalla completa; allí también puedes ajustar ciclos, descanso entre ciclos y cuenta atrás.",
+                                style = MaterialTheme.typography.bodySmall, color = c.textMuted, modifier = Modifier.padding(bottom = 16.dp),
+                            )
+                        }
+                    } else Column(Modifier.padding(top = 20.dp)) {
                         for (i in 1..row.sets) {
                             Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(34.dp).clip(androidx.compose.foundation.shape.CircleShape).background(c.surfaceHigh), contentAlignment = Alignment.Center) {

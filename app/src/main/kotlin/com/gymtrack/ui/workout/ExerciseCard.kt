@@ -164,6 +164,9 @@ fun ExerciseCard(
 
     MediaHost(showMedia, e.exerciseId, e.exerciseName) { showMedia = false }
     var restMenu by remember { mutableStateOf(false) }
+    // Los ejercicios por tiempo (Tabata, plancha…) se muestran como un solo botón; las series se pueden desplegar.
+    val compact = tracking == TrackingType.DURATION
+    var showTable by remember(e.id) { mutableStateOf(!compact) }
     // Bloque plano (sin tarjeta): miniatura circular, nombre en el acento, chips de descanso/nota y la tabla.
     Column(modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -206,7 +209,7 @@ fun ExerciseCard(
                 }
             }
         }
-        if (!e.skipped) Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (!e.skipped && !compact) Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box {
                 PillChip(if (e.restSec > 0) "Descanso: ${Formatting.duration(e.restSec)}" else "Descanso: --", Icons.Default.Timer) { restMenu = true }
                 DropdownMenu(expanded = restMenu, onDismissRequest = { restMenu = false }) {
@@ -220,15 +223,36 @@ fun ExerciseCard(
             }
             PillChip(if (showNotes) "Ocultar nota" else "Nota", Icons.Default.NoteAdd) { showNotes = !showNotes }
         }
-        if (!e.skipped && tracking == TrackingType.DURATION && item.sets.any { !it.completed }) {
-            // Ejercicios por tiempo (abdominales, plancha…): el temporizador Tabata queda a un toque.
-            com.gymtrack.ui.components.GradientCapsuleButton(
-                "TEMPORIZADOR TABATA", { actions.startInterval(e.id) },
-                Modifier.fillMaxWidth().padding(top = 10.dp).heightIn(min = 52.dp), icon = Icons.Default.Timer,
-            )
+        if (!e.skipped && compact) {
+            // Un solo botón: abre el temporizador; se marca ✓ y se pone verde cuando todas las series están hechas.
+            val work = e.targetDurationSec ?: item.sets.firstOrNull()?.durationSec ?: 20
+            val summary = "${item.sets.size} × $work s" + if (e.restSec > 0) " · descanso ${e.restSec} s" else ""
+            Row(
+                Modifier.fillMaxWidth().padding(top = 10.dp).heightIn(min = 64.dp).clip(RoundedCornerShape(18.dp))
+                    .background(if (done) SetDone else c.primary).clickable { actions.startInterval(e.id) }
+                    .padding(horizontal = 16.dp)
+                    .semantics { contentDescription = "Abrir el temporizador de ${e.exerciseName}" + if (done) ", completado" else "" },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Timer, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(if (done) "Completado" else "Iniciar temporizador", style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color.White)
+                    Text(summary, style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                }
+                Box(
+                    Modifier.size(36.dp).clip(CircleShape).background(androidx.compose.ui.graphics.Color.White.copy(alpha = if (done) 1f else 0.25f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = if (done) SetDone else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.6f))
+                }
+            }
+            TextButton(onClick = { showTable = !showTable }, modifier = Modifier.heightIn(min = MinTouch)) {
+                Text(if (showTable) "Ocultar series" else "Ver series (${item.completedSets}/${item.sets.size})", color = c.textSecondary)
+            }
         }
 
-        AnimatedVisibility(visible = !e.skipped) {
+        AnimatedVisibility(visible = !e.skipped && showTable) {
             Column(Modifier.padding(top = 6.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // ---- Sugerencia de progresión (editable, nunca automática)
                 val kind = e.suggestionKind?.let { enumOr(it, SuggestionKind.HOLD) }

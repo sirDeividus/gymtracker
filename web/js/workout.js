@@ -51,6 +51,7 @@ export function workoutView() {
   }
   const unit = S.settings.unit;
   let unlocked = false;
+  const openTables = new Set(); // ejercicios por tiempo con las series desplegadas
   let lastRestKey = null;
   const root = h('div', { class: 'screen', style: { paddingBottom: '140px' } });
   const timeEl = h('span', { class: 'wk-time' });
@@ -103,10 +104,22 @@ export function workoutView() {
     updateStats(); tick();
   }
 
+  function timerButton(ex, done) {
+    const work = ex.durationSec || ex.sets[0]?.durationSec || 20;
+    const summary = `${ex.sets.length} × ${work} s` + (ex.restSec > 0 ? ` · descanso ${ex.restSec} s` : '');
+    return h('button', { style: { display: 'flex', alignItems: 'center', gap: '12px', width: '100%', margin: '10px 0 0', padding: '14px 16px', border: 0, borderRadius: '18px', color: '#fff', textAlign: 'left', fontFamily: 'inherit', background: done ? 'var(--ok)' : 'var(--primary)' },
+      onclick: () => openTabata(se, ex, () => saveSession(se), render), 'aria-label': 'Abrir el temporizador' },
+      h('span', { style: { fontSize: '24px' } }, '⏱'),
+      h('span', { style: { flex: 1 } }, h('div', { style: { fontWeight: 700, fontSize: '17px' } }, done ? 'Completado' : 'Iniciar temporizador'), h('div', { style: { fontSize: '13px', opacity: .85 } }, summary)),
+      h('span', { style: { width: '34px', height: '34px', borderRadius: '50%', background: done ? '#fff' : 'rgba(255,255,255,.25)', color: done ? 'var(--ok)' : 'rgba(255,255,255,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 } }, '✓'));
+  }
+
   function exerciseBlock(ex) {
     const def = exerciseById(ex.exerciseId);
     const done = ex.sets.length > 0 && ex.sets.every((s) => s.completed);
     const fields = ex.tracking === 'DURATION' ? ['SEG'] : ex.tracking === 'DISTANCE' ? ['KM', 'MIN'] : ex.tracking === 'BODYWEIGHT' ? ['REPS'] : [unit.toUpperCase(), 'REPS'];
+    const compact = ex.tracking === 'DURATION';
+    const showTable = !compact || openTables.has(ex.id);
     const sug = ex.suggestion && !ex.suggestionDismissed ? ex.suggestion : null;
     return h('section', { class: 'ex' + (done ? ' done' : '') },
       h('div', { class: 'ex-head' },
@@ -114,12 +127,13 @@ export function workoutView() {
         h('h3', null, ex.name),
         h('button', { class: 'icon-btn', 'aria-label': 'Más', onclick: () => exerciseMenu(ex) }, '⋮'),
       ),
-      h('div', { class: 'row', style: { margin: '10px 0' } },
+      compact ? null : h('div', { class: 'row', style: { margin: '10px 0' } },
         h('button', { class: 'pill', onclick: () => restPicker(ex) }, `⏱ Descanso: ${ex.restSec ? clock(ex.restSec) : '--'}`),
         h('button', { class: 'pill', onclick: () => noteEditor(ex) }, ex.notes ? '📝 Nota ✓' : '📝 Nota'),
       ),
-      ex.tracking === 'DURATION' && ex.sets.some((x) => !x.completed) ? h('button', { class: 'btn primary block', style: { margin: '0 0 10px' }, onclick: () => openTabata(se, ex, () => saveSession(se), render) }, '⏱  TEMPORIZADOR TABATA') : null,
-      sug && sug.kind !== 'hold' ? h('div', { class: 'banner' },
+      compact ? timerButton(ex, done) : null,
+      compact ? h('button', { class: 'btn small ghost', style: { margin: '8px 0' }, onclick: () => { if (openTables.has(ex.id)) openTables.delete(ex.id); else openTables.add(ex.id); render(); } }, showTable ? 'Ocultar series' : `Ver series (${ex.sets.filter((x) => x.completed).length}/${ex.sets.length})`) : null,
+      !showTable ? null : sug && sug.kind !== 'hold' ? h('div', { class: 'banner' },
         h('b', { style: { color: 'var(--primary)', fontSize: '12px', letterSpacing: '.6px' } }, sug.kind === 'first' ? 'PRIMERA VEZ' : 'SUGERENCIA'),
         h('div', null, sug.text),
         sug.kind === 'up' ? h('div', { class: 'row', style: { marginTop: '6px' } },
@@ -127,9 +141,9 @@ export function workoutView() {
           h('button', { class: 'btn small ghost', onclick: () => { ex.suggestionDismissed = true; persist(se); render(); } }, 'Ignorar')) :
           h('button', { class: 'btn small ghost', onclick: () => { ex.suggestionDismissed = true; persist(se); render(); } }, 'Entendido'),
       ) : null,
-      h('div', { class: 'tbl-h' }, h('span', null, 'SERIE'), h('span', null, 'ANTERIOR'), ...fields.map((f) => h('span', null, f)), ...(fields.length === 1 ? [h('span')] : []), h('span', null, '✓')),
-      ...ex.sets.map((s, i) => setRow(ex, s, i)),
-      h('button', { class: 'btn block', style: { marginTop: '6px' }, onclick: () => { const last = ex.sets[ex.sets.length - 1]; ex.sets.push({ id: uid(), type: 'N', weightKg: null, reps: null, durationSec: null, completed: false, rpe: null, prev: null }); void last; persist(se); render(); } }, '+  Agregar Serie'),
+      !showTable ? null : h('div', { class: 'tbl-h' }, h('span', null, 'SERIE'), h('span', null, 'ANTERIOR'), ...fields.map((f) => h('span', null, f)), ...(fields.length === 1 ? [h('span')] : []), h('span', null, '✓')),
+      ...(showTable ? ex.sets.map((s, i) => setRow(ex, s, i)) : []),
+      !showTable ? null : h('button', { class: 'btn block', style: { marginTop: '6px' }, onclick: () => { const last = ex.sets[ex.sets.length - 1]; ex.sets.push({ id: uid(), type: 'N', weightKg: null, reps: null, durationSec: null, completed: false, rpe: null, prev: null }); void last; persist(se); render(); } }, '+  Agregar Serie'),
     );
   }
 

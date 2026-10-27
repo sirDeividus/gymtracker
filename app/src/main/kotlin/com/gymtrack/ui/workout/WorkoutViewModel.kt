@@ -320,22 +320,20 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
     val interval = MutableStateFlow<IntervalUi?>(null)
     private var run: IntervalRun? = null
     private var runJob: Job? = null
-    private val intervalPrefs get() = c.context.getSharedPreferences("intervals", android.content.Context.MODE_PRIVATE)
+    /** Plan inicial tomado del ejercicio de la rutina: trabajo = duración, descanso = su descanso, rondas = sus series. */
+    private fun planFor(ex: com.gymtrack.data.repo.ActiveExercise): IntervalPlan = runCatching {
+        IntervalPlan(
+            workSec = (ex.entity.targetDurationSec ?: ex.sets.firstOrNull()?.durationSec ?: 20).coerceIn(1, 3600),
+            restSec = ex.entity.restSec.coerceIn(0, 3600),
+            rounds = ex.sets.size.coerceIn(1, IntervalPlan.MAX_ROUNDS),
+            prepSec = 10, cycles = 1, cycleRestSec = 30,
+        )
+    }.getOrDefault(IntervalPlan(20, 10, 8, 10, 1, 30))
 
-    private fun savedPlan(): IntervalPlan {
-        val p = intervalPrefs
-        return runCatching {
-            IntervalPlan(
-                p.getInt("work", 20), p.getInt("rest", 10), p.getInt("rounds", 8),
-                p.getInt("prep", 10), p.getInt("cycles", 1), p.getInt("cycleRest", 30),
-            )
-        }.getOrDefault(IntervalPlan(20, 10, 8, 10, 1, 30))
-    }
-
-    /** Abre el temporizador listo para empezar (en pausa) con la última configuración usada. */
+    /** Abre el temporizador listo para empezar (en pausa) con los valores del ejercicio. */
     fun openIntervalSetup(sessionExerciseId: String) {
         val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == sessionExerciseId } ?: return
-        val r = IntervalRun(sessionExerciseId, savedPlan(), ex.entity.exerciseName)
+        val r = IntervalRun(sessionExerciseId, planFor(ex), ex.entity.exerciseName)
         run = r
         runJob?.cancel()
         runJob = viewModelScope.launch {
@@ -381,9 +379,6 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
             events.tryEmit("Valores fuera de rango")
             return
         }
-        intervalPrefs.edit()
-            .putInt("work", plan.workSec).putInt("rest", plan.restSec).putInt("rounds", plan.rounds)
-            .putInt("prep", plan.prepSec).putInt("cycles", plan.cycles).putInt("cycleRest", plan.cycleRestSec).apply()
         r.reset(plan)
     }
 
