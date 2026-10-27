@@ -97,3 +97,17 @@ export function intervalSnapshot(p, elapsedMs) {
   }
   return { phase: 'DONE', cycle: p.cycles, round: p.rounds, remainingMs: 0, totalMs: 0, completed: p.rounds * p.cycles, totalLeftMs: 0 };
 }
+
+/** Todos los tramos en orden, empezando por la preparación (si la hay). */
+export function intervalSchedule(p) {
+  const out = p.prepSec > 0 ? [{ phase: 'PREP', cycle: 0, round: 0, seconds: p.prepSec }] : [];
+  return out.concat(timeline(p).map((s) => ({ phase: s.phase, cycle: s.cycle, round: s.round, seconds: s.ms / 1000 })));
+}
+/** Fase del tramo siguiente al actual ('DONE' si es el último). */
+export function nextPhase(p, elapsedMs) {
+  const e = Math.max(0, elapsedMs), prep = p.prepSec * 1000, steps = timeline(p);
+  if (e < prep) return steps[0].phase;
+  let t = e - prep;
+  for (let i = 0; i < steps.length; i++) { if (t < steps[i].ms) return steps[i + 1]?.phase ?? 'DONE'; t -= steps[i].ms; }
+  return 'DONE';
+}

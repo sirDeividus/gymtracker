@@ -65,17 +65,33 @@ data class IntervalSetup(
     /** Descanso entre un ciclo y el siguiente. */
     val cycleRestSec: Int = 30,
     /** Cuenta atrás antes de empezar. */
-    val prepSec: Int = IntervalPlan.DEFAULT_PREP_SEC,
+    val prepSec: Int = 10,
 )
 
-data class IntervalUi(val exerciseName: String, val plan: IntervalPlan, val snapshot: IntervalSnapshot, val paused: Boolean)
+/** Estado de la pantalla del temporizador; [started] = false mientras espera el botón de empezar. */
+data class IntervalUi(
+    val exerciseName: String,
+    val plan: IntervalPlan,
+    val snapshot: IntervalSnapshot,
+    val nextPhase: IntervalPhase,
+    val started: Boolean,
+    val paused: Boolean,
+    val muted: Boolean,
+)
 
-private class IntervalRun(val setIds: List<String>, val plan: IntervalPlan, val startMs: Long, val name: String) {
+private class IntervalRun(val exerciseId: String, var plan: IntervalPlan, val name: String) {
+    var setIds: List<String> = emptyList()
+    var started = false
+    var startMs = 0L
     var pausedAt: Long? = null
     var pausedTotal = 0L
     var done = 0
+    var muted = false
     var lastKey: Triple<IntervalPhase, Int, Int>? = null
-    fun elapsed(now: Long): Long = (pausedAt ?: now) - startMs - pausedTotal
+    fun elapsed(now: Long): Long = if (!started) 0L else (pausedAt ?: now) - startMs - pausedTotal
+    fun reset(newPlan: IntervalPlan) {
+        plan = newPlan; setIds = emptyList(); started = false; startMs = 0; pausedAt = null; pausedTotal = 0; done = 0; lastKey = null
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -299,66 +315,100 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
 
     // ------------------------------------------------------------ Modo intervalos (Tabata)
 
+    /** Configuración que se está editando (null = el diálogo de edición está cerrado). */
     val intervalSetup = MutableStateFlow<IntervalSetup?>(null)
     val interval = MutableStateFlow<IntervalUi?>(null)
     private var run: IntervalRun? = null
     private var runJob: Job? = null
+    private val intervalPrefs get() = c.context.getSharedPreferences("intervals", android.content.Context.MODE_PRIVATE)
 
-    /** Abre la configuración con los valores del ejercicio: trabajo = duración objetivo, descanso = su descanso. */
-    fun openIntervalSetup(sessionExerciseId: String) {
-        val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == sessionExerciseId } ?: return
-        val pending = ex.sets.count { !it.completed }
-        if (pending == 0) {
-            events.tryEmit("No quedan series pendientes en este ejercicio")
-            return
-        }
-        intervalSetup.value = IntervalSetup(
-            sessionExerciseId, ex.entity.exerciseName,
-            workSec = (ex.entity.targetDurationSec ?: 20).coerceIn(5, 300),
-            restSec = ex.entity.restSec.coerceIn(0, 120),
-            rounds = pending.coerceIn(1, IntervalPlan.MAX_ROUNDS),
-        )
+    private fun savedPlan(): IntervalPlan {
+        val p = intervalPrefs
+        return runCatching {
+            IntervalPlan(
+                p.getInt("work", 20), p.getInt("rest", 10), p.getInt("rounds", 8),
+                p.getInt("prep", 10), p.getInt("cycles", 1), p.getInt("cycleRest", 30),
+            )
+        }.getOrDefault(IntervalPlan(20, 10, 8, 10, 1, 30))
     }
 
-    fun cancelIntervalSetup() { intervalSetup.value = null }
-
-    /**
-     * Cada ronda de trabajo completa una serie pendiente del ejercicio, en orden; si hay más rondas
-     * (rondas × ciclos) que series pendientes, se añaden las series que falten.
-     */
-    fun beginInterval(cfg: IntervalSetup) {
-        val setup = intervalSetup.value ?: return
-        val plan = runCatching {
-            IntervalPlan(cfg.workSec, cfg.restSec, cfg.rounds, cfg.prepSec, cfg.cycles, cfg.cycleRestSec)
-        }.getOrNull() ?: return
-        intervalSetup.value = null
+    /** Abre el temporizador listo para empezar (en pausa) con la última configuración usada. */
+    fun openIntervalSetup(sessionExerciseId: String) {
+        val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == sessionExerciseId } ?: return
+        val r = IntervalRun(sessionExerciseId, savedPlan(), ex.entity.exerciseName)
+        run = r
         runJob?.cancel()
         runJob = viewModelScope.launch {
-            val ids = c.workout.pendingSetIds(setup.exerciseId, plan.totalRounds)
-            if (ids.isEmpty()) return@launch
-            val r = IntervalRun(ids, plan, System.currentTimeMillis(), setup.exerciseName)
-            run = r
             while (isActive) {
                 tickInterval(r)
-                if (r.done >= plan.totalRounds) break
                 delay(200)
             }
         }
     }
 
+    /** Botón central: empezar, pausar o reanudar. Al empezar se asegura una serie pendiente por ronda. */
+    fun playPauseInterval() {
+        val r = run ?: return
+        val now = System.currentTimeMillis()
+        when {
+            !r.started -> {
+                r.started = true; r.startMs = now; r.pausedAt = null; r.pausedTotal = 0
+                viewModelScope.launch { r.setIds = c.workout.pendingSetIds(r.exerciseId, r.plan.totalRounds) }
+            }
+            r.pausedAt == null -> r.pausedAt = now
+            else -> { r.pausedTotal += now - (r.pausedAt ?: now); r.pausedAt = null }
+        }
+    }
+
+    /** «Editar temporizador»: pausa (si corría) y abre la edición con la configuración actual. */
+    fun editInterval() {
+        val r = run ?: return
+        if (r.started && r.pausedAt == null) r.pausedAt = System.currentTimeMillis()
+        val p = r.plan
+        intervalSetup.value = IntervalSetup(r.exerciseId, r.name, p.workSec, p.restSec, p.rounds, p.cycles, p.cycleRestSec, p.prepSec)
+    }
+
+    fun cancelIntervalSetup() { intervalSetup.value = null }
+
+    /** Guarda la configuración y reinicia el temporizador (en pausa, listo para empezar). */
+    fun applyIntervalConfig(cfg: IntervalSetup) {
+        val r = run ?: return
+        val plan = runCatching {
+            IntervalPlan(cfg.workSec, cfg.restSec, cfg.rounds, cfg.prepSec, cfg.cycles, cfg.cycleRestSec)
+        }.getOrNull()
+        intervalSetup.value = null
+        if (plan == null) {
+            events.tryEmit("Valores fuera de rango")
+            return
+        }
+        intervalPrefs.edit()
+            .putInt("work", plan.workSec).putInt("rest", plan.restSec).putInt("rounds", plan.rounds)
+            .putInt("prep", plan.prepSec).putInt("cycles", plan.cycles).putInt("cycleRest", plan.cycleRestSec).apply()
+        r.reset(plan)
+    }
+
+    fun toggleIntervalSound() { run?.let { it.muted = !it.muted } }
+
     private suspend fun tickInterval(r: IntervalRun) {
-        val snap = IntervalTimer.snapshot(r.plan, r.elapsed(System.currentTimeMillis()))
-        while (r.done < snap.completedRounds && r.done < r.setIds.size) {
-            c.workout.completeTimedSet(r.setIds[r.done], r.plan.workSec)
-            r.done++
+        val now = System.currentTimeMillis()
+        val elapsed = r.elapsed(now)
+        val snap = IntervalTimer.snapshot(r.plan, elapsed)
+        if (r.started) {
+            while (r.done < snap.completedRounds && r.done < r.setIds.size) {
+                c.workout.completeTimedSet(r.setIds[r.done], r.plan.workSec)
+                r.done++
+            }
+            val key = Triple(snap.phase, snap.cycle, snap.round)
+            if (key != r.lastKey) {
+                val first = r.lastKey == null
+                r.lastKey = key
+                if (!first && !r.muted) intervalAlert()
+            }
         }
-        val key = Triple(snap.phase, snap.cycle, snap.round)
-        if (key != r.lastKey) {
-            val first = r.lastKey == null
-            r.lastKey = key
-            if (!first) intervalAlert()
-        }
-        interval.value = IntervalUi(r.name, r.plan, snap, r.pausedAt != null)
+        interval.value = IntervalUi(
+            r.name, r.plan, snap, IntervalTimer.nextPhase(r.plan, elapsed),
+            started = r.started, paused = !r.started || r.pausedAt != null, muted = r.muted,
+        )
     }
 
     private fun intervalAlert() {
@@ -367,24 +417,13 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
         if (s.sound) RestNotifier.beep()
     }
 
-    fun pauseInterval() {
-        run?.let { if (it.pausedAt == null) it.pausedAt = System.currentTimeMillis() }
-    }
-
-    fun resumeInterval() {
-        run?.let {
-            val p = it.pausedAt ?: return
-            it.pausedTotal += System.currentTimeMillis() - p
-            it.pausedAt = null
-        }
-    }
-
-    /** Termina o cierra el modo intervalos. Las rondas ya completadas se conservan. */
+    /** Cierra el temporizador. Las rondas ya completadas se conservan. */
     fun stopInterval() {
         runJob?.cancel()
         runJob = null
         run = null
         interval.value = null
+        intervalSetup.value = null
     }
 
     // ------------------------------------------------------------ Finalizar / descartar

@@ -55,6 +55,9 @@ data class IntervalSnapshot(
     val finished: Boolean get() = phase == IntervalPhase.DONE
 }
 
+/** Un tramo del temporizador (para listar «Ver intervalos»). */
+data class IntervalStep(val phase: IntervalPhase, val cycle: Int, val round: Int, val seconds: Int)
+
 /** Cálculo determinista a partir del tiempo transcurrido: no acumula errores y soporta pausas. */
 object IntervalTimer {
     private class Segment(val phase: IntervalPhase, val cycle: Int, val round: Int, val ms: Long, val doneBefore: Int)
@@ -89,5 +92,25 @@ object IntervalTimer {
             t -= s.ms
         }
         return IntervalSnapshot(IntervalPhase.DONE, plan.rounds, 0, 0, plan.totalRounds, 0, plan.cycles)
+    }
+
+    /** Todos los tramos en orden, empezando por la preparación (si la hay). */
+    fun schedule(plan: IntervalPlan): List<IntervalStep> = buildList {
+        if (plan.prepSec > 0) add(IntervalStep(IntervalPhase.PREP, 0, 0, plan.prepSec))
+        timeline(plan).forEach { add(IntervalStep(it.phase, it.cycle, it.round, (it.ms / 1000).toInt())) }
+    }
+
+    /** Fase del tramo siguiente al actual (DONE si ya es el último). */
+    fun nextPhase(plan: IntervalPlan, elapsedMs: Long): IntervalPhase {
+        val e = elapsedMs.coerceAtLeast(0)
+        val prep = plan.prepSec * 1000L
+        val steps = timeline(plan)
+        if (e < prep) return steps.first().phase
+        var t = e - prep
+        for ((i, s) in steps.withIndex()) {
+            if (t < s.ms) return steps.getOrNull(i + 1)?.phase ?: IntervalPhase.DONE
+            t -= s.ms
+        }
+        return IntervalPhase.DONE
     }
 }

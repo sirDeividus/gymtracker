@@ -91,6 +91,18 @@ class IntervalTimerTest {
         assertEquals(2, IntervalTimer.snapshot(p, 10_000 + 40_000).cycle)
     }
 
+    @Test fun `lista de tramos y fase siguiente`() {
+        val p = IntervalPlan(workSec = 10, restSec = 5, rounds = 2, prepSec = 3, cycles = 2, cycleRestSec = 20)
+        val steps = IntervalTimer.schedule(p)
+        assertEquals(IntervalPhase.PREP, steps.first().phase)
+        assertEquals(listOf(IntervalPhase.PREP, IntervalPhase.WORK, IntervalPhase.REST, IntervalPhase.WORK, IntervalPhase.CYCLE_REST, IntervalPhase.WORK, IntervalPhase.REST, IntervalPhase.WORK), steps.map { it.phase })
+        assertEquals(p.totalSec, steps.sumOf { it.seconds })
+        assertEquals(IntervalPhase.WORK, IntervalTimer.nextPhase(p, 0))            // prep -> trabajo
+        assertEquals(IntervalPhase.REST, IntervalTimer.nextPhase(p, 5_000))        // trabajo 1 -> descanso
+        assertEquals(IntervalPhase.CYCLE_REST, IntervalTimer.nextPhase(p, 20_000)) // trabajo 2 -> descanso de ciclo
+        assertEquals(IntervalPhase.DONE, IntervalTimer.nextPhase(p, p.totalSec * 1000L - 1))
+    }
+
     @Test fun `ciclos fuera de rango se rechazan`() {
         assertTrue(runCatching { IntervalPlan(20, 10, 8, cycles = 0) }.isFailure)
         assertTrue(runCatching { IntervalPlan(20, 10, 8, cycles = 31) }.isFailure)

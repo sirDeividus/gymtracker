@@ -277,8 +277,9 @@ fun WorkoutScreen(
         }
         IntervalDialog(
             setup = intervalSetup, run = intervalRun,
-            onBegin = vm::beginInterval, onCancelSetup = vm::cancelIntervalSetup,
-            onPause = vm::pauseInterval, onResume = vm::resumeInterval, onStop = vm::stopInterval,
+            onPlayPause = vm::playPauseInterval, onEdit = vm::editInterval,
+            onSaveConfig = vm::applyIntervalConfig, onCancelEdit = vm::cancelIntervalSetup,
+            onToggleSound = vm::toggleIntervalSound, onStop = vm::stopInterval,
             contentPadding = contentPadding,
         )
         if (picker) ExercisePickerSheet(libraryVm, onPick = { vm.addExercise(it); picker = false }, onDismiss = { picker = false }, contentPadding = contentPadding)
