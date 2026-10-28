@@ -1,0 +1,70 @@
+# Compila, firma y sube la app a TestFlight. Requiere la cuenta de pago de Apple Developer (99 USD/año)
+# y los secretos descritos en gymtrack_flutter/docs/IOS.md. Se lanza a mano: Actions → «Flutter TestFlight» → Run workflow.
+name: Flutter TestFlight
+on:
+  workflow_dispatch:
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    env:
+      KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      BUNDLE_ID: ${{ secrets.APP_BUNDLE_ID }}
+    defaults:
+      run:
+        working-directory: gymtrack_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Comprobar secretos
+        run: |
+          for v in KEY_ID ISSUER_ID TEAM_ID BUNDLE_ID; do
+            if [ -z "${!v}" ]; then echo "Falta el secreto para $v (ver docs/IOS.md)"; exit 1; fi
+          done
+      - name: Poner tu identificador de app (Bundle ID)
+        run: sed -i '' "s/com\.gymtrack\.gymtrack/${BUNDLE_ID}/g" ios/Runner.xcodeproj/project.pbxproj
+      - run: flutter pub get
+      - run: flutter test
+      - name: Preparar el proyecto de iOS
+        run: flutter build ios --release --no-codesign --build-number ${{ github.run_number }}
+      - name: Clave de la API de App Store Connect
+        env:
+          API_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          mkdir -p "$HOME/private_keys"
+          printf '%s' "$API_KEY" > "$HOME/private_keys/AuthKey_${KEY_ID}.p8"
+      - name: Archivar con firma automática
+        working-directory: gymtrack_flutter/ios
+        run: |
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic \
+            archive
+      - name: Exportar y subir a TestFlight
+        working-directory: gymtrack_flutter/ios
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID"

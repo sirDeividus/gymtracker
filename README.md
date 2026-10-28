@@ -12,6 +12,10 @@ fiables. Funciona **sin conexión, sin cuenta y sin permisos innecesarios**.
 > * Las pruebas instrumentadas (persistencia, recuperación de sesión, migraciones, copia de seguridad) están escritas
 >   pero **no se han ejecutado**. No hay APK publicado.
 
+## App nativa para iPhone (Flutter)
+
+[`gymtrack_flutter/`](gymtrack_flutter/docs/IOS.md): versión Flutter para iPhone (avisos con pantalla bloqueada, voz con bajada de volumen de la música). Se compila en GitHub (macOS) y se instala con Sideloadly/AltStore (Apple ID gratis, renovar cada 7 días) o por TestFlight (99 USD/año).
+
 ## Versión web para iPhone
 
 La carpeta [`web/`](web/README.md) contiene una versión web instalable (PWA) que se añade a la pantalla de inicio del iPhone sin Mac ni cuenta de Apple.
