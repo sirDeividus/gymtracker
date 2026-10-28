@@ -60,6 +60,15 @@ enum class TrackingType(val label: String) {
 @Serializable
 enum class SessionStatus { IN_PROGRESS, FINISHED, DISCARDED }
 
+/** Tipo de serie. Los calentamientos no cuentan para volumen, récords ni sugerencias de progresión. */
+@Serializable
+enum class SetType(val short: String, val label: String) {
+    NORMAL("", "Normal"),
+    WARMUP("W", "Calentamiento"),
+    DROP("D", "Drop set"),
+    FAILURE("F", "Al fallo"),
+}
+
 @Serializable
 enum class Side(val short: String) { BOTH(""), LEFT("I"), RIGHT("D") }
 
@@ -89,6 +98,7 @@ data class SetEntry(
     val distanceM: Double? = null,
     val rpe: Double? = null,
     val completed: Boolean = false,
+    val type: SetType = SetType.NORMAL,
 )
 
 /** Resultado de un ejercicio en una sesión finalizada (para historial y sugerencias). */
@@ -102,6 +112,9 @@ data class ExercisePerformance(
     val discomfort: Boolean = false,
 ) {
     val completedSets: List<SetEntry> get() = sets.filter { it.completed }
+
+    /** Series completadas que cuentan para estadísticas, récords y progresión (sin calentamientos). */
+    val workingSets: List<SetEntry> get() = sets.filter { it.completed && it.type != SetType.WARMUP }
 }
 
 data class RepTarget(val min: Int, val max: Int) {

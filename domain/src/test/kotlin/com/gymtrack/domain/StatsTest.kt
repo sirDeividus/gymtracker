@@ -63,4 +63,32 @@ class StatsTest {
         assertEquals(760.0, pts[0].volumeKg, 1e-9)
         assertEquals(42.5, pts[1].topWeightKg!!, 1e-9)
     }
+
+    private val utc = ZoneOffset.UTC
+    private fun day(y: Int, m: Int, d: Int) = LocalDate.of(y, m, d).atStartOfDay(utc).toInstant().toEpochMilli()
+
+    @Test fun `dias entrenados de la semana en curso`() {
+        val now = day(2026, 10, 22) // jueves
+        val starts = listOf(day(2026, 10, 19), day(2026, 10, 21), day(2026, 10, 14)) // lun, mié y un miércoles anterior
+        assertEquals(setOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.WEDNESDAY), Stats.trainedDaysInWeekOf(now, starts, utc))
+        assertEquals(emptySet<java.time.DayOfWeek>(), Stats.trainedDaysInWeekOf(now, emptyList(), utc))
+    }
+
+    @Test fun `racha de semanas consecutivas`() {
+        val now = day(2026, 10, 22)
+        val starts = listOf(day(2026, 10, 20), day(2026, 10, 13), day(2026, 10, 6), day(2026, 9, 22)) // hueco la semana del 14/9
+        assertEquals(3, Stats.weekStreak(starts, now, utc))
+    }
+
+    @Test fun `la semana en curso sin entrenar no rompe la racha`() {
+        val now = day(2026, 10, 22)
+        val starts = listOf(day(2026, 10, 13), day(2026, 10, 6)) // nada esta semana
+        assertEquals(2, Stats.weekStreak(starts, now, utc))
+    }
+
+    @Test fun `una semana saltada deja la racha en cero`() {
+        val now = day(2026, 10, 22)
+        assertEquals(0, Stats.weekStreak(listOf(day(2026, 10, 1)), now, utc))
+        assertEquals(0, Stats.weekStreak(emptyList(), now, utc))
+    }
 }

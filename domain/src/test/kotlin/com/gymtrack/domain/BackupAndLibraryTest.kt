@@ -97,9 +97,27 @@ class BackupAndLibraryTest {
         assertTrue(onlyDumbbell.isNotEmpty() && onlyDumbbell.all { it.equipment == Equipment.DUMBBELL })
     }
 
+    @Test fun `navegar combina busqueda filtros y orden`() {
+        val lib = ExerciseLibrary.all
+        val r = ExerciseRecommender.browse(lib, "press", setOf(MuscleGroup.CHEST, MuscleGroup.SHOULDERS), setOf(Equipment.DUMBBELL))
+        assertTrue(r.isNotEmpty())
+        assertTrue(r.all { it.name.contains("ress") && it.equipment == Equipment.DUMBBELL })
+        assertTrue(r.all { it.primaryMuscle == MuscleGroup.CHEST || it.primaryMuscle == MuscleGroup.SHOULDERS })
+        val byMuscle = ExerciseRecommender.browse(lib, sort = RecommendationSort.MUSCLE).map { it.primaryMuscle.ordinal }
+        assertEquals(byMuscle.sorted(), byMuscle)
+        assertEquals(lib.size, ExerciseRecommender.browse(lib).size)
+    }
+
     @Test fun `busqueda ignora acentos y mayusculas`() {
         assertTrue(ExerciseRecommender.search(ExerciseLibrary.all, "TRICEPS").any { it.name.contains("tríceps") })
         assertTrue(ExerciseRecommender.search(ExerciseLibrary.all, "").size == ExerciseLibrary.all.size)
+    }
+
+    @Test fun `numeros no validos no lanzan excepcion`() {
+        assertEquals("—", Formatting.number(Double.NaN))
+        assertEquals("—", Formatting.number(emptyList<Double>().average()))
+        assertEquals("—", Formatting.number(Double.POSITIVE_INFINITY, 2))
+        assertEquals("—", Formatting.weight(Double.NaN, WeightUnit.KG, false))
     }
 
     @Test fun `formato de numeros con coma decimal`() {
@@ -111,5 +129,21 @@ class BackupAndLibraryTest {
         assertEquals(null, Formatting.parseDecimal("-3"))
         assertEquals("1:05", Formatting.duration(65))
         assertEquals("1:01:01", Formatting.duration(3661))
+    }
+}
+
+class RoutineTemplatesTest {
+    @Test fun `las plantillas solo usan ejercicios de la biblioteca y rangos validos`() {
+        assertTrue(RoutineTemplates.all.size >= 5)
+        for (t in RoutineTemplates.all) {
+            assertTrue(t.items.isNotEmpty())
+            for (i in t.items) {
+                val ex = ExerciseLibrary.byId[i.exerciseId]
+                assertTrue("${t.name}: no existe ${i.exerciseId}", ex != null)
+                assertTrue(i.sets in 1..SessionPlanner.MAX_SETS && i.repMin in 1..i.repMax)
+                if (ex!!.tracking == TrackingType.DURATION) assertTrue(i.durationSec != null)
+            }
+            assertEquals(t.items.size, t.items.map { it.exerciseId }.toSet().size)
+        }
     }
 }

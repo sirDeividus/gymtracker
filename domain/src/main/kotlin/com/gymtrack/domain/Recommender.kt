@@ -2,6 +2,7 @@ package com.gymtrack.domain
 
 enum class RecommendationSort(val label: String) {
     RELEVANCE("Relevancia"),
+    MUSCLE("Grupo muscular"),
     EQUIPMENT("Equipamiento"),
     NAME("Nombre"),
 }
@@ -24,19 +25,33 @@ object ExerciseRecommender {
         prefs: RecommendationPrefs = RecommendationPrefs(),
         sort: RecommendationSort = RecommendationSort.RELEVANCE,
         equipment: Set<Equipment> = emptySet(),
+    ): List<Exercise> = browse(library, "", setOf(muscle), equipment, sort, prefs)
+
+    /** Búsqueda + filtros + orden sobre toda la biblioteca (para el selector y la biblioteca). */
+    fun browse(
+        library: List<Exercise>,
+        query: String = "",
+        muscles: Set<MuscleGroup> = emptySet(),
+        equipment: Set<Equipment> = emptySet(),
+        sort: RecommendationSort = RecommendationSort.RELEVANCE,
+        prefs: RecommendationPrefs = RecommendationPrefs(),
     ): List<Exercise> {
-        val candidates = library.filter {
-            it.primaryMuscle == muscle && (equipment.isEmpty() || it.equipment in equipment)
+        val candidates = search(library, query).filter {
+            (muscles.isEmpty() || it.primaryMuscle in muscles) && (equipment.isEmpty() || it.equipment in equipment)
         }
         return when (sort) {
             RecommendationSort.NAME -> candidates.sortedBy { it.name }
+            RecommendationSort.MUSCLE ->
+                candidates.sortedWith(compareBy<Exercise>({ it.primaryMuscle.ordinal }, { it.name }))
             RecommendationSort.EQUIPMENT ->
                 candidates.sortedWith(compareBy<Exercise>({ it.equipment.ordinal }, { it.name }))
             RecommendationSort.RELEVANCE -> candidates.sortedWith(
                 compareByDescending<Exercise> { it.id in prefs.favoriteIds }
                     .thenByDescending { prefs.usage[it.id] ?: 0 }
+                    .thenByDescending { !it.id.startsWith(ExerciseDataset.ID_PREFIX) } // revisados a mano primero
                     .thenByDescending { it.equipment in prefs.preferredEquipment }
                     .thenByDescending { it.movement != MovementType.ISOLATION }
+                    .thenBy { it.primaryMuscle.ordinal }
                     .thenBy { it.name },
             )
         }

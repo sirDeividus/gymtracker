@@ -1,0 +1,38 @@
+# Compila la app Flutter para iPhone en un servidor de GitHub con macOS y publica un .ipa SIN firmar.
+# Ese archivo se instala con Sideloadly / AltStore / SideStore usando un Apple ID gratuito (ver gymtrack_flutter/docs/IOS.md).
+name: Flutter iOS (.ipa sin firmar)
+on:
+  push:
+    paths:
+      - 'gymtrack_flutter/**'
+      - '.github/workflows/flutter-ios.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: gymtrack_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+      - run: flutter build ios --release --no-codesign --build-number ${{ github.run_number }}
+      - name: Empaquetar .ipa sin firmar
+        run: |
+          rm -rf Payload GymTrack-unsigned.ipa
+          mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry GymTrack-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GymTrack-ios-unsigned
+          path: gymtrack_flutter/GymTrack-unsigned.ipa
+          if-no-files-found: error

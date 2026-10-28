@@ -34,7 +34,7 @@ object Stats {
         var distance = 0.0
         for (l in sets) {
             val s = l.set
-            if (!s.completed) continue
+            if (!s.completed || s.type == SetType.WARMUP) continue
             count++
             when (l.tracking) {
                 TrackingType.WEIGHT_REPS -> volume += (s.weightKg ?: 0.0) * (s.reps ?: 0)
@@ -50,7 +50,7 @@ object Stats {
     }
 
     fun setsPerMuscle(sets: List<LoggedSet>): Map<MuscleGroup, Int> =
-        sets.filter { it.set.completed }.groupingBy { it.muscle }.eachCount()
+        sets.filter { it.set.completed && it.set.type != SetType.WARMUP }.groupingBy { it.muscle }.eachCount()
 
     fun weekStart(epochMs: Long, zone: ZoneId): LocalDate =
         Instant.ofEpochMilli(epochMs).atZone(zone).toLocalDate()
@@ -63,6 +63,29 @@ object Stats {
     fun sessionsInWeekOf(nowMs: Long, startTimes: List<Long>, zone: ZoneId): Int {
         val ws = weekStart(nowMs, zone)
         return startTimes.count { weekStart(it, zone) == ws }
+    }
+
+    /** Días de la semana (lun–dom) en los que hubo al menos una sesión en la semana de [nowMs]. */
+    fun trainedDaysInWeekOf(nowMs: Long, startTimes: List<Long>, zone: ZoneId): Set<DayOfWeek> {
+        val ws = weekStart(nowMs, zone)
+        return startTimes.filter { weekStart(it, zone) == ws }
+            .map { Instant.ofEpochMilli(it).atZone(zone).dayOfWeek }.toSet()
+    }
+
+    /**
+     * Racha: semanas consecutivas con al menos una sesión. La semana en curso todavía puede salvar la racha:
+     * si aún no has entrenado esta semana, se cuenta desde la anterior.
+     */
+    fun weekStreak(startTimes: List<Long>, nowMs: Long, zone: ZoneId): Int {
+        val weeks = startTimes.map { weekStart(it, zone) }.toSet()
+        var cursor = weekStart(nowMs, zone)
+        if (cursor !in weeks) cursor = cursor.minusWeeks(1)
+        var n = 0
+        while (cursor in weeks) {
+            n++
+            cursor = cursor.minusWeeks(1)
+        }
+        return n
     }
 
     fun epochDay(epochMs: Long, zone: ZoneId): LocalDate =
@@ -82,7 +105,7 @@ data class ExercisePoint(
 object ExerciseEvolution {
     fun points(performances: List<ExercisePerformance>): List<ExercisePoint> =
         performances.sortedBy { it.performedAt }.mapNotNull { p ->
-            val done = p.completedSets
+            val done = p.workingSets
             if (done.isEmpty()) return@mapNotNull null
             ExercisePoint(
                 performedAt = p.performedAt,

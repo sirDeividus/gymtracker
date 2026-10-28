@@ -36,14 +36,14 @@ class ExerciseBests private constructor(private val sets: List<SetEntry>, privat
     fun maxDistance(): Double? = sets.mapNotNull { it.distanceM }.maxOrNull()
 
     fun plus(set: SetEntry): ExerciseBests =
-        if (set.completed) ExerciseBests(sets + set, tracking) else this
+        if (set.completed && set.type != SetType.WARMUP) ExerciseBests(sets + set, tracking) else this
 
     /**
      * Récords que supera [set]. Si no hay historial previo no se marca nada
      * (la primera marca de un ejercicio no es un "récord" que celebrar).
      */
     fun recordsFor(set: SetEntry): List<PersonalRecord> {
-        if (!set.completed || isEmpty) return emptyList()
+        if (!set.completed || set.type == SetType.WARMUP || isEmpty) return emptyList()
         val out = mutableListOf<PersonalRecord>()
         when (tracking) {
             TrackingType.WEIGHT_REPS -> {
@@ -84,7 +84,7 @@ class ExerciseBests private constructor(private val sets: List<SetEntry>, privat
 
     companion object {
         fun from(performances: List<ExercisePerformance>, tracking: TrackingType): ExerciseBests =
-            ExerciseBests(performances.flatMap { it.completedSets }, tracking)
+            ExerciseBests(performances.flatMap { it.workingSets }, tracking)
 
         fun empty(tracking: TrackingType) = ExerciseBests(emptyList(), tracking)
     }
