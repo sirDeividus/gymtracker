@@ -1,4 +1,5 @@
-import { h, uid, clock, beep, unlockAudio, sheet, closeSheet, toast } from './util.js';
+import { h, uid, clock, beep, unlockAudio, sheet, closeSheet, toast, speak, cueNumber } from './util.js';
+import { S } from './state.js';
 import { intervalSnapshot, planTotalSec, intervalSchedule, nextPhase } from './domain.js';
 
 const COLORS = { PREP: '#f4f4f5', WORK: '#ff1e46', REST: '#38bdf8', CYCLE_REST: '#f5a524', DONE: '#34c759' };
@@ -13,7 +14,7 @@ const saveCfg = (c) => { try { localStorage.setItem(KEY, JSON.stringify(c)); } c
 /** Temporizador de intervalos a pantalla completa: se abre listo (en pausa); el botón verde empieza. */
 export function openTabata(se, ex, save, onChange) {
   let plan = { workSec: ex.durationSec || ex.sets[0]?.durationSec || 20, restSec: ex.restSec ?? 10, rounds: Math.min(60, Math.max(1, ex.sets.length)), cycles: ex.cycles || 1, cycleRestSec: ex.cycleRestSec ?? 30, prepSec: ex.prepSec ?? 10 };
-  let started = false, pausedAt = null, pausedTotal = 0, startMs = 0, filled = 0, lastKey = null, muted = false, sets = [];
+  let lastCount = null; let started = false, pausedAt = null, pausedTotal = 0, startMs = 0, filled = 0, lastKey = null, muted = false, sets = [];
   let iv = null, wake = null;
 
   const timeTotal = h('div', { class: 'small muted' });
@@ -69,7 +70,26 @@ export function openTabata(se, ex, save, onChange) {
     if (started) {
       while (filled < snap.completed && filled < sets.length) { sets[filled].durationSec = p.workSec; sets[filled].completed = true; filled++; }
       const key = snap.phase + snap.cycle + ':' + snap.round;
-      if (key !== lastKey) { if (lastKey !== null && !muted && snap.phase !== 'DONE') beep(1); if (snap.phase === 'DONE' && !muted) beep(3); lastKey = key; }
+      const voice = S.settings.voice !== false, sound = S.settings.sound;
+      const changed = key !== lastKey;
+      if (changed) {
+        if (lastKey !== null && !muted && snap.phase !== 'DONE') beep(1);
+        if (snap.phase === 'DONE' && !muted) beep(3);
+        lastKey = key;
+        // Al empezar cada tramo, qué toca hacer.
+        if (!muted) speak({ WORK: 'Go', REST: 'Descanso', CYCLE_REST: 'Descanso', PREP: 'Prepárate', DONE: 'Terminado' }[snap.phase], voice);
+      } else if (!muted && pausedAt == null && snap.phase !== 'DONE') {
+        const left = Math.ceil(snap.remainingMs / 1000), total = Math.round(snap.totalMs / 1000);
+        if (left >= 1 && left <= 3 && left < total) {
+          const ck = key + ':' + left;
+          if (ck !== lastCount) {
+            lastCount = ck;
+            // En los descansos, a 3 s: «Prepárate»; después 2, 1. En trabajo y preparación: 3, 2, 1.
+            if ((snap.phase === 'REST' || snap.phase === 'CYCLE_REST') && left === 3) { if (!speak('Prepárate', voice) && sound) beep(1); }
+            else cueNumber(left, voice, sound);
+          }
+        }
+      }
     }
     const nx = nextPhase(p, e);
     const paused = !started || pausedAt != null;
@@ -102,7 +122,7 @@ export function openTabata(se, ex, save, onChange) {
       h('button', { class: 'btn primary block', onclick: () => {
         const n = (k, min, max) => { const v = Number(String(f[k].value).replace(',', '.')); return Math.min(max, Math.max(min, Number.isFinite(v) && String(f[k].value).trim() !== '' ? Math.round(v) : plan[k])); };
         plan = { workSec: n('workSec', 1, 3600), restSec: n('restSec', 0, 3600), rounds: n('rounds', 1, 60), cycles: n('cycles', 1, 30), cycleRestSec: n('cycleRestSec', 0, 3600), prepSec: n('prepSec', 0, 60) };
-        ex.cycles = plan.cycles; ex.cycleRestSec = plan.cycleRestSec; ex.prepSec = plan.prepSec; started = false; pausedAt = null; pausedTotal = 0; filled = 0; lastKey = null; sets = []; closeSheet(); draw();
+        ex.cycles = plan.cycles; ex.cycleRestSec = plan.cycleRestSec; ex.prepSec = plan.prepSec; started = false; pausedAt = null; pausedTotal = 0; filled = 0; lastKey = null; sets = []; lastCount = null; closeSheet(); draw();
       } }, 'Guardar')));
   }
   function showList() {

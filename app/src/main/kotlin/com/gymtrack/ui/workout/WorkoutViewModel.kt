@@ -88,9 +88,10 @@ private class IntervalRun(val exerciseId: String, var plan: IntervalPlan, val na
     var done = 0
     var muted = false
     var lastKey: Triple<IntervalPhase, Int, Int>? = null
+    var lastCountKey: String? = null
     fun elapsed(now: Long): Long = if (!started) 0L else (pausedAt ?: now) - startMs - pausedTotal
     fun reset(newPlan: IntervalPlan) {
-        plan = newPlan; setIds = emptyList(); started = false; startMs = 0; pausedAt = null; pausedTotal = 0; done = 0; lastKey = null
+        plan = newPlan; setIds = emptyList(); started = false; startMs = 0; pausedAt = null; pausedTotal = 0; done = 0; lastKey = null; lastCountKey = null
     }
 }
 
@@ -123,6 +124,7 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.Eagerly, WorkoutUiState())
 
     init {
+        c.speech.warmUp()
         viewModelScope.launch { state.collect { checkRestFinished(it) } }
     }
 
@@ -147,7 +149,32 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
 
     // ------------------------------------------------------------ Fin del descanso
 
+    private var lastCountKey: Pair<Long, Int>? = null
+
+    /** Voz (o pitido corto) para un número de la cuenta atrás. */
+    private fun cueNumber(n: Int) {
+        val s = state.value.settings
+        if (s.voice) c.speech.speak(when (n) { 3 -> "tres"; 2 -> "dos"; else -> "uno" }) else if (s.sound) RestNotifier.tick()
+    }
+
+    private fun cueWord(text: String) {
+        if (state.value.settings.voice) c.speech.speak(text)
+    }
+
+    /** 3, 2, 1 en los últimos tres segundos del descanso (solo si el descanso dura más de tres). */
+    private fun countdownRest(st: WorkoutUiState) {
+        val rest = st.rest ?: return
+        val ends = rest.endsAtMs ?: return
+        val left = st.restRemainingSec
+        if (left !in 1..3 || rest.totalSec <= 3) return
+        val key = ends to left
+        if (key == lastCountKey) return
+        lastCountKey = key
+        cueNumber(left)
+    }
+
     private fun checkRestFinished(st: WorkoutUiState) {
+        countdownRest(st)
         val rest = st.rest ?: return
         val ends = rest.endsAtMs ?: return
         if (st.nowMs < ends || lastRestAlertFor == ends) return
@@ -334,6 +361,7 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
     /** Abre el temporizador listo para empezar (en pausa) con los valores del ejercicio. */
     fun openIntervalSetup(sessionExerciseId: String) {
         val ex = state.value.workout?.exercises?.firstOrNull { it.entity.id == sessionExerciseId } ?: return
+        c.speech.warmUp()
         val r = IntervalRun(sessionExerciseId, planFor(ex), ex.entity.exerciseName)
         run = r
         runJob?.cancel()
@@ -400,10 +428,32 @@ class WorkoutViewModel(private val c: AppContainer) : ViewModel() {
                 r.done++
             }
             val key = Triple(snap.phase, snap.cycle, snap.round)
-            if (key != r.lastKey) {
+            val phaseChanged = key != r.lastKey
+            if (phaseChanged) {
                 val first = r.lastKey == null
                 r.lastKey = key
                 if (!first && !r.muted) intervalAlert()
+            }
+            if (!r.muted) {
+                val secLeft = ceil(snap.phaseRemainingMs / 1000.0).toInt()
+                val phaseSecs = (snap.phaseTotalMs / 1000).toInt()
+                if (phaseChanged) {
+                    // Al empezar cada tramo: qué toca hacer.
+                    when (snap.phase) {
+                        IntervalPhase.WORK -> cueWord("Go")
+                        IntervalPhase.REST, IntervalPhase.CYCLE_REST -> cueWord("Descanso")
+                        IntervalPhase.PREP -> cueWord("Prepárate")
+                        IntervalPhase.DONE -> cueWord("Terminado")
+                    }
+                } else if (r.pausedAt == null && secLeft in 1..3 && secLeft < phaseSecs) {
+                    val ck = "$key:$secLeft"
+                    if (ck != r.lastCountKey) {
+                        r.lastCountKey = ck
+                        // En los descansos, a 3 s: «Prepárate»; después 2, 1. En trabajo y preparación: 3, 2, 1.
+                        val rest = snap.phase == IntervalPhase.REST || snap.phase == IntervalPhase.CYCLE_REST
+                        if (rest && secLeft == 3) cueWord("Prepárate") else cueNumber(secLeft)
+                    }
+                }
             }
         }
         interval.value = IntervalUi(

@@ -79,6 +79,17 @@ object RestNotifier {
         }
     }
 
+    /** Pitido corto para la cuenta atrás (3, 2, 1). */
+    fun tick() {
+        try {
+            val tg = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 70)
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
+            Handler(Looper.getMainLooper()).postDelayed({ tg.release() }, 400)
+        } catch (_: RuntimeException) {
+            // Sin sonido disponible: no es crítico.
+        }
+    }
+
     fun notifyRestOver(context: Context) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

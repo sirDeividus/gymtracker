@@ -1,5 +1,5 @@
 import { S, exerciseById, saveSession, activeSession, finished, go } from './state.js';
-import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, beep, unlockAudio, toast, SET_TYPES, sheet, closeSheet } from './util.js';
+import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, beep, unlockAudio, toast, SET_TYPES, sheet, closeSheet, cueNumber } from './util.js';
 import { sessionVolume, completedSets, lastPerformance, suggest, stepFor, warmupSets, isWorking } from './domain.js';
 import { pickExercise } from './views.js';
 import { openTabata } from './tabata.js';
@@ -53,6 +53,7 @@ export function workoutView() {
   let unlocked = false;
   const openTables = new Set(); // ejercicios por tiempo con las series desplegadas
   let lastRestKey = null;
+  let lastCount = null;
   const root = h('div', { class: 'screen', style: { paddingBottom: '140px' } });
   const timeEl = h('span', { class: 'wk-time' });
   const prog = h('i');
@@ -248,6 +249,11 @@ export function workoutView() {
     timeEl.textContent = clock((now - se.startedAt) / 1000);
     stDur.textContent = clock((now - se.startedAt) / 1000);
     const left = se.restEndsAt ? Math.ceil((se.restEndsAt - now) / 1000) : 0;
+    // 3, 2, 1 en los últimos segundos del descanso (si dura más de tres).
+    if (se.restEndsAt && left >= 1 && left <= 3 && se.restTotal > 3) {
+      const k = se.restEndsAt + ':' + left;
+      if (k !== lastCount) { lastCount = k; cueNumber(left, S.settings.voice !== false, S.settings.sound); }
+    }
     if (se.restEndsAt && left <= 0) {
       se.restEndsAt = null; persist(se); unlocked = false;
       if (S.settings.sound) beep(); toast('¡Descanso terminado!');

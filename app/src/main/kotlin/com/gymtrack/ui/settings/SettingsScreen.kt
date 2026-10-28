@@ -89,6 +89,7 @@ fun SettingsScreen(
                     ChipSelector(listOf(0, 60, 90, 120, 180, 240, 300), setOf(s.exerciseChangeRestSec), { if (it == 0) "Sin descanso" else "${it} s" }, { vm.setChangeRest(it) }, Modifier.padding(top = 6.dp))
                     ToggleRow("Iniciar el descanso al completar una serie", s.autoRest, vm::setAutoRest)
                     ToggleRow("Vibración al terminar", s.vibration, vm::setVibration)
+                    ToggleRow("Voz en los avisos (3, 2, 1 · Descanso · Prepárate · Go)", s.voice, vm::setVoice)
                     ToggleRow("Sonido al terminar", s.sound, vm::setSound)
                     ToggleRow("Aviso con la app en segundo plano", s.backgroundAlert) { on ->
                         if (on && Build.VERSION.SDK_INT >= 33 &&

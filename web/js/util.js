@@ -80,6 +80,38 @@ export function unlockAudio() {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
   } catch { /* sin audio */ }
+  // iOS solo deja hablar tras un gesto del usuario: una frase vacía "desbloquea" la voz.
+  try { if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch { /* sin voz */ }
+}
+
+/** Pitido corto para la cuenta atrás. */
+export function tick() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 660; o.connect(g); g.connect(audioCtx.destination);
+    const t0 = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.35, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
+    o.start(t0); o.stop(t0 + 0.14);
+  } catch { /* sin audio */ }
+}
+
+/** Dice una frase en español (si la voz está activada en Ajustes). Devuelve true si habló. */
+export function speak(text, enabled = true) {
+  if (!enabled || !('speechSynthesis' in window)) return false;
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES'; u.rate = 1.05;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+    return true;
+  } catch { return false; }
+}
+const NUM = { 3: 'tres', 2: 'dos', 1: 'uno' };
+/** Cuenta atrás: voz con el número o, si no hay voz, un pitido corto. */
+export function cueNumber(n, voice, sound) {
+  if (voice && speak(NUM[n])) return;
+  if (sound) tick();
 }
 
 // ---- Hoja inferior genérica

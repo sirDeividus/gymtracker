@@ -4,7 +4,7 @@ import TEMPLATES from '../data/templates.js';
 import { uid } from './util.js';
 
 export const S = {
-  settings: { unit: 'kg', restSec: 90, changeRestSec: 120, sound: true },
+  settings: { unit: 'kg', restSec: 90, changeRestSec: 120, sound: true, voice: true },
   custom: [],
   routines: [],
   sessions: [],
