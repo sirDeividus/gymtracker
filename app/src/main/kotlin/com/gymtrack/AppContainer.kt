@@ -41,6 +41,7 @@ class AppContainer(val context: Context) {
     val media = MediaRepository(context)
     val body = BodyRepository(context, database)
     val speech = com.gymtrack.notify.SpeechCues(context)
+    val nowPlaying = com.gymtrack.notify.NowPlaying(context)
 
     /** Carga imágenes y GIF animados desde assets (sin red). */
     val imageLoader: ImageLoader = ImageLoader.Builder(context)

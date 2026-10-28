@@ -91,6 +91,7 @@ fun SettingsScreen(
                     ToggleRow("Vibración al terminar", s.vibration, vm::setVibration)
                     ToggleRow("Voz en los avisos (3, 2, 1 · Descanso · Prepárate · Go)", s.voice, vm::setVoice)
                     ToggleRow("Sonido al terminar", s.sound, vm::setSound)
+                    ToggleRow("Controles de música en el entrenamiento", s.musicControls, vm::setMusicControls)
                     ToggleRow("Aviso con la app en segundo plano", s.backgroundAlert) { on ->
                         if (on && Build.VERSION.SDK_INT >= 33 &&
                             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

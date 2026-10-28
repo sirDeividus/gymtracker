@@ -216,6 +216,7 @@ fun WorkoutScreen(
                 MiniMuscleMap(muscleSets, Modifier.width(64.dp))
             }
             androidx.compose.material3.HorizontalDivider(color = c.outline)
+            if (state.settings.musicControls) MusicBar(Modifier.padding(horizontal = ScreenPadding, vertical = 8.dp))
 
             // ---- Ejercicios
             // Al terminar un ejercicio, la lista se desplaza sola al siguiente (y al abrir, al que toca).

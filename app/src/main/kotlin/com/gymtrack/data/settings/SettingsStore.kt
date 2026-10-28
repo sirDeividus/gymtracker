@@ -28,6 +28,8 @@ data class UserSettings(
     val sound: Boolean = false,
     /** Voz en los avisos: cuenta atrás (3, 2, 1), «Descanso», «Prepárate», «Go». */
     val voice: Boolean = true,
+    /** Mini control de la música de otras apps durante el entrenamiento. */
+    val musicControls: Boolean = true,
     val backgroundAlert: Boolean = false,
     val bodyWeightKg: Double? = null,
     val increments: IncrementSettings = IncrementSettings(),
@@ -45,6 +47,7 @@ class SettingsStore(private val context: Context) {
         val vibration = booleanPreferencesKey("vibration")
         val sound = booleanPreferencesKey("sound")
         val voice = booleanPreferencesKey("voice")
+        val musicControls = booleanPreferencesKey("music_controls")
         val backgroundAlert = booleanPreferencesKey("background_alert")
         val bodyWeight = doublePreferencesKey("body_weight_kg")
         val incUpper = doublePreferencesKey("inc_upper")
@@ -71,6 +74,7 @@ class SettingsStore(private val context: Context) {
             prefs[Keys.vibration] = new.vibration
             prefs[Keys.sound] = new.sound
             prefs[Keys.voice] = new.voice
+            prefs[Keys.musicControls] = new.musicControls
             prefs[Keys.backgroundAlert] = new.backgroundAlert
             if (new.bodyWeightKg != null) prefs[Keys.bodyWeight] = new.bodyWeightKg else prefs.remove(Keys.bodyWeight)
             prefs[Keys.incUpper] = new.increments.upperBodyKg
@@ -140,6 +144,7 @@ class SettingsStore(private val context: Context) {
             vibration = this[Keys.vibration] ?: true,
             sound = this[Keys.sound] ?: false,
             voice = this[Keys.voice] ?: true,
+            musicControls = this[Keys.musicControls] ?: true,
             backgroundAlert = this[Keys.backgroundAlert] ?: false,
             bodyWeightKg = this[Keys.bodyWeight],
             increments = IncrementSettings(

@@ -40,6 +40,7 @@ class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     fun setChangeRest(sec: Int) = update { it.copy(exerciseChangeRestSec = sec.coerceIn(0, 1800)) }
     fun setAutoRest(on: Boolean) = update { it.copy(autoRest = on) }
     fun setVibration(on: Boolean) = update { it.copy(vibration = on) }
+    fun setMusicControls(on: Boolean) = update { it.copy(musicControls = on) }
     fun setVoice(on: Boolean) = update { it.copy(voice = on) }
     fun setSound(on: Boolean) = update { it.copy(sound = on) }
     fun setBackgroundAlert(on: Boolean) = update { it.copy(backgroundAlert = on) }
