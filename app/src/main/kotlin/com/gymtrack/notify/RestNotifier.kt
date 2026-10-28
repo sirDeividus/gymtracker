@@ -70,6 +70,7 @@ object RestNotifier {
     }
 
     fun beep() {
+        AudioDucker.duck(1200)
         try {
             val tg = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 70)
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
@@ -81,6 +82,7 @@ object RestNotifier {
 
     /** Pitido corto para la cuenta atrás (3, 2, 1). */
     fun tick() {
+        AudioDucker.duck(900)
         try {
             val tg = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 70)
             tg.startTone(ToneGenerator.TONE_PROP_BEEP, 120)

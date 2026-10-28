@@ -100,6 +100,7 @@ recursos) y `res/drawable/ic_launcher_foreground.xml` + `brand_icon_background` 
 * **Modo intervalos/Tabata** configurable: trabajo, descanso, rondas por ciclo, ciclos, descanso entre ciclos y cuenta atrás de inicio.
 * **Voz en los avisos** (Ajustes, activada por defecto): 3, 2, 1 al acabar el descanso; en el Tabata dice «Descanso» al empezar el descanso, «Prepárate» a 3 s de que acabe, «Go» al empezar el trabajo y «Terminado» al final. Sin voz, usa pitidos cortos si el sonido está activo.
 * **Controles de música (Android)**: durante el entrenamiento, mini reproductor con lo que suena en YouTube Music, Spotify u otra app (pausa, anterior, siguiente) sin salir de GymTrack. Requiere conceder «Acceso a notificaciones» una vez; solo se usan las sesiones multimedia, no se lee ninguna notificación. No existe en la versión web/iPhone.
+* **La música baja de volumen** mientras suena un aviso (pitido o voz) y vuelve a subir al acabar (enfoque de audio con «ducking»; depende de que la app de música lo respete, como hacen YouTube Music y Spotify).
 * **Añadir ejercicio**: silueta corporal tocable (Girar frente/espalda) → cuadrícula de ejercicios del músculo elegido, con filtros.
 * **Editar ejercicio** de rutina a pantalla completa con una tarjeta por serie (todas comparten objetivo).
 * **Demostración a pantalla completa**: el GIF se anima en la miniatura del entrenamiento y, al tocarlo, se abre ajustado a la pantalla.
