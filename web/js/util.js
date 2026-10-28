@@ -125,3 +125,19 @@ export function sheet(title, options, extra) {
       extra));
   document.body.append(sheetEl);
 }
+
+/** Opciones típicas de descanso con el valor actual incluido (p. ej. 75 s), ordenadas. */
+export const restOptions = (base, current) => [...new Set([...base, current])].filter((v) => v != null).sort((a, b) => a - b);
+
+/** Descanso a medida: minutos y segundos escritos directamente. */
+export function customRest(title, initialSec, onSave, minSec = 0, maxSec = 1800) {
+  const m = h('input', { type: 'text', inputmode: 'numeric', value: String(Math.floor(initialSec / 60)), onfocus: (e) => e.target.select() });
+  const s = h('input', { type: 'text', inputmode: 'numeric', value: String(initialSec % 60), onfocus: (e) => e.target.select() });
+  sheet(title, [], h('div', { class: 'stack' },
+    h('div', { class: 'row' }, h('label', { class: 'small muted', style: { flex: 1 } }, 'Minutos', m), h('label', { class: 'small muted', style: { flex: 1 } }, 'Segundos', s)),
+    h('button', { class: 'btn primary block', onclick: () => {
+      const total = (parseInt(m.value, 10) || 0) * 60 + (parseInt(s.value, 10) || 0);
+      if (total < minSec || total > maxSec) { toast(`Debe estar entre ${minSec} s y ${Math.floor(maxSec / 60)} min`); return; }
+      closeSheet(); onSave(total);
+    } }, 'Guardar')));
+}

@@ -164,6 +164,8 @@ fun ExerciseCard(
 
     MediaHost(showMedia, e.exerciseId, e.exerciseName) { showMedia = false }
     var restMenu by remember { mutableStateOf(false) }
+    var restDialog by remember { mutableStateOf(false) }
+    if (restDialog) com.gymtrack.ui.components.RestTimeDialog("Descanso entre series", e.restSec, { restDialog = false }, { actions.setRest(e.id, it); restDialog = false })
     // Los ejercicios por tiempo (Tabata, plancha…) se muestran como un solo botón; las series se pueden desplegar.
     val compact = tracking == TrackingType.DURATION
     var showTable by remember(e.id) { mutableStateOf(!compact) }
@@ -213,12 +215,13 @@ fun ExerciseCard(
             Box {
                 PillChip(if (e.restSec > 0) "Descanso: ${Formatting.duration(e.restSec)}" else "Descanso: --", Icons.Default.Timer) { restMenu = true }
                 DropdownMenu(expanded = restMenu, onDismissRequest = { restMenu = false }) {
-                    listOf(0, 30, 45, 60, 90, 120, 180, 240, 300).forEach { sec ->
+                    com.gymtrack.ui.components.restOptions(listOf(0, 30, 45, 60, 90, 120, 180, 240, 300), e.restSec).forEach { sec ->
                         DropdownMenuItem(
-                            text = { Text(if (sec == 0) "Sin descanso" else Formatting.duration(sec)) },
+                            text = { Text((if (sec == 0) "Sin descanso" else Formatting.duration(sec)) + if (sec == e.restSec) "  ✓" else "") },
                             onClick = { restMenu = false; actions.setRest(e.id, sec) },
                         )
                     }
+                    DropdownMenuItem(text = { Text("Personalizado…", color = c.primary) }, onClick = { restMenu = false; restDialog = true })
                 }
             }
             PillChip(if (showNotes) "Ocultar nota" else "Nota", Icons.Default.NoteAdd) { showNotes = !showNotes }

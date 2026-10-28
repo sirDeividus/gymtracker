@@ -1,5 +1,5 @@
 import { S, TPL, allExercises, exerciseById, saveRoutine, removeRoutine, saveCustomExercise, newRoutineItem, activeSession, finished, removeSession, saveSettings, go, loadAll } from './state.js';
-import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, dayText, fullDate, startOfWeek, toast, sheet, closeSheet, MUSCLES, EQUIPMENT, TRACKING } from './util.js';
+import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, dayText, fullDate, startOfWeek, toast, sheet, closeSheet, MUSCLES, EQUIPMENT, TRACKING, restOptions, customRest } from './util.js';
 import { sessionVolume, completedSets, bestOf, weekStreak, epley1RM, isWorking } from './domain.js';
 import { startSession } from './workout.js';
 import { db } from './db.js';
@@ -98,7 +98,7 @@ export function routineEditView(id) {
         h('button', { class: 'btn small', onclick: () => { set(Math.min(max, get() + 1)); val.textContent = get(); } }, '+')));
     };
     const w = h('input', { type: 'text', inputmode: 'decimal', value: it.startWeightKg != null ? num(toDisplay(it.startWeightKg, unit), 2) : '', placeholder: `Peso inicial opcional (${unit})`, oninput: (e) => { const p = parseNum(e.target.value); it.startWeightKg = p == null ? null : fromDisplay(p, unit); } });
-    const restSel = h('select', { onchange: (e) => { it.restSec = Number(e.target.value); } }, ...[0, 30, 45, 60, 90, 120, 180, 240, 300].map((s) => h('option', { value: s, selected: s === it.restSec }, s ? clock(s) : 'Sin descanso')));
+    const restSel = h('select', { onchange: (e) => { if (e.target.value === 'custom') { customRest('Descanso entre series', it.restSec, async (v) => { it.restSec = v; await save(); render(); }); return; } it.restSec = Number(e.target.value); } }, ...restOptions([0, 30, 45, 60, 90, 120, 180, 240, 300], it.restSec).map((s) => h('option', { value: s, selected: s === it.restSec }, s ? clock(s) : 'Sin descanso')), h('option', { value: 'custom' }, 'Personalizado…'));
     sheet(ex?.name || 'Ejercicio', [], h('div', { class: 'stack' },
       stepper(dur ? 'Rondas' : 'Series', () => it.sets, (v) => { it.sets = v; }, 1, 20),
       ...(dur ? [stepper('Trabajo (s)', () => it.durationSec || 30, (v) => { it.durationSec = v; }, 5, 600), stepper('Ciclos', () => it.cycles || 1, (v) => { it.cycles = v; }, 1, 30), stepper('Descanso entre ciclos (s)', () => it.cycleRestSec ?? 30, (v) => { it.cycleRestSec = v; }, 0, 300)]
@@ -231,9 +231,9 @@ export function settingsView() {
     h('div', { class: 'label' }, 'Unidades'),
     h('div', { class: 'chips' }, ...['kg', 'lb'].map((u) => h('button', { class: 'chip' + (s.unit === u ? ' on' : ''), onclick: async () => { s.unit = u; await upd(); go('#/settings'); location.reload(); } }, u))),
     h('div', { class: 'label' }, 'Descanso por defecto'),
-    h('select', { onchange: async (e) => { s.restSec = Number(e.target.value); await upd(); } }, ...[30, 45, 60, 90, 120, 180, 240].map((v) => h('option', { value: v, selected: v === s.restSec }, clock(v)))),
+    h('select', { onchange: async (e) => { if (e.target.value === 'custom') { customRest('Descanso por defecto', s.restSec, async (v) => { s.restSec = v; await upd(); go('#/settings'); location.reload(); }, 5); return; } s.restSec = Number(e.target.value); await upd(); } }, ...restOptions([30, 45, 60, 90, 120, 180, 240], s.restSec).map((v) => h('option', { value: v, selected: v === s.restSec }, clock(v))), h('option', { value: 'custom' }, 'Personalizado…')),
     h('div', { class: 'label' }, 'Descanso al cambiar de ejercicio'),
-    h('select', { onchange: async (e) => { s.changeRestSec = Number(e.target.value); await upd(); } }, ...[0, 60, 90, 120, 180, 240, 300].map((v) => h('option', { value: v, selected: v === (s.changeRestSec ?? 120) }, v ? clock(v) : 'Sin descanso'))),
+    h('select', { onchange: async (e) => { if (e.target.value === 'custom') { customRest('Descanso al cambiar de ejercicio', s.changeRestSec ?? 120, async (v) => { s.changeRestSec = v; await upd(); location.reload(); }); return; } s.changeRestSec = Number(e.target.value); await upd(); } }, ...restOptions([0, 60, 90, 120, 180, 240, 300], s.changeRestSec ?? 120).map((v) => h('option', { value: v, selected: v === (s.changeRestSec ?? 120) }, v ? clock(v) : 'Sin descanso')), h('option', { value: 'custom' }, 'Personalizado…')),
     h('p', { class: 'small muted' }, 'Se usa al completar la última serie de un ejercicio y pasar al siguiente.'),
     h('div', { class: 'label' }, 'Voz en los avisos'),
     h('div', { class: 'chips' }, h('button', { class: 'chip' + (s.voice !== false ? ' on' : ''), onclick: async () => { s.voice = s.voice === false; await upd(); location.reload(); } }, s.voice !== false ? 'Voz activada' : 'Voz desactivada')),

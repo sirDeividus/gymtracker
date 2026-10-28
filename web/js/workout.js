@@ -1,5 +1,5 @@
 import { S, exerciseById, saveSession, activeSession, finished, go } from './state.js';
-import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, beep, unlockAudio, toast, SET_TYPES, sheet, closeSheet, cueNumber } from './util.js';
+import { h, uid, num, parseNum, toDisplay, fromDisplay, weightText, clock, beep, unlockAudio, toast, SET_TYPES, sheet, closeSheet, cueNumber, restOptions, customRest } from './util.js';
 import { sessionVolume, completedSets, lastPerformance, suggest, stepFor, warmupSets, isWorking } from './domain.js';
 import { pickExercise } from './views.js';
 import { openTabata } from './tabata.js';
@@ -232,7 +232,7 @@ export function workoutView() {
     ].filter(Boolean));
   }
   function restPicker(ex) {
-    sheet('Descanso entre series', [0, 30, 45, 60, 90, 120, 180, 240, 300].map((s) => [s === 0 ? 'Sin descanso' : clock(s), () => { ex.restSec = s; persist(se); render(); }]));
+    sheet('Descanso entre series', [...restOptions([0, 30, 45, 60, 90, 120, 180, 240, 300], ex.restSec).map((s) => [(s === 0 ? 'Sin descanso' : clock(s)) + (s === ex.restSec ? '  ✓' : ''), () => { ex.restSec = s; persist(se); render(); }]), ['Personalizado…', () => customRest('Descanso entre series', ex.restSec, (v) => { ex.restSec = v; persist(se); render(); })]]);
   }
   function noteEditor(ex) {
     const ta = h('textarea', { rows: 4, placeholder: 'Notas del ejercicio' }, ex.notes);

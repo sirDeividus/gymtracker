@@ -83,10 +83,15 @@ fun SettingsScreen(
                 GymCard(Modifier.fillMaxWidth()) {
                     SectionTitle("Descanso")
                     Text("Descanso por defecto en ejercicios nuevos", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
-                    ChipSelector(listOf(45, 60, 90, 120, 180, 240), setOf(s.defaultRestSec), { "${it} s" }, { vm.setRest(it) }, Modifier.padding(top = 6.dp))
+                    var restDialog by remember { mutableStateOf<String?>(null) }
+                    ChipSelector(com.gymtrack.ui.components.restOptions(listOf(45, 60, 90, 120, 180, 240), s.defaultRestSec), setOf(s.defaultRestSec), { "${it} s" }, { vm.setRest(it) }, Modifier.padding(top = 6.dp))
+                    TextButton(onClick = { restDialog = "default" }) { Text("Personalizado…", color = com.gymtrack.ui.theme.Brand.colors.primary) }
+                    if (restDialog == "default") com.gymtrack.ui.components.RestTimeDialog("Descanso por defecto", s.defaultRestSec, { restDialog = null }, { vm.setRest(it); restDialog = null }, minSec = 5)
+                    if (restDialog == "change") com.gymtrack.ui.components.RestTimeDialog("Descanso al cambiar de ejercicio", s.exerciseChangeRestSec, { restDialog = null }, { vm.setChangeRest(it); restDialog = null })
                     Text("Se usa cuando completas la última serie de un ejercicio y sigues con otro.", style = MaterialTheme.typography.bodySmall, color = com.gymtrack.ui.theme.Brand.colors.textSecondary, modifier = Modifier.padding(top = 10.dp))
                     Text("Descanso al cambiar de ejercicio", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
-                    ChipSelector(listOf(0, 60, 90, 120, 180, 240, 300), setOf(s.exerciseChangeRestSec), { if (it == 0) "Sin descanso" else "${it} s" }, { vm.setChangeRest(it) }, Modifier.padding(top = 6.dp))
+                    ChipSelector(com.gymtrack.ui.components.restOptions(listOf(0, 60, 90, 120, 180, 240, 300), s.exerciseChangeRestSec), setOf(s.exerciseChangeRestSec), { if (it == 0) "Sin descanso" else "${it} s" }, { vm.setChangeRest(it) }, Modifier.padding(top = 6.dp))
+                    TextButton(onClick = { restDialog = "change" }) { Text("Personalizado…", color = com.gymtrack.ui.theme.Brand.colors.primary) }
                     ToggleRow("Iniciar el descanso al completar una serie", s.autoRest, vm::setAutoRest)
                     ToggleRow("Vibración al terminar", s.vibration, vm::setVibration)
                     ToggleRow("Voz en los avisos (3, 2, 1 · Descanso · Prepárate · Go)", s.voice, vm::setVoice)

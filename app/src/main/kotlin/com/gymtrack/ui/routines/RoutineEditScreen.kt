@@ -377,6 +377,8 @@ private fun RoutineExerciseDialog(
     var durText by remember(item.row.id) { mutableStateOf((item.row.targetDurationSec ?: 30).toString()) }
     var showNote by remember(item.row.id) { mutableStateOf(item.row.notes.isNotBlank()) }
     var restMenu by remember { mutableStateOf(false) }
+    var restDialog by remember { mutableStateOf(false) }
+    if (restDialog) com.gymtrack.ui.components.RestTimeDialog("Descanso entre series", row.restSec, { restDialog = false }, { set(row.copy(restSec = it)); restDialog = false })
     var showMedia by remember { mutableStateOf(false) }
     val trackingLabel = when (tracking) {
         TrackingType.WEIGHT_REPS -> "Reps y carga"
@@ -411,12 +413,13 @@ private fun RoutineExerciseDialog(
                         Box(Modifier.weight(1f)) {
                             EditChip(if (row.restSec > 0) Formatting.duration(row.restSec) else "Sin descanso", Modifier.fillMaxWidth(), icon = Icons.Default.Timer) { restMenu = true }
                             DropdownMenu(expanded = restMenu, onDismissRequest = { restMenu = false }) {
-                                listOf(0, 30, 45, 60, 90, 120, 180, 240, 300).forEach { s ->
+                                com.gymtrack.ui.components.restOptions(listOf(0, 30, 45, 60, 90, 120, 180, 240, 300), row.restSec).forEach { s ->
                                     DropdownMenuItem(
-                                        text = { Text(if (s == 0) "Sin descanso" else Formatting.duration(s)) },
+                                        text = { Text((if (s == 0) "Sin descanso" else Formatting.duration(s)) + if (s == row.restSec) "  ✓" else "") },
                                         onClick = { restMenu = false; set(row.copy(restSec = s)) },
                                     )
                                 }
+                                DropdownMenuItem(text = { Text("Personalizado…", color = c.primary) }, onClick = { restMenu = false; restDialog = true })
                             }
                         }
                         EditChip("Nota", Modifier.weight(0.9f), icon = Icons.Default.Add) { showNote = !showNote }
