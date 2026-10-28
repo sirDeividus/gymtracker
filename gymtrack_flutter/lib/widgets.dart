@@ -163,7 +163,7 @@ Future<void> showOptions(BuildContext context, String title, List<(String, VoidC
                 o.$2();
               }),
             ),
-          if (extra != null) extra,
+          ?extra,
         ]),
       ),
     ),

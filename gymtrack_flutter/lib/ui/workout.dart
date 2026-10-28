@@ -25,7 +25,6 @@ class WorkoutScreen extends StatefulWidget {
 class _WorkoutScreenState extends State<WorkoutScreen> with WidgetsBindingObserver {
   Timer? _tick;
   bool unlocked = false;
-  String? _lastRestKey;
   String? _lastCount;
   final Set<String> _openTables = {};
   int _now = DateTime.now().millisecondsSinceEpoch;
